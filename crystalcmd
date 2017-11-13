@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export JAVA_HOME=$SNAP/jre1.8.0_152
+export PATH=$JAVA_HOME/bin:$PATH
+
+# Not good, needed for fontconfig
+export XDG_DATA_HOME=$SNAP/usr/share
+
+# Font Config
+export FONTCONFIG_PATH=$SNAP/etc/fonts/config.d
+export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf
+
+java -jar -Duser.home=$SNAP_USER_DATA $SNAP/CrystalCmd.jar "$@"
+# java -jar CrystalCmd.jar "$@"
