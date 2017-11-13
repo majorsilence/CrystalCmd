@@ -1,0 +1,67 @@
+# Example usage
+
+Note that this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.
+
+```bash
+java -jar CrystalCmd.jar -reportpath "/path/to/report.rpt" -datafile "/path/to/data.json" -outpath "/path/to/generated/file.pdf"
+```
+
+example 2
+
+```bash
+java -jar CrystalCmd.jar -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalWrapper/test.json" -outpath "/home/peter/Projects/CrystalWrapper/Java/build/output.pdf"
+```
+
+### Example of using the installed snap
+
+install
+```bash
+snap install ./Java/build/CrystalCmd.snap --force-dangerous --classic
+```
+
+run
+```bash
+crystalcmd -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalWrapper/test.json" -outpath "/home/peter/Projects/CrystalWrapper/Java/build/output.pdf"
+```
+
+# Java
+
+## dev setup
+
+```bash
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
+```
+
+http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jre-8u151-linux-x64.tar.gz?AuthParam=1509230467_0755e209172b0f2026ed83c4a73a1ef0
+
+Download [eclipse java edition](http://www.eclipse.org/downloads/eclipse-packages/).
+
+Setup eclipse with [crystal references](https://archive.sap.com/documents/docs/DOC-29757).
+
+Import java folder as ecplise project.
+
+## Runtime setup
+
+```bash
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
+```
+
+## Export Jar
+* Eclipse -> File -> Export -> Java -> Runnable Jar File
+
+Package required libraries into generated JAR
+
+output as "CrystalCmd.jar"
+
+
+# Dot Net
+
+Use this project to generate test data from c# program
+
+# Crystal report examples
+
+https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
