@@ -3,36 +3,51 @@ import com.crystaldecisions.sdk.occa.report.application.ReportClientDocument;
 import com.crystaldecisions.sdk.occa.report.definition.IReportObject;
 import com.crystaldecisions.sdk.occa.report.exportoptions.ReportExportFormat;
 import com.crystaldecisions.sdk.occa.report.lib.ReportSDKException;
-import com.sun.net.httpserver.HttpServer;
-
-import jj2000.j2k.NotImplementedError;
-
 import com.crystaldecisions.sdk.occa.report.application.ParameterFieldController;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 public class PdfExporter {
-	public void exportReport(String reportPath, String outputPath, Data datafile)
+	
+	public void exportReportToFile(String reportPath, String outputPath, Data datafile)
+			throws ReportSDKException, IOException, SQLException {
+		ByteArrayInputStream report = exportReport(reportPath, datafile);
+		
+		byte[] byteArray;
+		int bytesRead;
+		
+		byteArray = new byte[1024];
+		/*
+		 * while((bytesRead = byteArrayInputStream.read(byteArray)) != -1) {
+		 * response.getOutputStream().write(byteArray, 0, bytesRead); }
+		 */
+		FileOutputStream fos = new FileOutputStream(outputPath);
+		while ((bytesRead = report.read(byteArray)) != -1) {
+			fos.write(byteArray, 0, bytesRead);
+		}
+		fos.close();
+
+	}
+	
+	public ByteArrayInputStream exportReportToStream(String reportPath, Data datafile)
+			throws ReportSDKException, IOException, SQLException {
+	
+		return exportReport(reportPath, datafile);
+	}
+	
+	
+	private ByteArrayInputStream exportReport(String reportPath, Data datafile)
 			throws ReportSDKException, IOException, SQLException {
 
 		ReportClientDocument reportClientDocument;
 		ByteArrayInputStream byteArrayInputStream;
-		byte[] byteArray;
-		int bytesRead;
+	
 
 		/*
 		 * Instantiate ReportClientDocument and specify the Java Print Engine as the
@@ -83,18 +98,8 @@ public class PdfExporter {
 		byteArrayInputStream = (ByteArrayInputStream) reportClientDocument.getPrintOutputController()
 				.export(ReportExportFormat.PDF);
 
-		byteArray = new byte[1024];
-		/*
-		 * while((bytesRead = byteArrayInputStream.read(byteArray)) != -1) {
-		 * response.getOutputStream().write(byteArray, 0, bytesRead); }
-		 */
-		FileOutputStream fos = new FileOutputStream(outputPath);
-		while ((bytesRead = byteArrayInputStream.read(byteArray)) != -1) {
-			fos.write(byteArray, 0, bytesRead);
-		}
-		fos.close();
-
 		reportClientDocument.close();
+		return byteArrayInputStream;
 	}
 
 	private void moveReportObject(ReportClientDocument reportClientDocument, MoveObjects item)

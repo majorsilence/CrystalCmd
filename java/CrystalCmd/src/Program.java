@@ -1,37 +1,21 @@
 
-import com.crystaldecisions.sdk.occa.report.application.OpenReportOptions;
-import com.crystaldecisions.sdk.occa.report.application.ReportClientDocument;
-import com.crystaldecisions.sdk.occa.report.definition.IReportObject;
-import com.crystaldecisions.sdk.occa.report.exportoptions.ReportExportFormat;
 import com.crystaldecisions.sdk.occa.report.lib.ReportSDKException;
 import com.sun.net.httpserver.HttpServer;
 
-import jj2000.j2k.NotImplementedError;
-
-import com.crystaldecisions.sdk.occa.report.application.ParameterFieldController;
-
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 public class Program {
 
 	public static void main(String[] args) throws ReportSDKException, IOException, SQLException {
 		String reportpath = "";
 		String dataFilePath = "";
-		Data convertedDataFile = null;
+		
 		String outpath = "";
 
 		for (int i = 0; i <= args.length - 1; i++) {
@@ -55,10 +39,10 @@ public class Program {
 
 			String datafile = readFile(dataFilePath, StandardCharsets.UTF_8);
 			com.google.gson.Gson gson = new com.google.gson.Gson();
-			convertedDataFile = gson.fromJson(datafile, Data.class);
+			Data convertedDataFile = gson.fromJson(datafile, Data.class);
 
 			PdfExporter pdfExport = new PdfExporter();
-			pdfExport.exportReport(reportpath, outpath, convertedDataFile);
+			pdfExport.exportReportToFile(reportpath, outpath, convertedDataFile);
 		} else {
 			System.out.println("Running in server mode");
 			HttpServer server = HttpServer.create(new InetSocketAddress(4321), 0);

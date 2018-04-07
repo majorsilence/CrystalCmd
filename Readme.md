@@ -2,6 +2,10 @@
 
 Note that this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.
 
+## command line mode
+
+CrystalCmd upports running as a command line tool. Pass in path to report, data, and output fileand a pdf is generated.
+
 ```bash
 java -jar CrystalCmd.jar -reportpath "/path/to/report.rpt" -datafile "/path/to/data.json" -outpath "/path/to/generated/file.pdf"
 ```
@@ -11,6 +15,30 @@ example 2
 ```bash
 java -jar CrystalCmd.jar -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalWrapper/test.json" -outpath "/home/peter/Projects/CrystalWrapper/Java/build/output.pdf"
 ```
+
+## Server mode
+
+CrystalCmd supports running in server mode.  If you runn it with no command line arguments it
+starts a web server listending on port 4321.  There are two end points that can be called.
+
+1. http://localhost:4321/status
+1. http://localhost:4321/export
+    * Returns pdf as bytestream
+    * Must be passed two post variables as byte arrays
+        * reporttemplate
+        * reportdata
+
+Run the server.
+
+```bash
+java -jar CrystalCmd.jar
+```
+
+Call the server.
+```
+curl 
+```
+
 
 ### Example of using the installed snap
 
