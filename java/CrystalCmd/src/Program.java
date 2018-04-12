@@ -15,7 +15,7 @@ public class Program {
 	public static void main(String[] args) throws ReportSDKException, IOException, SQLException {
 		String reportpath = "";
 		String dataFilePath = "";
-		
+
 		String outpath = "";
 
 		for (int i = 0; i <= args.length - 1; i++) {
@@ -59,5 +59,4 @@ public class Program {
 		return new String(encoded, encoding);
 	}
 
-	
 }
