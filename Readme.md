@@ -13,7 +13,7 @@ java -jar CrystalCmd.jar -reportpath "/path/to/report.rpt" -datafile "/path/to/d
 example 2
 
 ```bash
-java -jar CrystalCmd.jar -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalWrapper/test.json" -outpath "/home/peter/Projects/CrystalWrapper/Java/build/output.pdf"
+java -jar CrystalCmd.jar -reportpath "/home/peter/Projects/CrystalCmd/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalCmd/test.json" -outpath "/home/peter/Projects/CrystalCmd/java/CrystalCmd/build/output.pdf"
 ```
 
 ## Server mode
@@ -35,8 +35,9 @@ java -jar CrystalCmd.jar
 ```
 
 Call the server.
-```
-curl 
+
+```bash
+curl -F "reporttemplate=@the_dataset_report.rpt" -F "reportdata=@test.json" http://localhost:4321/export
 ```
 
 
