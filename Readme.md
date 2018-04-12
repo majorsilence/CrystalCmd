@@ -37,7 +37,7 @@ java -jar CrystalCmd.jar
 Call the server.
 
 ```bash
-curl -F "reporttemplate=@the_dataset_report.rpt" -F "reportdata=@test.json" http://localhost:4321/export
+curl -F "reporttemplate=@the_dataset_report.rpt" -F "reportdata=@test.json" http://localhost:4321/export > myoutputfile.pdf
 ```
 
 
@@ -45,13 +45,20 @@ curl -F "reporttemplate=@the_dataset_report.rpt" -F "reportdata=@test.json" http
 
 install
 ```bash
-snap install ./Java/build/CrystalCmd.snap --force-dangerous --classic
+snap install ./java/CrystalCmd/build/CrystalCmd.snap --force-dangerous --classic
 ```
 
 run
 ```bash
 crystalcmd -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalWrapper/test.json" -outpath "/home/peter/Projects/CrystalWrapper/Java/build/output.pdf"
 ```
+
+# Building Snaps
+
+```bash
+sudo ./build_snap.sh
+```
+
 
 # Java
 
@@ -84,7 +91,7 @@ sudo apt-get install oracle-java8-installer
 
 Package required libraries into generated JAR
 
-output as "CrystalCmd.jar"
+output as "CrystalCmd.jar" in folder ./CrystalCmd/java/CrystalCmd/build
 
 
 # Dot Net

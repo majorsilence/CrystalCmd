@@ -1,5 +1,5 @@
 name: crystalcmd
-version: 0.1
+version: 0.2
 summary: Generate pdf from crystal report and json data.
 description: 
    Generate pdf from crystal report and json data.
@@ -10,16 +10,22 @@ confinement: strict
 apps:
   crystalcmd:
     command: bin/crystalcmd
+  crystalcmd-server:
+    command: bin/crystalcmd
+    plugs: 
+      - network-bind
+      - network
+    daemon: simple
 
 parts:
   crystalcmd-bin:
     plugin: copy
     files:
-       "./Java/build/CrystalCmd.jar": "."
+       "./java/CrystalCmd/build/CrystalCmd.jar": "."
   crystalcmd-wrapper:
     plugin: copy
     files:
       "crystalcmd": "bin/crystalcmd"
   java-bin:
     plugin: dump
-    source: jre-8u152-linux-x64.tar.gz
+    source: jre-8u161-linux-x64.tar.gz

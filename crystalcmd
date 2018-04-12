@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export JAVA_HOME=$SNAP/jre1.8.0_152
+export JAVA_HOME=$SNAP/jre1.8.0_161
 export PATH=$JAVA_HOME/bin:$PATH
 
 # Not good, needed for fontconfig
