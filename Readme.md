@@ -2,6 +2,18 @@
 
 Note that this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.
 
+test server: c.majorsilence.com
+* https://c.majorsilence.com/status
+* https://c.majorsilence.com/export
+
+Example running from base CrystalCmd folder.
+
+```
+curl https://c.majorsilence.com/status
+
+curl -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" https://c.majorsilence.com/export
+```
+
 ## command line mode
 
 CrystalCmd upports running as a command line tool. Pass in path to report, data, and output fileand a pdf is generated.
