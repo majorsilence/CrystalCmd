@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 
 namespace DotNetRunner
@@ -11,20 +14,71 @@ namespace DotNetRunner
     {
         public static void Main(string[] args)
         {
-            DataTable dt = GetTable();
-            string csv = DataTable2Csv(dt);
+            CreateJsonForConsoleRunner ();
+            ConnectToServerWritePdf ();
+        }
 
-            var reportData = new Data()
-            {
-                DataTables = new Dictionary<string, string>(),
-                MoveObjectPosition = new List<MoveObjects>(),
-                Parameters = new Dictionary<string, object>(),
+        static void CreateJsonForConsoleRunner(){
+            DataTable dt = GetTable ();
+            string csv = DataTable2Csv (dt);
+
+            var reportData = new Data () {
+                DataTables = new Dictionary<string, string> (),
+                MoveObjectPosition = new List<MoveObjects> (),
+                Parameters = new Dictionary<string, object> (),
                 //ReportFile = File.ReadAllBytes("thereport.rpt")
             };
-            reportData.DataTables.Add("Employee", csv);
+            reportData.DataTables.Add ("Employee", csv);
 
-            string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
-            File.WriteAllText("test.json", json);
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject (reportData);
+            File.WriteAllText ("test.json", json);
+        }
+
+
+        static void ConnectToServerWritePdf(){
+            DataTable dt = GetTable ();
+            string csv = DataTable2Csv (dt);
+
+            var reportData = new Data () {
+                DataTables = new Dictionary<string, string> (),
+                MoveObjectPosition = new List<MoveObjects> (),
+                Parameters = new Dictionary<string, object> (),
+                //ReportFile = File.ReadAllBytes("thereport.rpt")
+            };
+            reportData.DataTables.Add ("Employee", csv);
+
+
+            // report data
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject (reportData);
+
+            // crystal report                   
+            var crystalReport = System.IO.File.ReadAllBytes ("the_dataset_report.rpt");
+
+            /*
+             string crystalReport = Convert.ToBase64String (System.IO.File.ReadAllBytes ("the_dataset_report.rpt"));
+
+            using (var client = new WebClient ()) {
+                var data = new NameValueCollection ();
+                data.Add ("reportdata", json);
+                data.Add ("reporttemplate", crystalReport);
+                var result = client.UploadValues ("https://c.majorsilence.com/export", data);
+
+                System.IO.File.WriteAllBytes ("test_report_from_server.pdf", result);
+            }  
+            */
+
+            HttpClient httpClient = new HttpClient ();
+            MultipartFormDataContent form = new MultipartFormDataContent ();
+
+            form.Add (new StringContent (json), "reportdata");
+            form.Add (new ByteArrayContent (crystalReport), "reporttemplate", "the_dataset_report.rpt");
+            HttpResponseMessage response = httpClient.PostAsync ("https://c.majorsilence.com/export", form).Result;
+
+            response.EnsureSuccessStatusCode ();
+            httpClient.Dispose ();
+            var result = response.Content.ReadAsByteArrayAsync ().Result;
+            //string sd = response.Content.ReadAsStringAsync ().Result;
+            System.IO.File.WriteAllBytes ("test_report_from_server.pdf", result);
         }
 
         static DataTable GetTable()

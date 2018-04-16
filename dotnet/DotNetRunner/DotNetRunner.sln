@@ -5,13 +5,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetRunner", "DotNetRunne
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug|AnyCPU = Debug|AnyCPU
+		Release|AnyCPU = Release|AnyCPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Debug|x86.ActiveCfg = Debug|x86
-		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Debug|x86.Build.0 = Debug|x86
-		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Release|x86.ActiveCfg = Release|x86
-		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Release|x86.Build.0 = Release|x86
+		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{A3C6D6F0-77B8-46DB-829F-DEA9D64D1595}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
