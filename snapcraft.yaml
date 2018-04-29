@@ -1,5 +1,5 @@
 name: crystalcmd
-version: 0.3
+version: 0.4
 summary: Generate pdf from crystal report and json data.
 description: 
    Generate pdf from crystal report and json data.
