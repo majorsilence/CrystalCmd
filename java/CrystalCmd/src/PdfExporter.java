@@ -90,15 +90,17 @@ public class PdfExporter {
 				reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
 			}
 			if(datafile.getSubReportDataTables() != null) {
-				for (Map.Entry<String, String> item : datafile.getSubReportDataTables().entrySet()) {
-	
+				for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext();) {
+					SubReports item = itr.next();
+					
 					CsharpResultSet inst = new CsharpResultSet();
-					ResultSet result = inst.Execute(item.getValue());
-					String subReportName = item.getKey();
+					ResultSet result = inst.Execute(item.DataTable);
+					String subReportName = item.ReportName;
+					String tableName = item.TableName;
+					
 					//set resultSet for sub report
 					ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
-					String subTableAlias = subClientDoc.getDatabaseController().getDatabase().getTables().getTable(0).getAlias();
-					subClientDoc.getDatabaseController().setDataSource(result, subTableAlias, subTableAlias);
+					subClientDoc.getDatabaseController().setDataSource(result, tableName, tableName);
 				}
 			}
 			for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext();) {
