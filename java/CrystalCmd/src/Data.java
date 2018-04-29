@@ -38,6 +38,13 @@ public class Data {
         	return this.DataTables;
         }
         
+        private Map<String, String> SubReportDataTables;
+        public void setSubReportDataTables(Map<String, String> dataTables) {
+        	this.SubReportDataTables = dataTables;
+        }
+        public Map<String, String> getSubReportDataTables(){
+        	return this.SubReportDataTables;
+        }
         
     }
     

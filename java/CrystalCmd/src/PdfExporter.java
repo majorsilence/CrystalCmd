@@ -1,3 +1,4 @@
+import com.crystaldecisions.sdk.occa.report.application.ISubreportClientDocument;
 import com.crystaldecisions.sdk.occa.report.application.OpenReportOptions;
 import com.crystaldecisions.sdk.occa.report.application.ReportClientDocument;
 import com.crystaldecisions.sdk.occa.report.definition.IReportObject;
@@ -87,7 +88,16 @@ public class PdfExporter {
 				ResultSet result = inst.Execute(item.getValue());
 
 				reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
+			}
+			for (Map.Entry<String, String> item : datafile.getSubReportDataTables().entrySet()) {
 
+				CsharpResultSet inst = new CsharpResultSet();
+				ResultSet result = inst.Execute(item.getValue());
+				String subReportName = item.getKey();
+				//set resultSet for sub report
+				ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
+				String subTableAlias = subClientDoc.getDatabaseController().getDatabase().getTables().getTable(0).getAlias();
+				subClientDoc.getDatabaseController().setDataSource(result, subTableAlias, subTableAlias);
 			}
 			for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext();) {
 				MoveObjects item = itr.next();
