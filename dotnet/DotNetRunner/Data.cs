@@ -11,6 +11,14 @@ namespace DotNetRunner
 
         // DataTables converted to xml, must be loaded into new DataTables
         public Dictionary<string, string> DataTables { get; set; }
+        public List<SubReports> SubReportDataTables { get; set; }
+    }
+
+    public class SubReports
+    {
+        public string ReportName { get; set; }
+        public string TableName { get; set; }
+        public string DataTable { get; set; }
     }
 
     public class MoveObjects
