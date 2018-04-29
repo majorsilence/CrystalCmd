@@ -38,11 +38,11 @@ public class Data {
         	return this.DataTables;
         }
         
-        private Map<String, String> SubReportDataTables;
-        public void setSubReportDataTables(Map<String, String> dataTables) {
+        private List<SubReports> SubReportDataTables;
+        public void setSubReportDataTables(List<SubReports> dataTables) {
         	this.SubReportDataTables = dataTables;
         }
-        public Map<String, String> getSubReportDataTables(){
+        public List<SubReports> getSubReportDataTables(){
         	return this.SubReportDataTables;
         }
         
