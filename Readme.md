@@ -52,6 +52,23 @@ Call the server.
 curl -F "reporttemplate=@the_dataset_report.rpt" -F "reportdata=@test.json" http://localhost:4321/export > myoutputfile.pdf
 ```
 
+### Example using docker
+
+```bash
+docker run -p 2005:4321 -t majorsilence/crystalcmd
+```
+
+Or run it as a daemon.
+```bash
+docker run -p 2005:4321 -d majorsilence/crystalcmd
+```
+
+
+
+
+Now check the status in your browser:
+* http://localhost:2005/status
+
 
 ### Example of using the installed snap
 
