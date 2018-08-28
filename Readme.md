@@ -1,6 +1,6 @@
 # Example usage
 
-Note that this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.
+Note that, when using the command line option, this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.  If using the server option with small reports it is very quick.
 
 test server: c.majorsilence.com
 * https://c.majorsilence.com/status
