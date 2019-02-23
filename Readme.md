@@ -11,7 +11,7 @@ Example running from base CrystalCmd folder.
 ```
 curl https://c.majorsilence.com/status
 
-curl -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" https://c.majorsilence.com/export
+curl -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" https://c.majorsilence.com/export --output testout.pdf
 ```
 
 ## command line mode
