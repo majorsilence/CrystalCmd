@@ -105,7 +105,7 @@ Download [eclipse java edition](http://www.eclipse.org/downloads/eclipse-package
 
 Setup eclipse with [crystal references](https://archive.sap.com/documents/docs/DOC-29757).
 
-Import java folder as ecplise project.
+Import java/CrystalCmd folder as ecplise project (Eclipse -> File -> Open Projects from File System).
 
 ## Runtime setup
 
