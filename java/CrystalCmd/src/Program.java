@@ -44,7 +44,7 @@ public class Program {
 			PdfExporter pdfExport = new PdfExporter();
 			pdfExport.exportReportToFile(reportpath, outpath, convertedDataFile);
 		} else {
-			System.out.println("Running in server mode");
+			System.out.println("Running in server mode, http://127.0.0.1:4321/status");
 			HttpServer server = HttpServer.create(new InetSocketAddress(4321), 0);
 			server.createContext("/status", new ServerStatus());
 			server.createContext("/export", new ServerExport());
