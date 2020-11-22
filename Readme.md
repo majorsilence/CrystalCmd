@@ -8,10 +8,13 @@ test server: c.majorsilence.com
 
 Example running from base CrystalCmd folder.
 
-```
+```bash
 curl https://c.majorsilence.com/status
 
 curl -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" https://c.majorsilence.com/export --output testout.pdf
+
+# test localhost
+curl -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" http://127.0.0.1:4321/export --output testout.pdf
 ```
 
 ## command line mode
@@ -101,11 +104,19 @@ sudo apt-get install oracle-java8-installer
 
 http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jre-8u151-linux-x64.tar.gz?AuthParam=1509230467_0755e209172b0f2026ed83c4a73a1ef0
 
+### Eclipse
 Download [eclipse java edition](http://www.eclipse.org/downloads/eclipse-packages/).
 
 Setup eclipse with [crystal references](https://archive.sap.com/documents/docs/DOC-29757).
 
 Import java/CrystalCmd folder as ecplise project (Eclipse -> File -> Open Projects from File System).
+
+### IntelliJ
+
+Download [intelliJ community edition](https://www.jetbrains.com/idea/).
+
+
+
 
 ## Runtime setup
 
