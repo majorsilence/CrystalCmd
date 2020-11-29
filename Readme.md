@@ -1,6 +1,13 @@
+
+# What is CrystalCmd
+
+CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+
+Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
+
 # Example usage
 
-Note that, when using the command line option, this is very slow and highly recommend using windows to generate the reports or to cache the reports after they have been generated.  If using the server option with small reports it is very quick.
+Note that, when using the command line option, this is very slow and highly recommended to use the server option.
 
 test server: c.majorsilence.com
 * https://c.majorsilence.com/status

@@ -3,6 +3,13 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net48;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
+    <Description>CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+
+Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.</Description>
+    <Authors>Majorsilence</Authors>
+    <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
