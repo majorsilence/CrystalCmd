@@ -6,7 +6,15 @@ namespace Majorsilence.CrystalCmd.Client
 {
     public class Data
     {
-       // public byte[] ReportFile { get; set; }
+        public Data()
+        {
+            Parameters = new Dictionary<string, object>();
+            MoveObjectPosition = new List<MoveObjects>();
+            DataTables = new Dictionary<string, string>();
+            SubReportDataTables = new List<SubReports>();
+        }
+
+        // public byte[] ReportFile { get; set; }
         public Dictionary<string, object> Parameters { get; set; }
         public IEnumerable<MoveObjects> MoveObjectPosition { get; set; }
 
