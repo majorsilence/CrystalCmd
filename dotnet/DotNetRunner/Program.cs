@@ -57,15 +57,22 @@ namespace DotNetRunner
             // report data
 
 
-            // crystal report                   
-            var crystalReport = System.IO.File.ReadAllBytes("the_dataset_report.rpt");
-
 
             using (var fstream = new FileStream("the_dataset_report.rpt", FileMode.Open))
-            using (var fstreamOut = new FileStream("test_report_from_server.pdf", FileMode.OpenOrCreate | FileMode.Append))
+            using (var fstreamOut = new FileStream("the_dataset_report.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
                 var rpt = new Majorsilence.CrystalCmd.Client.Report();
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
+                {
+                    stream.CopyTo(fstreamOut);
+                }
+            }
+
+            using (var fstream = new FileStream("thereport.rpt", FileMode.Open))
+            using (var fstreamOut = new FileStream("thereport.pdf", FileMode.OpenOrCreate | FileMode.Append))
+            {
+                var rpt = new Majorsilence.CrystalCmd.Client.Report();
+                using (var stream = await rpt.GenerateAsync(new Data(), fstream))
                 {
                     stream.CopyTo(fstreamOut);
                 }
