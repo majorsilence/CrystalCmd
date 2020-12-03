@@ -23,7 +23,6 @@ namespace DotNetRunner
         static void CreateJsonForConsoleRunner()
         {
             DataTable dt = GetTable();
-            string csv = DataTable2Csv(dt);
 
             var reportData = new Data()
             {
@@ -32,7 +31,7 @@ namespace DotNetRunner
                 Parameters = new Dictionary<string, object>(),
                 //ReportFile = File.ReadAllBytes("thereport.rpt")
             };
-            reportData.DataTables.Add("Employee", csv);
+            reportData.AddData("Employee", dt);
 
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
             File.WriteAllText("test.json", json);
@@ -42,8 +41,6 @@ namespace DotNetRunner
         static async Task ConnectToServerWritePdfAsync()
         {
             DataTable dt = GetTable();
-            string csv = DataTable2Csv(dt);
-
             var reportData = new Data()
             {
                 DataTables = new Dictionary<string, string>(),
@@ -51,7 +48,18 @@ namespace DotNetRunner
                 Parameters = new Dictionary<string, object>(),
                 //ReportFile = File.ReadAllBytes("thereport.rpt")
             };
-            reportData.DataTables.Add("Employee", csv);
+            reportData.AddData("Employee", dt);
+
+            var list = GetList();
+            var reportDataList = new Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<MoveObjects>(),
+                Parameters = new Dictionary<string, object>(),
+                //ReportFile = File.ReadAllBytes("thereport.rpt")
+            };
+            reportDataList.AddData("Employee", list);
+
 
 
             // report data
@@ -68,6 +76,17 @@ namespace DotNetRunner
                 }
             }
 
+
+            using (var fstream = new FileStream("the_dataset_report.rpt", FileMode.Open))
+            using (var fstreamOut = new FileStream("the_dataset_report_ienumerable.pdf", FileMode.OpenOrCreate | FileMode.Append))
+            {
+                var rpt = new Majorsilence.CrystalCmd.Client.Report();
+                using (var stream = await rpt.GenerateAsync(reportDataList, fstream))
+                {
+                    stream.CopyTo(fstreamOut);
+                }
+            }
+
             using (var fstream = new FileStream("thereport.rpt", FileMode.Open))
             using (var fstreamOut = new FileStream("thereport.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
@@ -77,8 +96,6 @@ namespace DotNetRunner
                     stream.CopyTo(fstreamOut);
                 }
             }
-
-
         }
 
         static DataTable GetTable()
@@ -100,33 +117,63 @@ namespace DotNetRunner
             return table;
         }
 
-        static string DataTable2Csv(DataTable dt)
+        static IEnumerable<Employee> GetList()
         {
-            var sb = new StringBuilder();
+            // Here we create a DataTable with four columns.
+            var list = new List<Employee>();
 
-            // column names
-            IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().
-                                              Select(column => column.ColumnName);
-            sb.AppendLine(string.Join(",", columnNames));
-
-            /*
-            foreach (DataRow row in dt.Rows)
+            // Here we add five DataRows.
+            list.Add(new Employee()
             {
-                IEnumerable<string> fields = row.ItemArray.Select(field => field.ToString());
-                sb.AppendLine(string.Join(",", fields));
-            }
-            */
-
-
-            foreach (DataRow row in dt.Rows)
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 25,
+                FIRST_NAME = "David",
+                LAST_NAME = "Indocin"
+            });
+            list.Add(new Employee()
             {
-                IEnumerable<string> fields = row.ItemArray.Select(field =>
-                  string.Concat("\"", field.ToString().Replace("\"", "\"\""), "\""));
-                sb.AppendLine(string.Join(",", fields));
-            }
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 50,
+                FIRST_NAME = "Sam",
+                LAST_NAME = "Enebrel"
+            });
+            list.Add(new Employee()
+            {
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 10,
+                FIRST_NAME = "Christoff",
+                LAST_NAME = "Hydralazine"
+            });
+            list.Add(new Employee()
+            {
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 21,
+                FIRST_NAME = "Janet",
+                LAST_NAME = "Combivent"
+            });
+            list.Add(new Employee()
+            {
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 100,
+                FIRST_NAME = "Melanie",
+                LAST_NAME = "Dilantin"
+            });
+            list.Add(new Employee()
+            {
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 101,
+                FIRST_NAME = "Hello",
+                LAST_NAME = "World"
+            });
+            list.Add(new Employee()
+            {
+                BIRTH_DATE = DateTime.Now,
+                EMPLOYEE_ID = 102,
+                FIRST_NAME = "IEnumerable",
+                LAST_NAME = "List"
+            });
 
-            return sb.ToString();
-
+            return list;
         }
     }
 }
