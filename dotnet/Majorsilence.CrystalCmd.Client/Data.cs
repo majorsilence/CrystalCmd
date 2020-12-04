@@ -20,12 +20,12 @@ namespace Majorsilence.CrystalCmd.Client
 
         // public byte[] ReportFile { get; set; }
         public Dictionary<string, object> Parameters { get; set; }
-        public IEnumerable<MoveObjects> MoveObjectPosition { get; set; }
+        public IList<MoveObjects> MoveObjectPosition { get; set; }
 
         // DataTables converted to CSV, must be loaded into new DataTables
 
         public Dictionary<string, string> DataTables { get; set; }
-        public List<SubReports> SubReportDataTables { get; set; }
+        public IList<SubReports> SubReportDataTables { get; set; }
 
 
         public void AddData(string name, DataTable dt)
@@ -38,6 +38,28 @@ namespace Majorsilence.CrystalCmd.Client
         {
             string csv = GenericListToCsv(list);
             DataTables.Add(name, csv);
+        }
+
+        public void AddData(string reportName, string subReportTableName, DataTable dt)
+        {
+            string csv = DataTable2Csv(dt);
+            SubReportDataTables.Add(new SubReports()
+            {
+                DataTable = csv,
+                ReportName = reportName,
+                TableName = subReportTableName
+            });
+        }
+
+        public void AddData<T>(string reportName, string subReportTableName, IEnumerable<T> list)
+        {
+            string csv = GenericListToCsv(list);
+            SubReportDataTables.Add(new SubReports()
+            {
+                DataTable = csv,
+                ReportName = reportName,
+                TableName = subReportTableName
+            });
         }
 
         static string GenericListToCsv<T>(IEnumerable<T> list)
