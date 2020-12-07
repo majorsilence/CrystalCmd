@@ -11,6 +11,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -64,12 +67,32 @@ public class PdfExporter {
 
 		// Object reportSource = reportClientDocument.getReportSource();
 
+		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
 		if (datafile != null) {
 			for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
 				ParameterFieldController parameterFieldController;
 
+
+
 				parameterFieldController = reportClientDocument.getDataDefController().getParameterFieldController();
-				parameterFieldController.setCurrentValue("", item.getKey(), item.getValue());
+
+				Date value = null;
+				try {
+					value =  fmt.parse(item.getValue().toString());
+				} catch (ParseException e) {}
+
+				try{
+					if(value == null){
+						parameterFieldController.setCurrentValue("", item.getKey(), item.getValue());
+					}
+					else{
+						parameterFieldController.setCurrentValue("", item.getKey(), value);
+					}
+				}
+				catch(com.crystaldecisions.sdk.occa.report.lib.ReportSDKInvalidParameterFieldCurrentValueException notfoundParameter){
+					// doesn't matter, but should add logging
+				}
 				/*
 				 * parameterFieldController.setCurrentValue("", "StringParam", "Hello");
 				 * parameterFieldController.setCurrentValue("sub", "StringParam",

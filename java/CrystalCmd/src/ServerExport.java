@@ -62,7 +62,7 @@ public class ServerExport implements HttpHandler {
 			com.google.gson.Gson gson = new com.google.gson.Gson();
 
 			String json = new String(reportData.data);
-			Data convertedDataFile = gson.fromJson(new String(json), Data.class);
+			Data convertedDataFile = gson.fromJson(json, Data.class);
 
 			ByteArrayInputStream report;
 
