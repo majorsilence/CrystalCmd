@@ -1,5 +1,11 @@
+import com.google.gson.annotations.SerializedName;
+
 public enum MoveType {
-	ABSOLUTE(1), RELATIVE(2);
+	@SerializedName("1")
+	ABSOLUTE(1),
+
+	@SerializedName("2")
+	RELATIVE(2);
 
 	private final int levelCode;
 
