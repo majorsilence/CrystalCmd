@@ -153,3 +153,18 @@ https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#Cry
 # Crystal reports Eclipse JAR library downloads
 
 https://origin.softwaredownloads.sap.com/public/site/index.html
+
+
+
+# OpenJDK PDF Export Problem, fonts
+
+https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontmanager.html?childToView=708783&answerPublished=true#answer-708783
+
+> After some experimentation, a workaround was to create the fonts folder in the AdoptOpenJDK JRE (jre\lib\fonts) and copy a single font file from the __Linux msttcorefonts__ mentioned above into the newly created fonts folder. My document uses all Arial font, but it doesn't seem to matter what font file is in the fonts folder. I copied Webdings.ttf. The file does have to be a real font file. I tried making a dummy text file and rename it to Webdings.ttf, but the NPE occurred with the dummy font file.
+> 
+> Once a real font is copied to jre\lib\fonts, The PDF is created just fine with the Arial font embedded. It seems that there just has to be a one real font at jre\lib\fonts to get started, and then crjava/AdoptOpenJDK will eventually use fontconfig to find the correct Windows font.
+
+
+Example:
+
+Copy a file to __C:\Users\[UserName]\.jdks\openjdk-15.0.1\lib\fonts__ from __C:\Windows\Fonts__.
