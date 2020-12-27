@@ -20,8 +20,10 @@ public class CsharpResultSet {
         //		.getConnection("jdbc:h2:mem:myDb;", "sa", "");
         // add application code here
         Reader reader = new StringReader(csv);
-        // ResultSet rs = new Csv().read(reader, null);
+//         ResultSet rs = new Csv().read(reader, null);
         ResultSet rs = new CsvReader().read(reader);
+
+
         /*ResultSetMetaData meta = rs.getMetaData();
         while (rs.next()) {
             for (int i = 0; i < meta.getColumnCount(); i++) {

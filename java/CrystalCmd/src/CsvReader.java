@@ -386,9 +386,11 @@ public class CsvReader implements SimpleRowSource {
                             colType = Types.FLOAT;
                             break;
                         case "long":
+                        case "int64":
                             colType = Types.BIGINT;
                             break;
                         case "int":
+                        case "int32":
                         case "integer":
                             colType = Types.INTEGER;
                             break;

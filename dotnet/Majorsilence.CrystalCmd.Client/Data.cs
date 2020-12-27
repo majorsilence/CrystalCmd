@@ -40,6 +40,12 @@ namespace Majorsilence.CrystalCmd.Client
             DataTables.Add(name, csv);
         }
 
+        public void AddData(string name, string rawCsv)
+        {
+            DataTables.Add(name, rawCsv);
+        }
+
+
         public void AddData(string reportName, string subReportTableName, DataTable dt)
         {
             string csv = DataTable2Csv(dt);
@@ -69,6 +75,10 @@ namespace Majorsilence.CrystalCmd.Client
                                     Select(column => column.Name);
             sb.AppendLine(string.Join(",", columnNames));
 
+            IEnumerable<string> columnTypes = list.FirstOrDefault().GetType().GetProperties().
+                                        Select(column => column.PropertyType.Name.ToString());
+            sb.AppendLine(string.Join(",", columnTypes));
+
             foreach (T tp in list)
             {
                 IEnumerable<string> fields = typeof(T).GetProperties().Select(field =>
@@ -86,6 +96,10 @@ namespace Majorsilence.CrystalCmd.Client
             IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().
                                               Select(column => column.ColumnName);
             sb.AppendLine(string.Join(",", columnNames));
+
+            IEnumerable<string> columnTypes = dt.Columns.Cast<DataColumn>().
+                                             Select(column => column.DataType.Name);
+            sb.AppendLine(string.Join(",", columnTypes));
 
             foreach (DataRow row in dt.Rows)
             {
