@@ -203,7 +203,7 @@ public class CsvReader implements SimpleRowSource {
      /*   for (String columnName : columnNames) {
             result.addColumn(columnName, Types.VARCHAR, Integer.MAX_VALUE, 0);
         } */
-        for (Integer i = 0; i<columnNames.length-1; i++){
+        for (Integer i = 0; i<columnNames.length; i++){
             result.addColumn(columnNames[i], columnTypes[i], Integer.MAX_VALUE, 0);
         }
         return result;
