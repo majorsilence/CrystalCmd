@@ -104,7 +104,7 @@ namespace Majorsilence.CrystalCmd.Client
             foreach (DataRow row in dt.Rows)
             {
                 IEnumerable<string> fields = row.ItemArray.Select(field =>
-                  string.Concat("\"", field.ToString().Replace("\"", "\"\""), "\""));
+                  string.Concat("\"", field.ToString().Replace("\"", "\"\""), "\"").Replace(",", @"\,"));
 
                 sb.AppendLine(string.Join(",", fields));
             }
