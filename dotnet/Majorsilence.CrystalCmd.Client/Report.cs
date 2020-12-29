@@ -58,7 +58,7 @@ namespace Majorsilence.CrystalCmd.Client
                 httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 using (var form = new MultipartFormDataContent())
                 {
-                    form.Add(new StringContent(json), "reportdata");
+                    form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
                     form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
                     //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
                     HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form);
