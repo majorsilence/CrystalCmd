@@ -14,6 +14,7 @@ namespace DotNetRunner
 {
     class MainClass
     {
+        static string exportUrl = "https://localhost:44355/export";
         public static async Task Main(string[] args)
         {
             CreateJsonForConsoleRunner();
@@ -46,7 +47,7 @@ namespace DotNetRunner
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
                 Parameters = new Dictionary<string, object>(),
-                //ReportFile = File.ReadAllBytes("thereport.rpt")
+                //ReportFile = File.ReadAllBytes("the_dataset_report.rpt")
             };
             reportData.AddData("Employee", dt);
 
@@ -62,6 +63,19 @@ namespace DotNetRunner
 
 
 
+
+
+            //using (var fstreamOut = new FileStream("the_dataset_report.pdf", FileMode.OpenOrCreate | FileMode.Append))
+            //{
+            //    var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl);
+            //    using (var stream = await rpt.GenerateAsync(reportData))
+            //    {
+            //        stream.CopyTo(fstreamOut);
+            //    }
+            //}
+
+
+
             // report data
 
 
@@ -69,7 +83,7 @@ namespace DotNetRunner
             using (var fstream = new FileStream("the_dataset_report.rpt", FileMode.Open))
             using (var fstreamOut = new FileStream("the_dataset_report.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
-                var rpt = new Majorsilence.CrystalCmd.Client.Report();
+                var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl);
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
                 {
                     stream.CopyTo(fstreamOut);
@@ -80,7 +94,7 @@ namespace DotNetRunner
             using (var fstream = new FileStream("the_dataset_report.rpt", FileMode.Open))
             using (var fstreamOut = new FileStream("the_dataset_report_ienumerable.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
-                var rpt = new Majorsilence.CrystalCmd.Client.Report();
+                var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl);
                 using (var stream = await rpt.GenerateAsync(reportDataList, fstream))
                 {
                     stream.CopyTo(fstreamOut);
@@ -90,7 +104,7 @@ namespace DotNetRunner
             using (var fstream = new FileStream("thereport.rpt", FileMode.Open))
             using (var fstreamOut = new FileStream("thereport.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
-                var rpt = new Majorsilence.CrystalCmd.Client.Report();
+                var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl);
                 using (var stream = await rpt.GenerateAsync(new Data(), fstream))
                 {
                     stream.CopyTo(fstreamOut);
@@ -108,7 +122,7 @@ namespace DotNetRunner
             table.Columns.Add("BIRTH_DATE", typeof(DateTime));
 
             // Here we add five DataRows.
-            table.Rows.Add(25, "Indocin", "David", DateTime.Now);
+            table.Rows.Add(25, "Indocin, Hi there", "David", DateTime.Now);
             table.Rows.Add(50, "Enebrel", "Sam", DateTime.Now);
             table.Rows.Add(10, "Hydralazine", "Christoff", DateTime.Now);
             table.Rows.Add(21, "Combivent", "Janet", DateTime.Now);

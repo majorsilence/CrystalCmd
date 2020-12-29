@@ -211,39 +211,7 @@ public class PdfExporter {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
         if (datafile != null) {
-            for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
-                ParameterFieldController parameterFieldController;
 
-
-                parameterFieldController = reportClientDocument.getDataDefController().getParameterFieldController();
-
-                Date value = null;
-                try {
-                    value = fmt.parse(item.getValue().toString());
-                } catch (ParseException e) {
-                }
-
-                try {
-                    if (value == null) {
-                        parameterFieldController.setCurrentValue("", item.getKey(), item.getValue());
-                    } else {
-                        parameterFieldController.setCurrentValue("", item.getKey(), value);
-                    }
-                } catch (com.crystaldecisions.sdk.occa.report.lib.ReportSDKInvalidParameterFieldCurrentValueException notfoundParameter) {
-                    // doesn't matter, but should add logging
-                }
-                /*
-                 * parameterFieldController.setCurrentValue("", "StringParam", "Hello");
-                 * parameterFieldController.setCurrentValue("sub", "StringParam",
-                 * "Subreport string value"); parameterFieldController.setCurrentValue("",
-                 * "BooleanParam", new Boolean(true));
-                 * parameterFieldController.setCurrentValue("", "CurrencyParam", new
-                 * Double(123.45)); parameterFieldController.setCurrentValue("", "NumberParam",
-                 * new Integer(123));
-                 *
-                 */
-                // rpt.SetParameterValue(item.Key, item.Value);
-            }
             for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
 
                 CsharpResultSet inst = new CsharpResultSet();
@@ -278,6 +246,39 @@ public class PdfExporter {
                     }
                 }
             }
+            for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
+                ParameterFieldController parameterFieldController;
+
+
+                parameterFieldController = reportClientDocument.getDataDefController().getParameterFieldController();
+
+                Date value = null;
+                try {
+                    value = fmt.parse(item.getValue().toString());
+                } catch (ParseException e) {
+                }
+
+                try {
+                    if (value == null) {
+                        parameterFieldController.setCurrentValue("", item.getKey(), item.getValue());
+                    } else {
+                        parameterFieldController.setCurrentValue("", item.getKey(), value);
+                    }
+                } catch (com.crystaldecisions.sdk.occa.report.lib.ReportSDKInvalidParameterFieldCurrentValueException notfoundParameter) {
+                    // doesn't matter, but should add logging
+                }
+                /*
+                 * parameterFieldController.setCurrentValue("", "StringParam", "Hello");
+                 * parameterFieldController.setCurrentValue("sub", "StringParam",
+                 * "Subreport string value"); parameterFieldController.setCurrentValue("",
+                 * "BooleanParam", new Boolean(true));
+                 * parameterFieldController.setCurrentValue("", "CurrencyParam", new
+                 * Double(123.45)); parameterFieldController.setCurrentValue("", "NumberParam",
+                 * new Integer(123));
+                 *
+                 */
+                // rpt.SetParameterValue(item.Key, item.Value);
+            }
             for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext(); ) {
                 MoveObjects item = itr.next();
                 moveReportObject(reportClientDocument, item);
@@ -286,7 +287,7 @@ public class PdfExporter {
 
 
         byteArrayInputStream = (ByteArrayInputStream) reportClientDocument.getPrintOutputController()
-                .export(ReportExportFormat.PDF);
+                .export(ReportExportFormat.RTF);
 
         reportClientDocument.close();
         return byteArrayInputStream;
