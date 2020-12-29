@@ -35,7 +35,15 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 {
                     // fixme: sub report with multiple datatables?
                     DataTable dt = CreateTable(table.DataTable);
-                    SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
+                    try
+                    {
+                        SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
+                    }
+                    catch (Exception)
+                    {
+                        // some sub reports are optional
+                        // TODO: logging
+                    }
                 }
 
 
@@ -45,16 +53,18 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     SetParameterValue(param.Key, param.Value, reportClientDocument);
                 }
 
-                //foreach (ParameterField x in reportClientDocument.ParameterFields)
-                //{
-                //    if (x.HasCurrentValue == false)
-                //    {
-                //        // why is this needed here but not in financial and web portals?
-                //    }
-                //    Console.WriteLine(x.Name);
-                //    Console.WriteLine(x.CurrentValues);
-                //    Console.WriteLine(x.ParameterValueType);
-                //}
+                foreach (ParameterField x in reportClientDocument.ParameterFields)
+                {
+                    if (x.HasCurrentValue == false && x.ReportParameterType == ParameterType.ReportParameter)
+                    {
+                        // to get things up and running
+
+                        SetParameterValue(x.Name, "", reportClientDocument);
+                    }
+                    Console.WriteLine(x.Name);
+                    Console.WriteLine(x.CurrentValues);
+                    Console.WriteLine(x.ParameterValueType);
+                }
 
                 return ExportPDF(reportClientDocument);
             }
@@ -66,23 +76,36 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             if (rpt.ParameterFields[name] != null)
             {
                 var par = rpt.ParameterFields[name];
+                string theValue;
                 switch (par.ParameterValueType){
                     case ParameterValueKind.BooleanParameter:
-                        rpt.SetParameterValue(name, bool.Parse(val.ToString()));
+                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "false" : val.ToString();
+                        rpt.SetParameterValue(name, bool.Parse(theValue));
                         break;
                     case ParameterValueKind.CurrencyParameter:
-                        rpt.SetParameterValue(name, decimal.Parse( val.ToString()));
+                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
+                        rpt.SetParameterValue(name, decimal.Parse(theValue));
                         break;
                     case ParameterValueKind.NumberParameter:
-                        rpt.SetParameterValue(name, int.Parse(val.ToString()));
+                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
+                        try
+                        {
+                            rpt.SetParameterValue(name, int.Parse(theValue));
+                        }
+                        catch (Exception)
+                        {
+                            rpt.SetParameterValue(name, decimal.Parse(theValue));
+                        }
+                        
                         break;
                     case ParameterValueKind.DateParameter:
                     case ParameterValueKind.DateTimeParameter:
                     case ParameterValueKind.TimeParameter:
-                        rpt.SetParameterValue(name, DateTime.Parse(val.ToString()));
+                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? DateTime.Now.ToLongDateString() : val.ToString();
+                        rpt.SetParameterValue(name, DateTime.Parse(theValue));
                         break;
                     default:
-                        var theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
+                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
                         rpt.SetParameterValue(name, theValue);
                         break;
                 }
