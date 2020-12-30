@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
+using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
 
@@ -21,20 +22,16 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 reportClientDocument.Load(reportPath);
 
 
-
-            
-
-
                 foreach (var table in datafile.DataTables)
                 {
-                    DataTable dt = CreateTable(table.Value);
+                    DataTable dt = CreateTableEtl(table.Value);
                     SetDataSource(table.Key, dt, reportClientDocument);
                 }
 
                 foreach (var table in datafile.SubReportDataTables)
                 {
                     // fixme: sub report with multiple datatables?
-                    DataTable dt = CreateTable(table.DataTable);
+                    DataTable dt = CreateTableEtl(table.DataTable);
                     try
                     {
                         SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
@@ -57,13 +54,11 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 {
                     if (x.HasCurrentValue == false && x.ReportParameterType == ParameterType.ReportParameter)
                     {
-                        // to get things up and running
+                        // to get things up and running, add defaults for missing parameters
 
                         SetParameterValue(x.Name, "", reportClientDocument);
                     }
-                    Console.WriteLine(x.Name);
-                    Console.WriteLine(x.CurrentValues);
-                    Console.WriteLine(x.ParameterValueType);
+
                 }
 
                 return ExportPDF(reportClientDocument);
@@ -155,44 +150,61 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             return myData;
         }
 
-        private DataTable CreateTable(string csv)
+
+        private DataTable CreateTableEtl(string csv)
         {
+            string[] headers=null;
+            string[] columntypes=null;
             DataTable dt = new DataTable();
-            using (StringReader sr = new StringReader(csv))
+            using (var reader = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+    .QuoteAllFields()
+    )
             {
-                // (?<!\\),   - , seperated csv and works with \, escapted commas
-                string[] headers = Regex.Split(sr.ReadLine(), @"(?<!\\),");
+                reader.Configuration.MayContainEOLInData = true;
+                int rowIdx = 0;
+                ChoDynamicObject e;
 
-                string[] columntypes = Regex.Split(sr.ReadLine(), @"(?<!\\),");
-                for(int i = 0; i< headers.Length; i++)
+                while ((e = reader.Read()) != null)
                 {
-                    dt.Columns.Add(headers[i], Type.GetType($"System.{columntypes[i]}",false, true));
-                }
+                    if (rowIdx == 0)
+                    {
+                        headers = e.Keys.ToArray();
+                        columntypes = e.Values.Select(p=> p.ToString()).ToArray();
+                        rowIdx = rowIdx + 1;
 
-                string line;
-                while ((line = sr.ReadLine()) != null)
-                {
-                    string[] columns = Regex.Split(line, @"(?<!\\),");
+                        for (int i = 0; i < headers.Length; i++)
+                        {
+                            dt.Columns.Add(headers[i], Type.GetType($"System.{columntypes[i]}", false, true));
+                        }
+                        continue;
+                    }
+
+
                     DataRow dr = dt.NewRow();
+
+                    var columns = e.Values.ToList();
                     for (int i = 0; i < headers.Length; i++)
                     {
-                        var cleaned = columns[i].Substring(1, columns[i].Length - 2).Replace(@"\,", ",");
+                        var cleaned = columns[i]?.ToString();
                         if (string.IsNullOrWhiteSpace(cleaned))
                         {
                             dr[i] = DBNull.Value;
                         }
-                        else {
+                        else
+                        {
                             dr[i] = cleaned;
                         }
                     }
+
                     dt.Rows.Add(dr);
                 }
-
+                
             }
 
-
+       
             return dt;
         }
+
 
     }
 
