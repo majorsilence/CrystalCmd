@@ -83,7 +83,7 @@ namespace DotNetRunner
             using (var fstream = new FileStream("the_dataset_report.rpt", FileMode.Open))
             using (var fstreamOut = new FileStream("the_dataset_report.pdf", FileMode.OpenOrCreate | FileMode.Append))
             {
-                var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl);
+                var rpt = new Majorsilence.CrystalCmd.Client.Report(exportUrl, username:"user", password: "password");
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
                 {
                     stream.CopyTo(fstreamOut);

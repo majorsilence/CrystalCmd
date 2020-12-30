@@ -9,11 +9,16 @@ namespace Majorsilence.CrystalCmd.Client
     {
         readonly string serverUrl;
         readonly string userAgent;
+        readonly string username;
+        readonly string password;
         public Report(string serverUrl = "https://c.majorsilence.com/export",
-            string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0")
+            string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
+            string username="", string password="")
         {
             this.serverUrl = serverUrl;
             this.userAgent = userAgent;
+            this.username = username;
+            this.password = password;
         }
 
 
@@ -55,6 +60,11 @@ namespace Majorsilence.CrystalCmd.Client
 
             using (var httpClient = new HttpClient())
             {
+                if(!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                {
+                    httpClient.DefaultRequestHeaders.Add($"Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
+                }
+
                 httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 using (var form = new MultipartFormDataContent())
                 {
@@ -91,6 +101,12 @@ namespace Majorsilence.CrystalCmd.Client
         /// </example>
         public async Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient)
         {
+
+            if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+            {
+                httpClient.DefaultRequestHeaders.Add($"Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
+            }
+
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
 
             using (var form = new MultipartFormDataContent())
@@ -104,5 +120,10 @@ namespace Majorsilence.CrystalCmd.Client
             }
         }
 
+        private static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
     }
 }
