@@ -196,8 +196,13 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         {
                             dr[i] = DBNull.Value;
                         }
+                        else if (string.Equals(columntypes[i], "byte[]", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            dr[i] = HexStringToByteArray(cleaned);
+                        }
                         else
                         {
+                            
                             dr[i] = cleaned;
                         }
                     }
@@ -211,6 +216,16 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             return dt;
         }
 
+        private static byte[] HexStringToByteArray(string cleaned)
+        {
+            String[] arr = cleaned.Split('-');
+            byte[] array = new byte[arr.Length];
+            for (int i = 0; i < arr.Length; i++)
+            {
+                array[i] = Convert.ToByte(arr[i], 16);
+            }
+            return array;
+        }
 
         private void MoveReportObject(MoveObjects item, ReportDocument rpt)
         {
