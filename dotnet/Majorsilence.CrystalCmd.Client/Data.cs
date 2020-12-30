@@ -81,8 +81,22 @@ namespace Majorsilence.CrystalCmd.Client
 
             foreach (T tp in list)
             {
-                IEnumerable<string> fields = typeof(T).GetProperties().Select(field =>
-                 string.Concat("\"", field.GetValue(tp, null).ToString().Replace("\"", "\"\""), "\""));
+                IList<string> fields = new List<string>();
+                foreach (var field in typeof(T).GetProperties()) {
+
+                    var value = field.GetValue(tp, null);
+
+                    if (value?.GetType() == typeof(byte[]))
+                    {
+                        fields.Add(string.Concat("\"", BitConverter.ToString((byte[])value), "\""));
+                    }
+                    else
+                    {
+                        fields.Add(string.Concat("\"", value?.ToString()?.Replace("\"", "\"\""), "\""));
+                    }
+                      
+                 
+                }
 
                 sb.AppendLine(string.Join(",", fields));
             }
@@ -103,9 +117,21 @@ namespace Majorsilence.CrystalCmd.Client
 
             foreach (DataRow row in dt.Rows)
             {
-                IEnumerable<string> fields = row.ItemArray.Select(field =>
-                  string.Concat("\"", field.ToString().Replace("\"", "\"\""), "\""));
+                //BitConverter.ToString("heloo");
 
+                IList<string> fields = new List<string>();
+
+                foreach (var field in row.ItemArray)
+                {
+                    if (field.GetType() == typeof(byte[]))
+                    {
+                        fields.Add(string.Concat("\"", BitConverter.ToString((byte[])field), "\""));
+                    }
+                    else
+                    {
+                        fields.Add(string.Concat("\"", field.ToString().Replace("\"", "\"\""), "\""));
+                    }
+                }
                 sb.AppendLine(string.Join(",", fields));
             }
 
