@@ -162,9 +162,9 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             string[] headers=null;
             string[] columntypes=null;
             DataTable dt = new DataTable();
-            using (var reader = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-    .QuoteAllFields()
-    )
+            using (var reader = ChoCSVReader.LoadText(csv, new ChoCSVRecordConfiguration() { 
+                 MaxLineSize = int.MaxValue/5
+                }).WithFirstLineHeader().QuoteAllFields())
             {
                 reader.Configuration.MayContainEOLInData = true;
                 int rowIdx = 0;
