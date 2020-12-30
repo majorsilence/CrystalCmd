@@ -8,6 +8,7 @@ using System.Web;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
+using Majorsilence.CrystalCmd.Client;
 
 namespace Majorsilence.CrystalCmd.NetFrameworkServer
 {
@@ -58,8 +59,13 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
                         SetParameterValue(x.Name, "", reportClientDocument);
                     }
-
                 }
+
+                foreach (var x in datafile.MoveObjectPosition)
+                {
+                    MoveReportObject(x, reportClientDocument);
+                }
+
 
                 return ExportPDF(reportClientDocument);
             }
@@ -205,6 +211,34 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             return dt;
         }
 
+
+        private void MoveReportObject(MoveObjects item, ReportDocument rpt)
+        {
+            if (item.Type == MoveType.ABSOLUTE)
+            {
+                switch (item.Pos)
+                {
+                    case MovePosition.LEFT:
+                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Left = item.Move;
+                        break;
+                    case MovePosition.TOP:
+                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Top = item.Move;
+                        break;
+                }
+            }
+            else
+            {
+                switch (item.Pos)
+                {
+                    case MovePosition.LEFT:
+                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Left += item.Move;
+                        break;
+                    case MovePosition.TOP:
+                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Top += item.Move;
+                        break;
+                }
+            }
+        }
 
     }
 
