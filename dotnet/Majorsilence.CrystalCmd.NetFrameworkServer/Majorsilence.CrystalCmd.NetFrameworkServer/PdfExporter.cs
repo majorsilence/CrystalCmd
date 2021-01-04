@@ -151,7 +151,15 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
         private void SetSubReport(string rptName, string reportTableName, DataTable dataSource, ReportDocument rpt)
         {
-            rpt.Subreports[rptName].Database.Tables[reportTableName].SetDataSource(dataSource);
+            if (string.IsNullOrWhiteSpace(reportTableName))
+            {
+                rpt.Subreports[rptName].SetDataSource(dataSource);
+            }
+            else
+            {
+                rpt.Subreports[rptName].Database.Tables[reportTableName].SetDataSource(dataSource);
+            }
+            
         }
 
         private void SetSubReport(string rptName, int idx, DataTable dataSource, ReportDocument rpt)
