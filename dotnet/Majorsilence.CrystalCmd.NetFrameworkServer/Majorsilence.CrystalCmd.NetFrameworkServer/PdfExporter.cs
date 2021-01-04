@@ -26,7 +26,18 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 foreach (var table in datafile.DataTables)
                 {
                     DataTable dt = CreateTableEtl(table.Value);
-                    SetDataSource(table.Key, dt, reportClientDocument);
+
+                    int idx = 0;
+                    bool converted = int.TryParse(table.Key, out idx);
+                    if (converted)
+                    {
+                        SetDataSource(idx, dt, reportClientDocument);
+                    }
+                    else
+                    {
+                        SetDataSource(table.Key, dt, reportClientDocument);
+                    }
+                   
                 }
 
                 foreach (var table in datafile.SubReportDataTables)
@@ -35,7 +46,17 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     DataTable dt = CreateTableEtl(table.DataTable);
                     try
                     {
-                        SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
+                        int idx = 0;
+                        bool converted = int.TryParse(table.TableName, out idx);
+                        if (converted)
+                        {
+                            SetSubReport(table.ReportName, idx, dt, reportClientDocument);
+                        }
+                        else
+                        {
+                            SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
+                        }
+                        
                     }
                     catch (Exception)
                     {
@@ -123,11 +144,20 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             rpt.Database.Tables[tableName].SetDataSource(val);
         }
 
+        private void SetDataSource(int idx, DataTable val, ReportDocument rpt)
+        {
+            rpt.Database.Tables[idx].SetDataSource(val);
+        }
+
         private void SetSubReport(string rptName, string reportTableName, DataTable dataSource, ReportDocument rpt)
         {
             rpt.Subreports[rptName].Database.Tables[reportTableName].SetDataSource(dataSource);
         }
 
+        private void SetSubReport(string rptName, int idx, DataTable dataSource, ReportDocument rpt)
+        {
+            rpt.Subreports[rptName].Database.Tables[idx].SetDataSource(dataSource);
+        }
 
         private byte[] ExportPDF(ReportDocument rpt)
         {
