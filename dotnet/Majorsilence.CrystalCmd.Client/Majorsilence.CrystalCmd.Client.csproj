@@ -10,7 +10,7 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
     <Authors>Majorsilence</Authors>
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.8</Version>
+    <Version>1.0.9</Version>
   </PropertyGroup>
 
   <ItemGroup>
