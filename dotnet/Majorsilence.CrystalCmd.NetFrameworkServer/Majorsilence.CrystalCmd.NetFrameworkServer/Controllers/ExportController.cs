@@ -69,9 +69,14 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                var message = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent(ex.Message + System.Environment.NewLine + ex.StackTrace)
+                };
+
+                return message;
             }
             finally
             {

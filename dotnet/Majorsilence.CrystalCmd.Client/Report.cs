@@ -13,7 +13,7 @@ namespace Majorsilence.CrystalCmd.Client
         readonly string password;
         public Report(string serverUrl = "https://c.majorsilence.com/export",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
-            string username="", string password="")
+            string username = "", string password = "")
         {
             this.serverUrl = serverUrl;
             this.userAgent = userAgent;
@@ -60,7 +60,7 @@ namespace Majorsilence.CrystalCmd.Client
 
             using (var httpClient = new HttpClient())
             {
-                if(!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
                 {
                     httpClient.DefaultRequestHeaders.Add($"Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                 }
@@ -72,7 +72,16 @@ namespace Majorsilence.CrystalCmd.Client
                     form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
                     //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
                     HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form);
-                    response.EnsureSuccessStatusCode();
+
+                    try
+                    {
+                        response.EnsureSuccessStatusCode();
+                    }
+                    catch (HttpRequestException hrex)
+                    {
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        throw new HttpRequestException(errorMessage, hrex);
+                    }
                     return await response.Content.ReadAsStreamAsync();
                 }
             }
@@ -115,7 +124,17 @@ namespace Majorsilence.CrystalCmd.Client
                 form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
                 //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
                 HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form);
-                response.EnsureSuccessStatusCode();
+
+                try
+                {
+                    response.EnsureSuccessStatusCode();
+                }
+                catch (HttpRequestException hrex)
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException(errorMessage, hrex);
+                }
+
                 return await response.Content.ReadAsStreamAsync();
             }
         }
