@@ -200,8 +200,9 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             string[] headers=null;
             string[] columntypes=null;
             DataTable dt = new DataTable();
-            using (var reader = ChoCSVReader.LoadText(csv, new ChoCSVRecordConfiguration() { 
-                 MaxLineSize = int.MaxValue/5
+            using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration() { 
+                 MaxLineSize = int.MaxValue/5,
+                 
                 }).WithFirstLineHeader().QuoteAllFields())
             {
                 reader.Configuration.MayContainEOLInData = true;
@@ -291,6 +292,13 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         break;
                 }
             }
+        }
+
+        private static string ConvertToWindowsEOL(string readData)
+        {
+            // see https://stackoverflow.com/questions/31053/regex-c-replace-n-with-r-n for regex explanation
+            readData = Regex.Replace(readData, "(?<!\r)\n", "\r\n");
+            return readData;
         }
 
     }
