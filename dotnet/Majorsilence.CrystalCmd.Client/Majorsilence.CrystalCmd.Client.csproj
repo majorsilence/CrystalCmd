@@ -15,7 +15,6 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
 
 </Project>
