@@ -17,4 +17,7 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
 </Project>
