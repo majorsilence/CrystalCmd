@@ -21,17 +21,17 @@ namespace Majorsilence.CrystalCmd.Client
             this.password = password;
         }
 
+        public Stream Generate(Data reportData, Stream report)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report,
+                System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
+        }
 
-        //public Stream Generate(Data data, string reportPath)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public Stream Generate(Data data, byte[] report)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
+        public Stream Generate(Data reportData, Stream report, HttpClient httpClient)
+        {
+            return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report, httpClient,
+                System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Call a server with a crystal report template and data and have a pdf report returned.
@@ -54,36 +54,12 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public async Task<Stream> GenerateAsync(Data reportData, Stream report)
+        public async Task<Stream> GenerateAsync(Data reportData, Stream report,
+            System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
-            string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
-
             using (var httpClient = new HttpClient())
             {
-                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-                {
-                    httpClient.DefaultRequestHeaders.Add($"Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
-                }
-
-                httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
-                using (var form = new MultipartFormDataContent())
-                {
-                    form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
-                    form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
-                    //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
-                    HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form);
-
-                    try
-                    {
-                        response.EnsureSuccessStatusCode();
-                    }
-                    catch (HttpRequestException hrex)
-                    {
-                        var errorMessage = await response.Content.ReadAsStringAsync();
-                        throw new HttpRequestException(errorMessage, hrex);
-                    }
-                    return await response.Content.ReadAsStreamAsync();
-                }
+                return await GenerateAsync(reportData, report, httpClient, cancellationToken);
             }
         }
 
@@ -108,7 +84,8 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public async Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient)
+        public async Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient,
+            System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
 
             if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
@@ -118,24 +95,34 @@ namespace Majorsilence.CrystalCmd.Client
 
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
 
+            httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
             using (var form = new MultipartFormDataContent())
             {
-                form.Add(new StringContent(json), "reportdata");
+                form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
+                //form.Add(new StringContent(json), "reportdata");
                 form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
                 //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
-                HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form);
+                HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form, cancellationToken).ConfigureAwait(false);
 
+                var content = response.Content.ReadAsStreamAsync();
+                string errorMessage = "";
                 try
                 {
+                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                    {
+                        using (var x = new StreamReader(await content))
+                        {
+                            errorMessage = x.ReadToEnd();
+                        }
+                    }
                     response.EnsureSuccessStatusCode();
                 }
                 catch (HttpRequestException hrex)
                 {
-                    var errorMessage = await response.Content.ReadAsStringAsync();
                     throw new HttpRequestException(errorMessage, hrex);
                 }
 
-                return await response.Content.ReadAsStreamAsync();
+                return await content;
             }
         }
 
