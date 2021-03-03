@@ -84,7 +84,15 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
                 foreach (var x in datafile.MoveObjectPosition)
                 {
-                    MoveReportObject(x, reportClientDocument);
+                    try
+                    {
+                        MoveReportObject(x, reportClientDocument);
+                    }
+                    catch (System.IndexOutOfRangeException)
+                    {
+                        // TODO: Add logging about bad move objects
+                    }
+                   
                 }
 
 
