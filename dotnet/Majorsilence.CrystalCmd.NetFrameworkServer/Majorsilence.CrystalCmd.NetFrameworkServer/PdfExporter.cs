@@ -110,6 +110,14 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 switch (par.ParameterValueType){
                     case ParameterValueKind.BooleanParameter:
                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "false" : val.ToString();
+                        if(theValue == "0")
+                        {
+                            theValue = "false";
+                        }
+                        else if (theValue == "1")
+                        {
+                            theValue = "true";
+                        }
                         rpt.SetParameterValue(name, bool.Parse(theValue));
                         break;
                     case ParameterValueKind.CurrencyParameter:
