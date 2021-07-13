@@ -59,7 +59,7 @@ namespace Majorsilence.CrystalCmd.Client
         {
             using (var httpClient = new HttpClient())
             {
-                return await GenerateAsync(reportData, report, httpClient, cancellationToken);
+                return await GenerateAsync(reportData, report, httpClient, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -104,7 +104,7 @@ namespace Majorsilence.CrystalCmd.Client
                 //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
                 HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form, cancellationToken).ConfigureAwait(false);
 
-                var content = response.Content.ReadAsStreamAsync();
+                var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 string errorMessage = "";
                 try
                 {

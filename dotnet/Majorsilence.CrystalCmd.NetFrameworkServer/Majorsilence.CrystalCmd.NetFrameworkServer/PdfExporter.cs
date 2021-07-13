@@ -27,17 +27,24 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 {
                     DataTable dt = CreateTableEtl(table.Value);
 
-                    int idx = 0;
-                    bool converted = int.TryParse(table.Key, out idx);
-                    if (converted)
+                    try
                     {
-                        SetDataSource(idx, dt, reportClientDocument);
+                        int idx = 0;
+                        bool converted = int.TryParse(table.Key, out idx);
+                        if (converted)
+                        {
+                            SetDataSource(idx, dt, reportClientDocument);
+                        }
+                        else
+                        {
+                            SetDataSource(table.Key, dt, reportClientDocument);
+                        }
                     }
-                    else
+                    catch (Exception)
                     {
-                        SetDataSource(table.Key, dt, reportClientDocument);
+                        // some report data sources are optional
+                        // TODO: logging
                     }
-                   
                 }
 
                 foreach (var table in datafile.SubReportDataTables)
@@ -56,7 +63,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         {
                             SetSubReport(table.ReportName, table.TableName, dt, reportClientDocument);
                         }
-                        
+
                     }
                     catch (Exception)
                     {
@@ -92,7 +99,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     {
                         // TODO: Add logging about bad move objects
                     }
-                   
+
                 }
 
 
@@ -107,9 +114,18 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             {
                 var par = rpt.ParameterFields[name];
                 string theValue;
-                switch (par.ParameterValueType){
+                switch (par.ParameterValueType)
+                {
                     case ParameterValueKind.BooleanParameter:
                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "false" : val.ToString();
+                        if (theValue == "0")
+                        {
+                            theValue = "false";
+                        }
+                        else if (theValue == "1")
+                        {
+                            theValue = "true";
+                        }
                         rpt.SetParameterValue(name, bool.Parse(theValue));
                         break;
                     case ParameterValueKind.CurrencyParameter:
@@ -117,7 +133,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         rpt.SetParameterValue(name, decimal.Parse(theValue));
                         break;
                     case ParameterValueKind.NumberParameter:
-                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
+                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
                         try
                         {
                             rpt.SetParameterValue(name, int.Parse(theValue));
@@ -126,7 +142,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         {
                             rpt.SetParameterValue(name, decimal.Parse(theValue));
                         }
-                        
+
                         break;
                     case ParameterValueKind.DateParameter:
                     case ParameterValueKind.DateTimeParameter:
@@ -135,11 +151,11 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         rpt.SetParameterValue(name, DateTime.Parse(theValue));
                         break;
                     default:
-                         theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
+                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
                         rpt.SetParameterValue(name, theValue);
                         break;
                 }
-               
+
             }
             else
             {
@@ -167,7 +183,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             {
                 rpt.Subreports[rptName].Database.Tables[reportTableName].SetDataSource(dataSource);
             }
-            
+
         }
 
         private void SetSubReport(string rptName, int idx, DataTable dataSource, ReportDocument rpt)
@@ -196,7 +212,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             }
             catch (Exception)
             {
-               // fixme: data cleanup
+                // fixme: data cleanup
             }
 
             return myData;
@@ -205,13 +221,14 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
         private DataTable CreateTableEtl(string csv)
         {
-            string[] headers=null;
-            string[] columntypes=null;
+            string[] headers = null;
+            string[] columntypes = null;
             DataTable dt = new DataTable();
-            using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration() { 
-                 MaxLineSize = int.MaxValue/5,
-                 
-                }).WithFirstLineHeader().QuoteAllFields())
+            using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration()
+            {
+                MaxLineSize = int.MaxValue / 5,
+
+            }).WithFirstLineHeader().QuoteAllFields())
             {
                 reader.Configuration.MayContainEOLInData = true;
                 int rowIdx = 0;
@@ -222,7 +239,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     if (rowIdx == 0)
                     {
                         headers = e.Keys.ToArray();
-                        columntypes = e.Values.Select(p=> p.ToString()).ToArray();
+                        columntypes = e.Values.Select(p => p.ToString()).ToArray();
                         rowIdx = rowIdx + 1;
 
                         for (int i = 0; i < headers.Length; i++)
@@ -249,17 +266,17 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                         }
                         else
                         {
-                            
+
                             dr[i] = cleaned;
                         }
                     }
 
                     dt.Rows.Add(dr);
                 }
-                
+
             }
 
-       
+
             return dt;
         }
 
