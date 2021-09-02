@@ -26,7 +26,6 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 foreach (var table in datafile.DataTables)
                 {
                     DataTable dt = CreateTableEtl(table.Value);
-
                     try
                     {
                         int idx = 0;
@@ -256,7 +255,11 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     for (int i = 0; i < headers.Length; i++)
                     {
                         var cleaned = columns[i]?.ToString();
-                        if (string.IsNullOrWhiteSpace(cleaned))
+                        if (string.Equals(columntypes[i], "string", StringComparison.InvariantCultureIgnoreCase) && string.IsNullOrWhiteSpace(cleaned))
+                        {
+                            dr[i] = "";
+                        }
+                        else if (string.IsNullOrWhiteSpace(cleaned))
                         {
                             dr[i] = DBNull.Value;
                         }
