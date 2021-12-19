@@ -12,6 +12,7 @@ import com.crystaldecisions.sdk.occa.report.application.ParameterFieldController
 import com.crystaldecisions12.reports.queryengine.collections.ITables;
 
 import java.io.ByteArrayInputStream;
+import java.io.Console;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Array;
@@ -33,10 +34,7 @@ public class PdfExporter {
         int bytesRead;
 
         byteArray = new byte[1024];
-        /*
-         * while((bytesRead = byteArrayInputStream.read(byteArray)) != -1) {
-         * response.getOutputStream().write(byteArray, 0, bytesRead); }
-         */
+
         FileOutputStream fos = new FileOutputStream(outputPath);
         while ((bytesRead = report.read(byteArray)) != -1) {
             fos.write(byteArray, 0, bytesRead);
@@ -87,97 +85,105 @@ public class PdfExporter {
 
         // Object reportSource = reportClientDocument.getReportSource();
 
+        // "06/24/2020 00:00:00"
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-        if (datafile != null) {
+        if (datafile == null) {
+            byteArrayInputStream = (ByteArrayInputStream) reportClientDocument.getPrintOutputController()
+                    .export(ReportExportFormat.RTF);
 
-            for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
+            reportClientDocument.close();
+            return byteArrayInputStream;
+        }
 
-                CsharpResultSet inst = new CsharpResultSet();
-                ResultSet result = inst.Execute(item.getValue());
+        for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
 
-                //try{
-                reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
+            CsharpResultSet inst = new CsharpResultSet();
+            ResultSet result = inst.Execute(item.getValue());
 
-                //	}
-                //	catch(ArrayIndexOutOfBoundsException aibe) {
+            reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
 
-                // doesn't matter, but should add logging
-                //	}
+            // inst.close();
+        }
 
-            }
-            if (datafile.getSubReportDataTables() != null) {
-                for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext(); ) {
-                    SubReports item = itr.next();
-                    try {
+        // Sub Reports
+        if (datafile.getSubReportDataTables() != null) {
+            for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext(); ) {
+                SubReports item = itr.next();
+                try {
 
 
-                        CsharpResultSet inst = new CsharpResultSet();
-                        ResultSet result = inst.Execute(item.DataTable);
-                        String subReportName = item.ReportName;
-                        String tableName = item.TableName;
+                    CsharpResultSet inst = new CsharpResultSet();
+                    ResultSet result = inst.Execute(item.DataTable);
+                    String subReportName = item.ReportName;
+                    String tableName = item.TableName;
 
-                        //set resultSet for sub report
-                        ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
-                        subClientDoc.getDatabaseController().setDataSource(result, tableName, tableName);
-                    } catch (ArrayIndexOutOfBoundsException aiofbe) {
-                        // add logging
-                    }
+                    //set resultSet for sub report
+                    ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
+                    subClientDoc.getDatabaseController().setDataSource(result, tableName, tableName);
+                   // inst.close();
+                }
+                catch(ReportSDKException rse){
+                    rse.printStackTrace();
+                }
+                catch (ArrayIndexOutOfBoundsException aiofbe) {
+                    // add logging
+                    aiofbe.printStackTrace();
                 }
             }
+        }
 
-            var z = reportClientDocument.getDataDefController().getDataDefinition().getParameterFields();
-            for(var blah : z){
-                if(blah.getParameterType() == ParameterFieldType.reportParameter){
-                    System.out.println("hi " + blah.getName() + " " + blah.getType().toVariantTypeString()+ " " + blah.getType());
+        var z = reportClientDocument.getDataDefController().getDataDefinition().getParameterFields();
+        for (var blah : z) {
+            if (blah.getParameterType() == ParameterFieldType.reportParameter) {
+                System.out.println("hi " + blah.getName() + " " + blah.getType().toVariantTypeString() + " " + blah.getType());
 
-                    String theValue;
-                    switch(blah.getType().toVariantTypeString().toLowerCase()){
-                        case "string":
-                            SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), ""));
-                            break;
-                        case "boolean":
-                        case "i1":
-                            SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), false));
-                            break;
-                        case "number":
-                        case "decimal":
-                            SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), 0));
-                            break;
-                        case "date":
-                        case "datetime":
-                            SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), new Date()));
-                            break;
-                        default:
-                            SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), ""));
-                            break;
-                    }
-
+                String theValue;
+                switch (blah.getType().toVariantTypeString().toLowerCase()) {
+                    case "string":
+                        SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), ""));
+                        break;
+                    case "boolean":
+                    case "i1":
+                        SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), false));
+                        break;
+                    case "number":
+                    case "decimal":
+                        SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), 0));
+                        break;
+                    case "date":
+                    case "datetime":
+                        SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), new Date()));
+                        break;
+                    default:
+                        SetParameterValue(reportClientDocument, fmt, Map.entry(blah.getName(), ""));
+                        break;
                 }
 
             }
-
-            for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
-                SetParameterValue(reportClientDocument, fmt, item);
-            }
-            for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext(); ) {
-                MoveObjects item = itr.next();
-                moveReportObject(reportClientDocument, item);
-            }
-
-
 
         }
 
+        for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
+            SetParameterValue(reportClientDocument, fmt, item);
+        }
+        for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext(); ) {
+            MoveObjects item = itr.next();
+            moveReportObject(reportClientDocument, item);
+        }
+
+
+
 
         byteArrayInputStream = (ByteArrayInputStream) reportClientDocument.getPrintOutputController()
-                .export(ReportExportFormat.RTF);
+                .export(ReportExportFormat.PDF);
 
         reportClientDocument.close();
         return byteArrayInputStream;
     }
 
-    private void SetParameterValue(ReportClientDocument reportClientDocument, SimpleDateFormat fmt, Map.Entry<String, Object> item) throws ReportSDKException {
+    private void SetParameterValue(ReportClientDocument reportClientDocument, SimpleDateFormat fmt,
+                                   Map.Entry<String, Object> item) throws ReportSDKException {
         ParameterFieldController parameterFieldController;
 
 
