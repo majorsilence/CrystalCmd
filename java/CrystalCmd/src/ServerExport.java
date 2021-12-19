@@ -11,6 +11,7 @@ import java.util.HashSet;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUpload;
+import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.io.IOUtils;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -66,8 +67,6 @@ public class ServerExport implements HttpHandler {
 
 			ByteArrayInputStream report;
 
-			//
-
 			String templateFilePath = pathReportTemplate.getAbsolutePath();
 			PdfExporter pdfExport = new PdfExporter();
 			report = pdfExport.exportReportToStream(templateFilePath, convertedDataFile);
@@ -75,6 +74,7 @@ public class ServerExport implements HttpHandler {
 			Files.delete(Paths.get(templateFilePath));
 
 			t.sendResponseHeaders(200, report.available());
+
 			byte[] byteArray;
 			int bytesRead;
 			byteArray = new byte[1024];
