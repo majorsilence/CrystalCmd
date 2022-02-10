@@ -104,9 +104,7 @@ sudo ./build_snap.sh
 ## dev setup
 
 ```bash
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install oracle-java8-installer
+sudo apt-get install openjdk-16-jdk
 ```
 
 http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jre-8u151-linux-x64.tar.gz?AuthParam=1509230467_0755e209172b0f2026ed83c4a73a1ef0
@@ -128,9 +126,7 @@ Download [intelliJ community edition](https://www.jetbrains.com/idea/).
 ## Runtime setup
 
 ```bash
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install oracle-java8-installer
+sudo apt-get install openjdk-16-jre
 ```
 
 ## Export Jar
@@ -167,4 +163,4 @@ https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontman
 
 Example:
 
-Copy a file to __C:\Users\[UserName]\.jdks\openjdk-15.0.1\lib\fonts__ from __C:\Windows\Fonts__.
+Copy a file to __C:\Users\[UserName]\.jdks\openjdk-16.0.1\lib\fonts__ from __C:\Windows\Fonts__.
