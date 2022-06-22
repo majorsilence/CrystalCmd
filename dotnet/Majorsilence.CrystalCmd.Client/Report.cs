@@ -87,22 +87,26 @@ namespace Majorsilence.CrystalCmd.Client
         public async Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
-
-            if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-            {
-                httpClient.DefaultRequestHeaders.Add($"Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
-            }
-
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
 
-            httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
             using (var form = new MultipartFormDataContent())
             {
                 form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
-                //form.Add(new StringContent(json), "reportdata");
                 form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
-                //form.Add(new ByteArrayContent(crystalReport), "reporttemplate", "the_dataset_report.rpt");
-                HttpResponseMessage response = await httpClient.PostAsync(serverUrl, form, cancellationToken).ConfigureAwait(false);
+
+                var request = new HttpRequestMessage()
+                {
+                    Content = form,
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri(serverUrl)
+                };
+                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                {
+                    request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
+                }
+                request.Headers.Add("User-Agent", userAgent);
+
+                HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                 var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 string errorMessage = "";
