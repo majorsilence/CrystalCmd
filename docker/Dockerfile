@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 LABEL maintainer "Peter Gill"
 
@@ -9,10 +9,8 @@ WORKDIR /
 
 RUN apt update \
         && apt-get install -y software-properties-common -y \
-        && add-apt-repository ppa:webupd8team/java -y \
         && apt update \
-        && echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections \
-        && apt install oracle-java8-installer -y \
+        && apt install openjdk-16-jdk ttf-mscorefonts-installer -y \
         && rm -rf /var/lib/apt/lists/*
 EXPOSE 4321
 CMD ["java", "-jar", "/root/CrystalCmd.jar"]
