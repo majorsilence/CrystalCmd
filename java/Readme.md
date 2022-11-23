@@ -18,9 +18,7 @@ https://origin.softwaredownloads.sap.com/public/site/index.html
 # try the ubuntu or fedora way first
 # https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontmanager.html
 apk add --no-cache msttcorefonts-installer && update-ms-fonts && fc-cache -f && ln -s /usr/share/fonts/truetype/msttcorefonts /usr/lib/jvm/default-jvm/jre/lib/fonts
-```
 
-```bash
 # ubuntu
 sudo apt install fonts-dejavu fontconfig 
 
