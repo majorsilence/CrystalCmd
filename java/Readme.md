@@ -30,7 +30,15 @@ dnf install fontconfig dejavu-sans-fonts dejavu-serif-fonts
 
 copy C:\Windows\fonts into the jre/jdk lib/fonts folder.
 
-For example copy 'C:\Windows\fonts' into 'C:\Users\[UserName]\.jdks\openjdk-17.0.1\lib\fonts'
+For example copy 'C:\Windows\fonts' into 'C:\Users\[UserName]\.jdks\[JavaVersion]\lib\fonts'
+
+
+### Mac
+
+
+copy '/System/Library/Fonts' into '/Users/[UserName]]/Library/Java/JavaVirtualMachines/[JavaVersion]/Contents/Home/lib/fonts'
+
+
 
 
 ## CSV ResultSet Driver
