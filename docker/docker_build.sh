@@ -3,7 +3,7 @@ set -e # exit on first error
 set -u # exit on using unset variable
 
 
-cp ../java/CrystalCmd/build/CrystalCmd.jar .
+cp ../java/CrystalCmd/out/CrystalCmd_jar/CrystalCmd.jar .
 
 
 #build
