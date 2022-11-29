@@ -25,10 +25,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class PdfExporter {
 
@@ -68,21 +65,50 @@ public class PdfExporter {
         reportClientDocument.open(reportPath, OpenReportOptions._openAsReadOnly);
 
         // Remove sub report connection strings
-        IStrings subNames = reportClientDocument.getSubreportController().querySubreportNames();
-        for (var name : subNames) {
-            var subReport = reportClientDocument.getSubreportController().getSubreport(name);
-            var subConnInfo = subReport.getDatabaseController().getDatabase().getConnections();
-            for (int i = 0; i < subConnInfo.size(); i++) {
-                // subReport.getDatabaseController().removeConnection(subConnInfo.getConnection(i));
+        try{
+
+            IStrings subNames = reportClientDocument.getSubreportController().querySubreportNames();
+            for (String name : subNames) {
+                try{
+                    var subReport = reportClientDocument.getSubreportController().getSubreport(name);
+
+                    var subConnInfo = subReport.getDatabaseController().getDatabase().getConnections();
+                    for (int i = 0; i < subConnInfo.size(); i++) {
+                         subReport.getDatabaseController().removeConnection(subConnInfo.getConnection(i));
+                    }
+
+
+                }
+                catch (Exception ex) {
+                    System.out.println("Sub report " + name + " failure");
+                    ex.printStackTrace();
+                }
 
             }
+
+
+        }
+        catch(MissingResourceException mre){
+            System.out.println("Sub report failure");
+            mre.printStackTrace();
+        }
+        catch (Exception ex) {
+            System.out.println("Sub report failure");
+            ex.printStackTrace();
         }
 
-        // Remove main report connection strings
-        Connections conns = reportClientDocument.getDatabase().getConnections();
-        for (int i = 0; i < conns.size(); i++) {
-            reportClientDocument.getDatabaseController().removeConnection(conns.getConnection(i));
-        }
+
+            // Remove main report connection strings
+            Connections conns = reportClientDocument.getDatabase().getConnections();
+            for (int i = 0; i < conns.size(); i++) {
+                try {
+                    reportClientDocument.getDatabaseController().removeConnection(conns.getConnection(i));
+                } catch (Exception ex) {
+                    System.out.println("Connection " + i + " failure");
+                    ex.printStackTrace();
+                }
+
+            }
 
 
         // Object reportSource = reportClientDocument.getReportSource();
@@ -101,12 +127,19 @@ public class PdfExporter {
 
         // Set Main Report Result Set
         for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
-            CsharpResultSet inst = new CsharpResultSet();
-            ResultSet result = inst.Execute(item.getValue());
 
-            reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
+            try{
+                CsharpResultSet inst = new CsharpResultSet();
+                ResultSet result = inst.Execute(item.getValue());
 
-            // inst.close();
+                reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
+
+                // inst.close();
+            }
+            catch (Exception ex) {
+                System.out.println("Main report failure");
+                ex.printStackTrace();
+            }
         }
 
         // Sub Reports
