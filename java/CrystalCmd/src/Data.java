@@ -2,7 +2,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Data {
-        
+        /*
         private byte[] ReportFile;
         public void setReportFile(byte[] reportFile) {
         	this.ReportFile = reportFile;
@@ -10,7 +10,7 @@ public class Data {
         public byte[] getReportFile() {
         	return this.ReportFile;
         }
-        
+        */
         //Map<String, String> map = new HashMap<String, String>();
         //map.put("dog", "type of animal");      
         private Map<String, Object> Parameters;
