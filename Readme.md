@@ -126,7 +126,7 @@ Download [intelliJ community edition](https://www.jetbrains.com/idea/).
 ## Runtime setup
 
 ```bash
-sudo apt-get install openjdk-16-jre
+sudo apt-get install openjdk-11-jre
 ```
 
 ## Export Jar
@@ -161,6 +161,25 @@ https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontman
 > Once a real font is copied to jre\lib\fonts, The PDF is created just fine with the Arial font embedded. It seems that there just has to be a one real font at jre\lib\fonts to get started, and then crjava/AdoptOpenJDK will eventually use fontconfig to find the correct Windows font.
 
 
-Example:
+## Windows Example:
 
 Copy a file to __C:\Users\[UserName]\.jdks\openjdk-16.0.1\lib\fonts__ from __C:\Windows\Fonts__.
+
+## Mac Example
+
+
+copy '/System/Library/Fonts' into '/Users/[UserName]]/Library/Java/JavaVirtualMachines/[JavaVersion]/Contents/Home/lib/fonts'
+
+## Linux Example:
+```bash
+# try the ubuntu or fedora way first
+# https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontmanager.html
+apk add --no-cache msttcorefonts-installer && update-ms-fonts && fc-cache -f && ln -s /usr/share/fonts/truetype/msttcorefonts /usr/lib/jvm/default-jvm/jre/lib/fonts
+
+# ubuntu
+sudo apt install fonts-dejavu fontconfig 
+
+# fedora
+dnf install fontconfig dejavu-sans-fonts dejavu-serif-fonts
+```
+
