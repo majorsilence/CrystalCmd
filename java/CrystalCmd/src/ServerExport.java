@@ -23,6 +23,8 @@ public class ServerExport implements HttpHandler {
 	HashSet<FileData> files;
 
 	public void handle(HttpExchange t) throws IOException {
+
+		// PROCESS HTTP CONTENT.
 		OutputStream os = null;
 		try {
 			FileItemIterator ii = new FileUpload().getItemIterator(new ExchangeRequestContext(t));
@@ -47,29 +49,25 @@ public class ServerExport implements HttpHandler {
 				return;
 			}
 
-			FileData reportTemplate;
-			FileData reportData;
-			if (((FileData) files.toArray()[0]).name.equals("reportdata")) {
-				reportData = (FileData) files.toArray()[0];
-				reportTemplate = (FileData) files.toArray()[1];
-			} else {
-				reportData = (FileData) files.toArray()[1];
-				reportTemplate = (FileData) files.toArray()[0];
+			File reportPath=null;
+			Data reportData=null;
+			for (FileData file: files) {
+				String name = file.name;
+				if(name.equalsIgnoreCase("reportdata")){
+					com.google.gson.Gson gson = new com.google.gson.Gson();
+					String json = new String(file.data);
+					reportData = gson.fromJson(json, Data.class);
+				}
+				else{
+					reportPath = saveReportTemplate(file.data);
+				}
 			}
 
-			// Start regular report code
-			File pathReportTemplate = saveReportTemplate(reportTemplate.data);
+			// PROCESS RPT and DATA.
 
-			com.google.gson.Gson gson = new com.google.gson.Gson();
-
-			String json = new String(reportData.data);
-			Data convertedDataFile = gson.fromJson(json, Data.class);
-
-			ByteArrayInputStream report;
-
-			String templateFilePath = pathReportTemplate.getAbsolutePath();
+			String templateFilePath = reportPath.getAbsolutePath();
 			PdfExporter pdfExport = new PdfExporter();
-			report = pdfExport.exportReportToStream(templateFilePath, convertedDataFile);
+			ByteArrayInputStream report = pdfExport.exportReportToStream(templateFilePath, reportData);
 
 			Files.delete(Paths.get(templateFilePath));
 
