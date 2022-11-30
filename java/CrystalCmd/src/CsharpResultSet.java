@@ -29,7 +29,7 @@ public class CsharpResultSet {
         String tmpdir = System.getProperty("java.io.tmpdir");
         String subfolder = java.util.UUID.randomUUID().toString();
         String finalTempDir = tmpdir +
-                //FileSystems.getDefault().getSeparator() +
+                FileSystems.getDefault().getSeparator() +
                 subfolder;
         Path path = Paths.get(finalTempDir);
         Files.createDirectories(path);

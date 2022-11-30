@@ -370,3 +370,5 @@ __pycache__/
 java/CrystalCmd/out
 testout.pdf
 .DS_Store
+/java/CrystalCmd/target/classes
+/docker/CrystalCmd_jar
