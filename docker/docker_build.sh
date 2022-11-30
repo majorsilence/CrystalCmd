@@ -2,9 +2,10 @@
 set -e # exit on first error
 set -u # exit on using unset variable
 
-
-cp ../java/CrystalCmd/out/CrystalCmd_jar/CrystalCmd.jar .
+rm -rf ./CrystalCmd_jar
+cp -r ../java/CrystalCmd/out/artifacts/CrystalCmd_jar/ .
 
 
 #build
-docker build --no-cache -f Dockerfile -t majorsilence/crystalcmd --rm=true .
+#docker build -f Dockerfile -t majorsilence/crystalcmd --rm=true .
+docker build -f Dockerfile.alpine --progress plain -t majorsilence/crystalcmd --rm=true .
