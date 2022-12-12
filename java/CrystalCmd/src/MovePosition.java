@@ -10,7 +10,7 @@ public enum MovePosition {
 
 	private final int levelCode;
 
-	private MovePosition(int levelCode) {
+	MovePosition(int levelCode) {
 		this.levelCode = levelCode;
 	}
 

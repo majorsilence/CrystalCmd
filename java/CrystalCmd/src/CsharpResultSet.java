@@ -35,7 +35,7 @@ public class CsharpResultSet {
         Files.createDirectories(path);
 
         String tableAndFileName = java.util.UUID.randomUUID().toString();
-        String csvAbsolutePath = path.toString() +
+        String csvAbsolutePath = path +
                 FileSystems.getDefault().getSeparator() +
                 tableAndFileName + ".csv";
 

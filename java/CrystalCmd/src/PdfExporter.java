@@ -133,8 +133,7 @@ public class PdfExporter {
         for (Map.Entry<String, Object> item : datafile.getParameters().entrySet()) {
             SetParameterValue(reportClientDocument, fmt, item);
         }
-        for (Iterator<MoveObjects> itr = datafile.getMoveObjectPosition().iterator(); itr.hasNext(); ) {
-            MoveObjects item = itr.next();
+        for (MoveObjects item : datafile.getMoveObjectPosition()) {
             moveReportObject(reportClientDocument, item);
         }
 
@@ -201,8 +200,7 @@ public class PdfExporter {
 
     private static void SetSubReports(Data datafile, ReportClientDocument reportClientDocument) throws SQLException, IOException {
         if (datafile.getSubReportDataTables() != null) {
-            for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext(); ) {
-                SubReports item = itr.next();
+            for (SubReports item : datafile.getSubReportDataTables()) {
                 try {
                     CsharpResultSet inst = new CsharpResultSet();
                     ResultSet result = inst.Execute(item.DataTable);
@@ -238,7 +236,7 @@ public class PdfExporter {
                 if (field.getParameterType() != ParameterFieldType.reportParameter) {
                     continue;
                 }
-                if (field.getName().toLowerCase().equals(name.toLowerCase()) == false) {
+                if (!field.getName().equalsIgnoreCase(name)) {
                     continue;
                 }
 

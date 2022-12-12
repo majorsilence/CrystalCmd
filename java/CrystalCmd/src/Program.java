@@ -34,7 +34,7 @@ public class Program {
 		System.out.println("-datafile: " + dataFilePath);
 		System.out.println("-outpath: " + outpath);
 
-		if (reportpath.trim().isEmpty() == false && dataFilePath.trim().isEmpty() == false) {
+		if (!reportpath.trim().isEmpty() && !dataFilePath.trim().isEmpty()) {
 			/// Load from report and data from file system
 
 			String datafile = readFile(dataFilePath, StandardCharsets.UTF_8);
