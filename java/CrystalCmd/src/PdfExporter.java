@@ -1,4 +1,3 @@
-import com.businessobjects.prompting.objectmodel.common.IPromptValue;
 import com.crystaldecisions.sdk.occa.report.application.ISubreportClientDocument;
 import com.crystaldecisions.sdk.occa.report.application.OpenReportOptions;
 import com.crystaldecisions.sdk.occa.report.application.ReportClientDocument;
@@ -6,22 +5,16 @@ import com.crystaldecisions.sdk.occa.report.data.*;
 import com.crystaldecisions.sdk.occa.report.definition.IReportObject;
 import com.crystaldecisions.sdk.occa.report.exportoptions.ReportExportFormat;
 import com.crystaldecisions.sdk.occa.report.lib.IStrings;
-import com.crystaldecisions.sdk.occa.report.lib.PropertyBag;
 import com.crystaldecisions.sdk.occa.report.lib.ReportSDKException;
 import com.crystaldecisions.sdk.occa.report.application.ParameterFieldController;
-import com.crystaldecisions12.reports.queryengine.collections.ITables;
 
 import java.io.ByteArrayInputStream;
-import java.io.Console;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -59,57 +52,30 @@ public class PdfExporter {
         ReportClientDocument reportClientDocument;
         ByteArrayInputStream byteArrayInputStream;
 
-
         reportClientDocument = new ReportClientDocument();
         reportClientDocument.setReportAppServer(ReportClientDocument.inprocConnectionString);
         reportClientDocument.open(reportPath, OpenReportOptions._openAsReadOnly);
 
         // Remove sub report connection strings
         try{
-
-            IStrings subNames = reportClientDocument.getSubreportController().querySubreportNames();
-            for (String name : subNames) {
-                try{
-                    var subReport = reportClientDocument.getSubreportController().getSubreport(name);
-
-                    var subConnInfo = subReport.getDatabaseController().getDatabase().getConnections();
-                    for (int i = 0; i < subConnInfo.size(); i++) {
-                         subReport.getDatabaseController().removeConnection(subConnInfo.getConnection(i));
-                    }
-
-
-                }
-                catch (Exception ex) {
-                    System.out.println("Sub report " + name + " failure");
-                    ex.printStackTrace();
-                }
-
-            }
-
-
+            RemoveSubReportsConnectionStrings(reportClientDocument);
         }
         catch(MissingResourceException mre){
             System.out.println("Sub report failure");
             mre.printStackTrace();
         }
         catch (Exception ex) {
-            System.out.println("Sub report failure");
+            System.out.println("Sub report failure to remove connection strings.");
             ex.printStackTrace();
         }
 
-
-            // Remove main report connection strings
-            Connections conns = reportClientDocument.getDatabase().getConnections();
-            for (int i = 0; i < conns.size(); i++) {
-                try {
-                    reportClientDocument.getDatabaseController().removeConnection(conns.getConnection(i));
-                } catch (Exception ex) {
-                    System.out.println("Connection " + i + " failure");
-                    ex.printStackTrace();
-                }
-
-            }
-
+        try{
+            RemoveMainReportConnectionStrings(reportClientDocument);
+        }
+        catch(Exception ex) {
+            System.out.println("Main report failure to remove connection strings.");
+            ex.printStackTrace();
+        }
 
         // Object reportSource = reportClientDocument.getReportSource();
 
@@ -126,44 +92,10 @@ public class PdfExporter {
         }
 
         // Set Main Report Result Set
-        for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
-
-            try{
-                CsharpResultSet inst = new CsharpResultSet();
-                ResultSet result = inst.Execute(item.getValue());
-
-                reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
-
-                // inst.close();
-            }
-            catch (Exception ex) {
-                System.out.println("Main report failure");
-                ex.printStackTrace();
-            }
-        }
+        SetMainReport(datafile, reportClientDocument);
 
         // Sub Reports
-        if (datafile.getSubReportDataTables() != null) {
-            for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext(); ) {
-                SubReports item = itr.next();
-                try {
-                    CsharpResultSet inst = new CsharpResultSet();
-                    ResultSet result = inst.Execute(item.DataTable);
-                    String subReportName = item.ReportName;
-                    String tableName = item.TableName;
-
-                    // Set Sub Report ResultSet
-                    ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
-                    subClientDoc.getDatabaseController().setDataSource(result, tableName, tableName);
-                    // inst.close();
-                } catch (ReportSDKException rse) {
-                    rse.printStackTrace();
-                } catch (ArrayIndexOutOfBoundsException aiofbe) {
-                    // add logging
-                    aiofbe.printStackTrace();
-                }
-            }
-        }
+        SetSubReports(datafile, reportClientDocument);
 
         /*
         var z = reportClientDocument.getDataDefController().getDataDefinition().getParameterFields();
@@ -212,6 +144,83 @@ public class PdfExporter {
 
         reportClientDocument.close();
         return byteArrayInputStream;
+    }
+
+    private static void RemoveMainReportConnectionStrings(ReportClientDocument reportClientDocument) throws ReportSDKException {
+        // Remove main report connection strings
+        Connections conns = reportClientDocument.getDatabase().getConnections();
+        for (int i = 0; i < conns.size(); i++) {
+            try {
+                reportClientDocument.getDatabaseController().removeConnection(conns.getConnection(i));
+            } catch (Exception ex) {
+                System.out.println("Connection " + i + " failure");
+                ex.printStackTrace();
+            }
+
+        }
+    }
+
+    private static void RemoveSubReportsConnectionStrings(ReportClientDocument reportClientDocument) throws ReportSDKException {
+        IStrings subNames = reportClientDocument.getSubreportController().querySubreportNames();
+        for (String name : subNames) {
+            try{
+                var subReport = reportClientDocument.getSubreportController().getSubreport(name);
+
+                var subConnInfo = subReport.getDatabaseController().getDatabase().getConnections();
+                for (int i = 0; i < subConnInfo.size(); i++) {
+                     subReport.getDatabaseController().removeConnection(subConnInfo.getConnection(i));
+                }
+
+
+            }
+            catch (Exception ex) {
+                System.out.println("Sub report " + name + " failure");
+                ex.printStackTrace();
+            }
+
+        }
+    }
+
+    private static void SetMainReport(Data datafile, ReportClientDocument reportClientDocument) {
+        for (Map.Entry<String, String> item : datafile.getDataTables().entrySet()) {
+
+            try{
+                CsharpResultSet inst = new CsharpResultSet();
+                ResultSet result = inst.Execute(item.getValue());
+
+                reportClientDocument.getDatabaseController().setDataSource(result, item.getKey(), item.getKey());
+
+                // inst.close();
+            }
+            catch (Exception ex) {
+                System.out.println("Main report failure");
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private static void SetSubReports(Data datafile, ReportClientDocument reportClientDocument) throws SQLException, IOException {
+        if (datafile.getSubReportDataTables() != null) {
+            for (Iterator<SubReports> itr = datafile.getSubReportDataTables().iterator(); itr.hasNext(); ) {
+                SubReports item = itr.next();
+                try {
+                    CsharpResultSet inst = new CsharpResultSet();
+                    ResultSet result = inst.Execute(item.DataTable);
+                    String subReportName = item.ReportName;
+                    String tableName = item.TableName;
+
+                    // Set Sub Report ResultSet
+                    ISubreportClientDocument subClientDoc = reportClientDocument.getSubreportController().getSubreport(subReportName);
+                    subClientDoc.getDatabaseController().setDataSource(result, tableName, tableName);
+                    // inst.close();
+                } catch (ReportSDKException rse) {
+                    rse.printStackTrace();
+                } catch (ArrayIndexOutOfBoundsException aiofbe) {
+                    // add logging
+                    aiofbe.printStackTrace();
+                }
+            }
+        }
     }
 
     private void SetParameterValue(ReportClientDocument reportClientDocument, SimpleDateFormat fmt,
