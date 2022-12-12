@@ -44,7 +44,7 @@ public class ServerExport implements HttpHandler {
 				}
 			}
 
-			if (files.isEmpty() == true) {
+			if (files.isEmpty()) {
 				os.close();
 				return;
 			}

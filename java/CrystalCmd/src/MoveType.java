@@ -9,7 +9,7 @@ public enum MoveType {
 
 	private final int levelCode;
 
-	private MoveType(int levelCode) {
+	MoveType(int levelCode) {
 		this.levelCode = levelCode;
 	}
 }
