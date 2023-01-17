@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -64,7 +65,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                     fstream.Close();
                 }
 
-                var exporter = new PdfExporter();
+                var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
                 bytes = exporter.exportReportToStream(reportPath, reportData);
 
 

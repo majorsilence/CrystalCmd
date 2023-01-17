@@ -10,7 +10,7 @@ using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
 using Majorsilence.CrystalCmd.Client;
 
-namespace Majorsilence.CrystalCmd.NetFrameworkServer
+namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class PdfExporter
     {
