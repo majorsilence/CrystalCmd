@@ -41,7 +41,6 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                 string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
                 if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    var buffer = await file.ReadAsByteArrayAsync();
                     reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(await file.ReadAsStringAsync());
                 }
                 else
