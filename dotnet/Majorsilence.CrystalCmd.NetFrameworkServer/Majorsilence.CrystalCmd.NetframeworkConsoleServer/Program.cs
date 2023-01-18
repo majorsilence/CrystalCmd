@@ -181,7 +181,26 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         static Dictionary<string, List<string>> GetAllEndPoints()
         {
             Dictionary<string, List<string>> listofends = new Dictionary<string, List<string>>();
-            listofends.Add("127.0.0.1", AddEndpoints("127.0.0.1"));
+           // listofends.Add("0.0.0.0", AddEndpoints("0.0.0.0"));
+
+            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
+            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (NetworkInterface network in networkInterfaces)
+            {
+                // Read the IP configuration for each network
+                IPInterfaceProperties properties = network.GetIPProperties();
+
+                // Each network interface may have multiple IP addresses
+                foreach (IPAddressInformation address in properties.UnicastAddresses)
+                {
+                    if (address.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        string ipaddress = address.Address.ToString();
+                        listofends.Add(ipaddress, AddEndpoints(ipaddress));
+                    }
+                }
+            }
 
             return listofends;
         }
