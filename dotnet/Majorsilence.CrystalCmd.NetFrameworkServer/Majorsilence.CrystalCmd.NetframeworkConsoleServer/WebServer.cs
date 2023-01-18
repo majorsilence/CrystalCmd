@@ -44,8 +44,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
             _responderMethod = method;
 
-            _listener.Start();
             SetAllListeners(prefixes);
+            _listener.Start();
+            
         }
 
         public void Run()
