@@ -177,28 +177,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             return (200, "");
         }
 
+        
         static Dictionary<string, List<string>> GetAllEndPoints()
         {
             Dictionary<string, List<string>> listofends = new Dictionary<string, List<string>>();
-
-            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
-            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-
-            foreach (NetworkInterface network in networkInterfaces)
-            {
-                // Read the IP configuration for each network
-                IPInterfaceProperties properties = network.GetIPProperties();
-
-                // Each network interface may have multiple IP addresses
-                foreach (IPAddressInformation address in properties.UnicastAddresses)
-                {
-                    if (address.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
-                    {
-                        string ipaddress = address.Address.ToString();
-                        listofends.Add(ipaddress, AddEndpoints(ipaddress));
-                    }
-                }
-            }
+            listofends.Add("127.0.0.1", AddEndpoints("127.0.0.1"));
 
             return listofends;
         }
@@ -206,8 +189,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         private static List<string> AddEndpoints(string address)
         {
             List<string> listofends = new List<string>();
-            listofends.Add("https://" + address + $":{port}/status/");
-            listofends.Add("https://" + address + $":{port}/export/");
+            listofends.Add("http://" + address + $":{port}/status/");
+            listofends.Add("http://" + address + $":{port}/export/");
 
             return listofends;
         }
