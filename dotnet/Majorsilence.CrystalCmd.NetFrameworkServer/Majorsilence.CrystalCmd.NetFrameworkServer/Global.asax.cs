@@ -1,4 +1,5 @@
-﻿using NSwag.AspNet.Owin;
+﻿using Majorsilence.CrystalCmd.Server.Common;
+using NSwag.AspNet.Owin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,12 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
     {
         protected void Application_Start()
         {
+            string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
+            if (System.IO.Directory.Exists(workingfolder))
+            {
+                System.IO.Directory.Delete(workingfolder, true);
+            }
+            System.IO.Directory.CreateDirectory(workingfolder);
 
             RouteTable.Routes.MapOwinPath("swagger", app =>
             {
@@ -24,7 +31,6 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                     settings.GeneratorSettings.DefaultUrlTemplate = "api/{controller}/{action}/{id}";
                 });
             });
-
 
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);

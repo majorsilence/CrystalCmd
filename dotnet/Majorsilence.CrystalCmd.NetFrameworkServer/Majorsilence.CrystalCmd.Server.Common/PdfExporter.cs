@@ -192,7 +192,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private byte[] ExportPDF(ReportDocument rpt)
         {        
-            string fileName = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.pdf");
+            string fileName = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.pdf");
             CrystalDecisions.Shared.ExportFormatType exp = ExportFormatType.PortableDocFormat;
             rpt.ExportToDisk(exp, fileName);
 

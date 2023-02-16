@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Majorsilence.CrystalCmd.Server.Common;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -53,7 +54,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             byte[] bytes = null;
             try
             {
-                reportPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.rpt");
+                reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
                 // System.IO.File.WriteAllBytes(reportPath, reportTemplate);
                 // Using System.IO.File.WriteAllBytes randomly causes problems where the system still 
                 // has the file open when crystal attempts to load it and crystal fails.
