@@ -91,7 +91,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 byte[] bytes = null;
                 try
                 {
-                    reportPath = System.IO.Path.GetTempFileName() + ".rpt";
+                    reportPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.rpt");
                     // System.IO.File.WriteAllBytes(reportPath, reportTemplate);
                     // Using System.IO.File.WriteAllBytes randomly causes problems where the system still 
                     // has the file open when crystal attempts to load it and crystal fails.
