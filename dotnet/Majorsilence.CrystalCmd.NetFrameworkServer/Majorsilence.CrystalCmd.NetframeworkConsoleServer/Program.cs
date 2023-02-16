@@ -14,6 +14,8 @@ using System.Net.NetworkInformation;
 using System.Configuration;
 using System.Runtime.Remoting.Contexts;
 using Majorsilence.CrystalCmd.Client;
+using System.Security.AccessControl;
+using Majorsilence.CrystalCmd.Server.Common;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -24,7 +26,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         static async Task Main(string[] args)
         {
-            
+            string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
+            if (System.IO.Directory.Exists(workingfolder))
+            {
+                System.IO.Directory.Delete(workingfolder, true);
+            }
+            System.IO.Directory.CreateDirectory(workingfolder);
+
             WebServer ws;
             Dictionary<string, List<string>> ends = GetAllEndPoints();
             ws = new WebServer(ends, SendResponse);
@@ -91,7 +99,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 byte[] bytes = null;
                 try
                 {
-                    reportPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.rpt");
+                    reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
                     // System.IO.File.WriteAllBytes(reportPath, reportTemplate);
                     // Using System.IO.File.WriteAllBytes randomly causes problems where the system still 
                     // has the file open when crystal attempts to load it and crystal fails.
