@@ -1,3 +1,5 @@
+WARNING. Do not use. This is one big experiment.
+
 # What is CrystalCmd
 
 CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
