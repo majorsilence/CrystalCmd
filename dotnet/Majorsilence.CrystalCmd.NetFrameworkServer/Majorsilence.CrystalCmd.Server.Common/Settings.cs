@@ -11,7 +11,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
     {
         public static string GetSetting(string key)
         {
-            var value = Environment.GetEnvironmentVariable(key);
+            var value = Environment.GetEnvironmentVariable($"appsettings__{key}");
 
             if (string.IsNullOrWhiteSpace(value))
             {
