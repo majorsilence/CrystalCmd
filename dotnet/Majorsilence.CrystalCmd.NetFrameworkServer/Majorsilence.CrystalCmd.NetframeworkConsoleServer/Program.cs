@@ -64,8 +64,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase))
             {
                 var creds = UsernameAndPassword(headers);
-                string user = ConfigurationManager.AppSettings["Username"];
-                string password = ConfigurationManager.AppSettings["Password"];
+                string user = Settings.GetSetting("Username");
+                string password = Settings.GetSetting("Password");
                 var expected_creds = Tuple.Create(user, password);
                 var callResult = Authenticate(creds, expected_creds);
                 if (callResult.StatusCode != 200)

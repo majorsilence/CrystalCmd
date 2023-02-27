@@ -125,6 +125,7 @@
     <Compile Include="..\..\Majorsilence.CrystalCmd.Client\SubReports.cs">
       <Link>Models\SubReports.cs</Link>
     </Compile>
+    <Compile Include="Settings.cs" />
     <Compile Include="WorkingFolder.cs" />
   </ItemGroup>
   <ItemGroup>

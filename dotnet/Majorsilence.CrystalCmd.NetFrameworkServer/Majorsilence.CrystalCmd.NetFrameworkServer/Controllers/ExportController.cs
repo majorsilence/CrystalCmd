@@ -106,8 +106,8 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 
         private static bool AuthFailed()
         {
-            string user = ConfigurationManager.AppSettings["Username"];
-            string password = ConfigurationManager.AppSettings["Password"];
+            string user = Settings.GetSetting("Username");
+            string password = Settings.GetSetting("Password");
             if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(password))
             {
                 // auth required
