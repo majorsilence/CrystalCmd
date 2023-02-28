@@ -1,0 +1,59 @@
+FROM ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+
+ADD VERSION .
+
+# Install Wine
+# https://wiki.winehq.org/Ubuntu
+RUN apt-get update \
+    && apt install -y wget software-properties-common gnupg2 \
+    && dpkg --add-architecture i386 \
+    && apt-get update \
+    && mkdir -pm755 /etc/apt/keyrings \
+    && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
+    && wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/focal/winehq-focal.sources \
+    && apt update \
+    && mkdir -p /tmp && cd /tmp/ \
+    && apt install -y winehq-stable winbind cabextract xvfb \
+    # Clean
+    && rm -rf /tmp/* \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
+    && chmod +x winetricks \
+    && cp winetricks /usr/local/bin
+
+# Turn off Fixme warnings
+#ENV WINEDEBUG=fixme-all
+
+# TODO: download from the crystal reports site. 
+# These files must be manually downloaded before running docker build
+COPY CR13SP33MSI64_0-80007712.MSI /root/CR13SP33MSI64_0-80007712.MSI
+COPY CR13SP33MSI32_0-80007712.MSI /root/CR13SP33MSI32_0-80007712.MSI
+
+# Setup a Wine prefix
+ENV WINEPREFIX=/majorsilence-wine
+ENV WINEARCH=win64
+RUN mkdir -p /majorsilence-wine \
+    && winecfg && wineboot -u \
+    && winetricks -q dotnet48 \
+    && winetricks -q gdiplus \
+    && wine msiexec /i /root/CR13SP33MSI64_0-80007712.MSI /qn \
+    && wineserver -k
+
+# Crystal reports
+# https://origin.softwaredownloads.sap.com/public/site/index.html
+
+RUN WINEPREFIX=/majorsilence-wine-x86 \
+    && WINEARCH=win32 \
+    && mkdir -p /majorsilence-wine-x86 \
+    && winecfg && wineboot -u \
+    && winetricks -q dotnet48 \
+    && winetricks -q gdiplus \
+    && wine msiexec /i /root/CR13SP33MSI32_0-80007712.MSI /qn \
+    && wineserver -k
+
+ENTRYPOINT ["/usr/bin/bash"]
