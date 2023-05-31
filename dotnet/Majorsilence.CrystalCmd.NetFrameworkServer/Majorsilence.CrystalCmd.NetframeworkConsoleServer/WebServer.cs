@@ -78,6 +78,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                             }
                             catch (Exception ex)
                             {
+                                Console.Error.WriteLine(ex);
                                 Console.Error.WriteLine($"Could not connect Error: {ex.Message} Stack Trace: {ex.StackTrace}");
                             }
                             finally
@@ -90,6 +91,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
                 catch (Exception ex)
                 {
+                    Console.Error.WriteLine(ex);
                     Console.Error.WriteLine($"Could not connect Error: {ex.Message} Stack Trace: {ex.StackTrace}");
                 } // suppress any exceptions
             });
@@ -118,8 +120,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             {
                 _listener.Prefixes.Add(prefix);
             }
-            catch
+            catch(Exception ex)
             {
+                Console.Error.WriteLine(ex);
             }
         }
     }
