@@ -117,6 +117,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
                 catch (Exception ex)
                 {
+                    Console.Error.WriteLine(ex);
                     var message = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                     {
                         Content = new StringContent(ex.Message + System.Environment.NewLine + ex.StackTrace)

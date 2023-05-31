@@ -39,10 +39,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
                             SetDataSource(table.Key, dt, reportClientDocument);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // some report data sources are optional
-                        // TODO: logging
+                        Console.Error.WriteLine(ex);
                     }
                 }
 
@@ -64,10 +63,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         }
 
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // some sub reports are optional
-                        // TODO: logging
+                        Console.Error.WriteLine(ex);
                     }
                 }
 
@@ -94,9 +92,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     {
                         MoveReportObject(x, reportClientDocument);
                     }
-                    catch (System.IndexOutOfRangeException)
+                    catch (System.IndexOutOfRangeException iore)
                     {
-                        // TODO: Add logging about bad move objects
+                        Console.Error.WriteLine(iore);
                     }
 
                 }
