@@ -16,6 +16,7 @@ namespace Majorsilence.CrystalCmd.Client
             MoveObjectPosition = new List<MoveObjects>();
             DataTables = new Dictionary<string, string>();
             SubReportDataTables = new List<SubReports>();
+            SubReportParameters = new List<SubReportParameters>();
         }
 
         // public byte[] ReportFile { get; set; }
@@ -26,7 +27,7 @@ namespace Majorsilence.CrystalCmd.Client
 
         public Dictionary<string, string> DataTables { get; set; }
         public IList<SubReports> SubReportDataTables { get; set; }
-
+        public IList<SubReportParameters> SubReportParameters { get; set; }
 
         public void AddData(string name, DataTable dt)
         {

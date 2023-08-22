@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
+using System.Web.UI.WebControls;
+using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
@@ -86,6 +88,32 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     }
                 }
 
+                foreach (var subreport in datafile.SubReportParameters)
+                {
+                    try
+                    {
+                        foreach (var parameter in subreport.Parameters)
+                        {
+                            try
+                            {
+                                SetSubreportParameterValue(
+                                    parameter.Key,
+                                    parameter.Value,
+                                    reportClientDocument, 
+                                    subreport.ReportName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.Error.WriteLine(ex);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine(ex);
+                    }
+                }
+
                 foreach (var x in datafile.MoveObjectPosition)
                 {
                     try
@@ -104,11 +132,27 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
         }
 
-
         private void SetParameterValue(string name, object val, ReportDocument rpt)
         {
             if (rpt.ParameterFields[name] != null)
             {
+                SetAnyLayerParameterValue(name, val, rpt);
+
+            }
+            else
+            {
+                Console.WriteLine(name);
+            }
+        }
+
+        private void SetSubreportParameterValue(string name, object val, ReportDocument rpt, string subreportName)
+        {
+            rpt.SetParameterValue(name, val, subreportName);
+        }
+
+        private void SetAnyLayerParameterValue(string name, object val, ReportDocument rpt)
+        {
+            
                 var par = rpt.ParameterFields[name];
                 string theValue;
                 switch (par.ParameterValueType)
@@ -153,11 +197,6 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         break;
                 }
 
-            }
-            else
-            {
-                Console.WriteLine(name);
-            }
         }
 
         private void SetDataSource(string tableName, DataTable val, ReportDocument rpt)
