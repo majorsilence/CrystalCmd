@@ -67,7 +67,7 @@ namespace DotNetRunner
 
             var parameterReportData = new Data();
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
-            parameterReportData.Parameters.Add("MyParameter2", "My Second Parameter");
+            parameterReportData.Parameters.Add("MyParameter2", true);
 
             await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
 
@@ -82,10 +82,36 @@ namespace DotNetRunner
             var subreportDatatableData = new Data();
             subreportDatatableData.AddData("the_dotnet_dataset_report.rpt", "Employee", dt);
             await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset.pdf", subreportDatatableData);
+
+
+            var fullData = new Data();
+            fullData.AddData("EMPLOYEE", dt);
+            fullData.AddData("the_dotnet_dataset_report_with_params", "Employee", dt);
+            fullData.Parameters = parameterReportData.Parameters;
+            fullData.SubReportParameters.Add(new SubReportParameters()
+            {
+                Parameters = parameterReportData.Parameters,
+                ReportName = "the_dotnet_dataset_report_with_params"
+            });
+            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport.pdf", fullData);
+
+            var emptySubreportData = new Data();
+            emptySubreportData.SetEmptyTable("EMPLOYEE");
+            emptySubreportData.SetEmptyTable("the_dotnet_dataset_report_with_params", "Employee");
+            emptySubreportData.Parameters = parameterReportData.Parameters;
+            emptySubreportData.SubReportParameters.Add(new SubReportParameters()
+            {
+                Parameters = parameterReportData.Parameters,
+                ReportName = "the_dotnet_dataset_report_with_params"
+            });
+            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
+
         }
 
         private static async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
+            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath}");
+
             using (var fstream = new FileStream(reportPath, FileMode.Open))
             using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
             {
