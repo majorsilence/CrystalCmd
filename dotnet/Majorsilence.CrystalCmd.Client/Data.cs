@@ -17,6 +17,8 @@ namespace Majorsilence.CrystalCmd.Client
             DataTables = new Dictionary<string, string>();
             SubReportDataTables = new List<SubReports>();
             SubReportParameters = new List<SubReportParameters>();
+            EmptyDataTables = new List<string>();
+            EmptySubReportDataTables = new List<SubReports>();
         }
 
         // public byte[] ReportFile { get; set; }
@@ -26,7 +28,9 @@ namespace Majorsilence.CrystalCmd.Client
         // DataTables converted to CSV, must be loaded into new DataTables
 
         public Dictionary<string, string> DataTables { get; set; }
+        public IList<string> EmptyDataTables { get; set; }
         public IList<SubReports> SubReportDataTables { get; set; }
+        public IList<SubReports> EmptySubReportDataTables { get; set; }
         public IList<SubReportParameters> SubReportParameters { get; set; }
 
         public void AddData(string name, DataTable dt)
@@ -66,6 +70,21 @@ namespace Majorsilence.CrystalCmd.Client
                 DataTable = csv,
                 ReportName = reportName,
                 TableName = subReportTableName
+            });
+        }
+
+        public void SetEmptyTable(string tableName)
+        {
+            EmptyDataTables.Add(tableName);
+        }
+
+        public void SetEmptyTable(string subreportName, string tableName)
+        {
+            EmptySubReportDataTables.Add(new SubReports()
+            {
+                DataTable = null,
+                ReportName = subreportName,
+                TableName = tableName
             });
         }
 
