@@ -2,9 +2,9 @@ WARNING. Do not use. This is one big experiment.
 
 # What is CrystalCmd
 
-CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+CrystalCmd is a collection of Java and C# programs to load json files into crystal reports and produce PDFs.
 
-Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
+Originally it was designed as a toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on Linux using a Java implementation.
 
 # Example usage
 
@@ -28,7 +28,7 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
 
 ## command line mode
 
-CrystalCmd upports running as a command line tool. Pass in path to report, data, and output fileand a pdf is generated.
+CrystalCmd supports running as a command line tool. Pass in path to report, data, and output fileand a pdf is generated.
 
 ```bash
 java -jar CrystalCmd.jar -reportpath "/path/to/report.rpt" -datafile "/path/to/data.json" -outpath "/path/to/generated/file.pdf"
@@ -112,9 +112,9 @@ sudo apt-get install openjdk-11-jdk
 
 Download [eclipse java edition](http://www.eclipse.org/downloads/eclipse-packages/).
 
-Setup eclipse with [crystal references](https://archive.sap.com/documents/docs/DOC-29757).
+Setup Eclipse with [crystal references](https://archive.sap.com/documents/docs/DOC-29757).
 
-Import java/CrystalCmd folder as ecplise project (Eclipse -> File -> Open Projects from File System).
+Import java/CrystalCmd folder as eclipse project (Eclipse -> File -> Open Projects from File System).
 
 ### IntelliJ
 
@@ -154,7 +154,7 @@ https://answers.sap.com/questions/676449/nullpointerexception-in-opentypefontman
 
 > After some experimentation, a workaround was to create the fonts folder in the AdoptOpenJDK JRE (jre\lib\fonts) and copy a single font file from the **Linux msttcorefonts** mentioned above into the newly created fonts folder. My document uses all Arial font, but it doesn't seem to matter what font file is in the fonts folder. I copied Webdings.ttf. The file does have to be a real font file. I tried making a dummy text file and rename it to Webdings.ttf, but the NPE occurred with the dummy font file.
 >
-> Once a real font is copied to jre\lib\fonts, The PDF is created just fine with the Arial font embedded. It seems that there just has to be a one real font at jre\lib\fonts to get started, and then crjava/AdoptOpenJDK will eventually use fontconfig to find the correct Windows font.
+> Once a real font is copied to jre\lib\fonts, The PDF is created just fine with the Arial font embedded. It seems that there just has to be one real font at jre\lib\fonts to get started, and then crjava/AdoptOpenJDK will eventually use fontconfig to find the correct Windows font.
 
 Copy a file from
 
