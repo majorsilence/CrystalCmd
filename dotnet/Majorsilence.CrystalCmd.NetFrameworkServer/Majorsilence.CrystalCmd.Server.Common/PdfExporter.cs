@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI.WebControls;
+using System.Windows.Documents;
 using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
@@ -47,6 +48,22 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     }
                 }
 
+                foreach (var emptyReportName in datafile.EmptyDataTables)
+                {
+                    try
+                    {
+                        var dt = CreateEmptyTableSchema(
+                            reportClientDocument
+                                .Database
+                                .Tables[emptyReportName]);
+                        SetDataSource(emptyReportName, dt, reportClientDocument);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine(ex);
+                    }
+                }
+
                 foreach (var table in datafile.SubReportDataTables)
                 {
                     // fixme: sub report with multiple datatables?
@@ -71,7 +88,22 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     }
                 }
 
-
+                foreach (var emptySubreport in datafile.EmptySubReportDataTables)
+                {
+                    try
+                    {
+                        var dt = CreateEmptyTableSchema(
+                            reportClientDocument
+                                .Subreports[emptySubreport.ReportName]
+                                .Database
+                                .Tables[emptySubreport.TableName]);
+                        SetSubReport(emptySubreport.ReportName, emptySubreport.TableName, dt, reportClientDocument);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine(ex);
+                    }
+                }
 
                 foreach (var param in datafile.Parameters)
                 {
@@ -198,6 +230,38 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
 
         }
+
+        private DataTable CreateEmptyTableSchema(
+            CrystalDecisions.CrystalReports.Engine.Table table)
+        {
+            var dt = new DataTable();
+            foreach (DatabaseFieldDefinition column in table.Fields)
+            {
+                var columnName = column.Name;
+                var columnType = typeof(object);
+                if (Columns.ContainsKey(column.ValueType))
+                    columnType = Columns[column.ValueType];
+                dt.Columns.Add(columnName, columnType);
+            }
+            return dt;
+        }
+
+        private Dictionary<FieldValueType, Type> Columns = new Dictionary<FieldValueType, Type>()
+        {
+            { FieldValueType.BooleanField, typeof(bool) },
+            { FieldValueType.CurrencyField, typeof(decimal) },
+            {FieldValueType.Int16sField, typeof(short) },
+            {FieldValueType.Int16uField, typeof(ushort) },
+            {FieldValueType.Int32sField, typeof(int) },
+            {FieldValueType.Int32uField, typeof(uint) },
+            {FieldValueType.Int8sField, typeof(sbyte) },
+            {FieldValueType.Int8uField, typeof(byte) },
+            {FieldValueType.NumberField, typeof(decimal) },
+            {FieldValueType.StringField, typeof(string) },
+            {FieldValueType.DateTimeField, typeof(DateTime) },
+            {FieldValueType.DateField, typeof(DateTime) },
+            {FieldValueType.TimeField, typeof(DateTime) }
+        };
 
         private void SetDataSource(string tableName, DataTable val, ReportDocument rpt)
         {
