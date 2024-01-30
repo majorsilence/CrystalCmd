@@ -15,7 +15,11 @@ using System.Configuration;
 using System.Runtime.Remoting.Contexts;
 using Majorsilence.CrystalCmd.Client;
 using System.Security.AccessControl;
+using EmbedIO;
+using EmbedIO.Actions;
+using EmbedIO.Files;
 using Majorsilence.CrystalCmd.Server.Common;
+using Swan.Logging;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -33,33 +37,57 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
             System.IO.Directory.CreateDirectory(workingfolder);
 
-            WebServer ws;
-            Dictionary<string, List<string>> ends = GetAllEndPoints();
-            ws = new WebServer(ends, SendResponse);
-            ws.Run();
-            Console.WriteLine($"Port {port}");
+            var url = $"http://localhost:{port}/";
 
-            while (true)
+            // Our web server is disposable.
+            using (var server = CreateWebServer(url))
             {
-                await Task.Delay(1000);
+                // Once we've registered our modules and configured them, we call the RunAsync() method.
+                await server.RunAsync();
+                
+                while (true)
+                {
+                    await Task.Delay(1000);
+                }
             }
         }
+        
+        // Create and configure our web server.
+        private static WebServer CreateWebServer(string url)
+        {
+            var server = new WebServer(o => o
+                    .WithUrlPrefix(url)
+                    .WithMode(HttpListenerMode.EmbedIO))
+                .WithModule(new ActionModule("/status", HttpVerbs.Any, async (ctx) =>
+                    {
+                         await SendResponse( "/status", ctx.Request.Headers, ctx.Request.InputStream,
+                            ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx); 
+                    }))
+                .WithModule(new ActionModule("/export", HttpVerbs.Any, async (ctx) =>
+                {
+                    await SendResponse( "/export", ctx.Request.Headers, ctx.Request.InputStream,
+                        ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx); 
+                }));
 
-        static async Task<HttpResponseMessage>
+            // Listen for state changes.
+            server.StateChanged += (s, e) => $"WebServer New State - {e.NewState}".Info();
+
+            return server;
+        }
+
+        static async Task
            SendResponse(string rawurl, System.Collections.Specialized.NameValueCollection headers,
              Stream inputStream,
              System.Text.Encoding inputContentEncoding,
-             string contentType
+             string contentType,
+             IHttpContext ctx
            )
         {
             if (string.Equals(rawurl, "/status", StringComparison.InvariantCultureIgnoreCase))
             {
               //  return (200, "I'm alive", "text/plain; charset=UTF-8", inputContentEncoding);
-
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent("I'm alive")
-                };
+                ctx.SendStringAsync("I'm alive", "text/plain", Encoding.UTF8);
+                return;
             }
             else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -69,10 +97,10 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 var expected_creds = Tuple.Create(user, password);
                 var callResult = Authenticate(creds, expected_creds);
                 if (callResult.StatusCode != 200)
-                    return new HttpResponseMessage((HttpStatusCode)callResult.StatusCode)
-                    {
-                        Content = new StringContent(callResult.message)
-                    };
+                {
+                    ctx.Response.StatusCode = callResult.StatusCode;
+                    return;
+                }
 
                 var streamContent = new StreamContent(inputStream);
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
@@ -112,18 +140,14 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
                     var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
                     bytes = exporter.exportReportToStream(reportPath, reportData);
-
-
+                    
                 }
                 catch (Exception ex)
                 {
                     Console.Error.WriteLine(ex);
-                    var message = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                    {
-                        Content = new StringContent(ex.Message + System.Environment.NewLine + ex.StackTrace)
-                    };
 
-                    return message;
+                    ctx.Response.StatusCode = 500;
+                    return;
                 }
                 finally
                 {
@@ -136,24 +160,22 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                         // TODO: cleanup will happen later
                     }
                 }
+                
+                // Set the headers for content disposition and content type
+                ctx.Response.Headers.Add("Content-Disposition", "attachment; filename=report.pdf");
+                ctx.Response.ContentType = "application/octet-stream";
+                ctx.Response.ContentLength64 = bytes.Length;
+                ctx.Response.StatusCode = 200;
 
-                var result = new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new ByteArrayContent(bytes)
-                };
-                result.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
-                {
-                    FileName = "report.pdf"
-                };
-                result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                return result;
+                // Write the byte array to the response stream
+                await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                await ctx.Response.OutputStream.FlushAsync();
 
+                // Ensure that all headers and content are sent
+                ctx.Response.Close();
+                return;
             }
-
-            return new HttpResponseMessage(HttpStatusCode.BadRequest)
-            {
-                Content = new StringContent("400")
-            };
+            ctx.Response.StatusCode = 400;
         }
 
         private static Tuple<string, string> UsernameAndPassword(NameValueCollection headers)
