@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net48;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net48;net5.0;net6.0;net8.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
     <Description>CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
@@ -10,7 +10,7 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
     <Authors>Majorsilence</Authors>
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.14</Version>
+    <Version>1.0.15</Version>
   </PropertyGroup>
 
   <ItemGroup>
