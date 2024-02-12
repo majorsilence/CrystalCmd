@@ -37,7 +37,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
             System.IO.Directory.CreateDirectory(workingfolder);
 
-            var url = $"http://localhost:{port}/";
+            var url = $"http://*:{port}/";
 
             // Our web server is disposable.
             using (var server = CreateWebServer(url))
