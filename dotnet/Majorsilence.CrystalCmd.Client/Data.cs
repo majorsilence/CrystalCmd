@@ -19,6 +19,11 @@ namespace Majorsilence.CrystalCmd.Client
             SubReportParameters = new List<SubReportParameters>();
             EmptyDataTables = new List<string>();
             EmptySubReportDataTables = new List<SubReports>();
+            Suppress = new Dictionary<string, bool>();
+            Resize = new Dictionary<string, int>();
+            FormulaFieldText = new Dictionary<string, string>();
+            CanGrow = new Dictionary<string, bool>();
+            SortByField = new Dictionary<string, string>();
         }
 
         // public byte[] ReportFile { get; set; }
@@ -32,6 +37,28 @@ namespace Majorsilence.CrystalCmd.Client
         public IList<SubReports> SubReportDataTables { get; set; }
         public IList<SubReports> EmptySubReportDataTables { get; set; }
         public IList<SubReportParameters> SubReportParameters { get; set; }
+        /// <summary>
+        /// Object name, True/False suppress field/object
+        /// </summary>
+        public Dictionary<string, bool> Suppress { get; set; }
+        /// <summary>
+        /// Object name, new width
+        /// </summary>
+        public Dictionary<string, int> Resize { get; set; }
+        /// <summary>
+        /// Formula Field Name, New field value
+        /// </summary>
+        public Dictionary<string, string> FormulaFieldText { get; set; }
+
+        /// <summary>
+        /// Object name, True/False can grow
+        /// </summary>
+        public Dictionary<string, bool> CanGrow { get; set; }
+
+        /// <summary>
+        /// Table name, field name 
+        /// </summary>
+        public Dictionary<string, string> SortByField { get; set; }
 
         public void AddData(string name, DataTable dt)
         {

@@ -131,7 +131,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                                 SetSubreportParameterValue(
                                     parameter.Key,
                                     parameter.Value,
-                                    reportClientDocument, 
+                                    reportClientDocument,
                                     subreport.ReportName);
                             }
                             catch (Exception ex)
@@ -144,6 +144,31 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     {
                         Console.Error.WriteLine(ex);
                     }
+                }
+
+                foreach(var item in datafile.FormulaFieldText)
+                {
+                    SetFormulaText(reportClientDocument, item);
+                }
+
+                foreach(var item in datafile.CanGrow)
+                {
+                    reportClientDocument.ReportDefinition.ReportObjects[item.Key].ObjectFormat.EnableCanGrow = item.Value;
+                }
+
+                foreach (var item in datafile.Suppress)
+                {
+                    SetSuppress(reportClientDocument, item);
+                }
+
+                foreach (var item in datafile.SortByField)
+                {
+                    SetSortOrder(reportClientDocument, item);
+                }
+
+                foreach(var item in datafile.Resize)
+                {
+                    SetResize(reportClientDocument, item);
                 }
 
                 foreach (var x in datafile.MoveObjectPosition)
@@ -162,6 +187,37 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
                 return ExportPDF(reportClientDocument);
             }
+        }
+
+        private static void SetFormulaText(ReportDocument reportClientDocument, KeyValuePair<string, string> item)
+        {
+            reportClientDocument.DataDefinition.FormulaFields[item.Key].Text = item.Value;
+        }
+
+        private static void SetResize(ReportDocument reportClientDocument, KeyValuePair<string, int> item)
+        {
+            reportClientDocument.ReportDefinition.ReportObjects[item.Key].Width = item.Value;
+        }
+
+        private static void SetSuppress(ReportDocument reportClientDocument, KeyValuePair<string, bool> item)
+        {
+            try
+            {
+                if (reportClientDocument.ReportDefinition.ReportObjects[item.Key] != null)
+                {
+                    reportClientDocument.ReportDefinition.ReportObjects[item.Key].ObjectFormat.EnableSuppress = item.Value;
+                }
+            }
+            catch (IndexOutOfRangeException ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
+        }
+
+        private static void SetSortOrder(ReportDocument reportClientDocument, KeyValuePair<string, string> item)
+        {
+            FieldDefinition FieldDef = reportClientDocument.Database.Tables[item.Key].Fields[item.Value];
+            reportClientDocument.DataDefinition.SortFields[0].Field = FieldDef;
         }
 
         private void SetParameterValue(string name, object val, ReportDocument rpt)
@@ -184,50 +240,50 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private void SetAnyLayerParameterValue(string name, object val, ReportDocument rpt)
         {
-            
-                var par = rpt.ParameterFields[name];
-                string theValue;
-                switch (par.ParameterValueType)
-                {
-                    case ParameterValueKind.BooleanParameter:
-                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "false" : val.ToString();
-                        if (theValue == "0")
-                        {
-                            theValue = "false";
-                        }
-                        else if (theValue == "1")
-                        {
-                            theValue = "true";
-                        }
-                        rpt.SetParameterValue(name, bool.Parse(theValue));
-                        break;
-                    case ParameterValueKind.CurrencyParameter:
-                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
-                        rpt.SetParameterValue(name, decimal.Parse(theValue));
-                        break;
-                    case ParameterValueKind.NumberParameter:
-                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
-                        try
-                        {
-                            rpt.SetParameterValue(name, int.Parse(theValue));
-                        }
-                        catch (Exception)
-                        {
-                            rpt.SetParameterValue(name, decimal.Parse(theValue));
-                        }
 
-                        break;
-                    case ParameterValueKind.DateParameter:
-                    case ParameterValueKind.DateTimeParameter:
-                    case ParameterValueKind.TimeParameter:
-                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? DateTime.Now.ToLongDateString() : val.ToString();
-                        rpt.SetParameterValue(name, DateTime.Parse(theValue));
-                        break;
-                    default:
-                        theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
-                        rpt.SetParameterValue(name, theValue);
-                        break;
-                }
+            var par = rpt.ParameterFields[name];
+            string theValue;
+            switch (par.ParameterValueType)
+            {
+                case ParameterValueKind.BooleanParameter:
+                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "false" : val.ToString();
+                    if (theValue == "0")
+                    {
+                        theValue = "false";
+                    }
+                    else if (theValue == "1")
+                    {
+                        theValue = "true";
+                    }
+                    rpt.SetParameterValue(name, bool.Parse(theValue));
+                    break;
+                case ParameterValueKind.CurrencyParameter:
+                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
+                    rpt.SetParameterValue(name, decimal.Parse(theValue));
+                    break;
+                case ParameterValueKind.NumberParameter:
+                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
+                    try
+                    {
+                        rpt.SetParameterValue(name, int.Parse(theValue));
+                    }
+                    catch (Exception)
+                    {
+                        rpt.SetParameterValue(name, decimal.Parse(theValue));
+                    }
+
+                    break;
+                case ParameterValueKind.DateParameter:
+                case ParameterValueKind.DateTimeParameter:
+                case ParameterValueKind.TimeParameter:
+                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? DateTime.Now.ToLongDateString() : val.ToString();
+                    rpt.SetParameterValue(name, DateTime.Parse(theValue));
+                    break;
+                default:
+                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
+                    rpt.SetParameterValue(name, theValue);
+                    break;
+            }
 
         }
 
@@ -292,7 +348,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
         }
 
         private byte[] ExportPDF(ReportDocument rpt)
-        {        
+        {
             string fileName = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.pdf");
             CrystalDecisions.Shared.ExportFormatType exp = ExportFormatType.PortableDocFormat;
             rpt.ExportToDisk(exp, fileName);
