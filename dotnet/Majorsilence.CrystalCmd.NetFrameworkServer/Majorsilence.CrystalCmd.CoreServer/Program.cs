@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -18,7 +19,7 @@ app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
     var id = Guid.NewGuid().ToString();
     string workingFolder = Path.Combine(config.GetValue<string>("WorkingFolder"), id);
 
-    Data reportData = null;
+    ReportData reportData = null;
     byte[] reportTemplate = null;
 
     

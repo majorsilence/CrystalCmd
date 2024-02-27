@@ -1,4 +1,5 @@
-﻿using Majorsilence.CrystalCmd.Server.Common;
+﻿using Majorsilence.CrystalCmd.Common;
+using Majorsilence.CrystalCmd.Server.Common;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -22,53 +23,18 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
         [HttpPost]
         public async Task<HttpResponseMessage> Post()
         {
-            if (!Request.Content.IsMimeMultipartContent())
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+            var serverSetup = new ServerSetup();
+            serverSetup.CheckAuthAndMimeType(Request);
 
-            if(AuthFailed())
-            {
-                var authproblem = new HttpResponseMessage(HttpStatusCode.Unauthorized);
-                return authproblem;
-            }
+            var (reportData, reportTemplate) = await serverSetup.GetTemplateAndData<ReportData>(Request);
 
-            var provider = new MultipartMemoryStreamProvider();
-            await Request.Content.ReadAsMultipartAsync(provider);
-
-            Client.Data reportData = null;
-            byte[] reportTemplate = null;
-
-            foreach (var file in provider.Contents)
-            {
-                string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
-                if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(await file.ReadAsStringAsync());
-                }
-                else
-                {
-                    reportTemplate = await file.ReadAsByteArrayAsync();
-                }
-            }
-
-            string reportPath = null;
             byte[] bytes = null;
             try
             {
-                reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
-                // System.IO.File.WriteAllBytes(reportPath, reportTemplate);
-                // Using System.IO.File.WriteAllBytes randomly causes problems where the system still 
-                // has the file open when crystal attempts to load it and crystal fails.
-                using (var fstream = new FileStream(reportPath, FileMode.Create))
-                {
-                    fstream.Write(reportTemplate, 0, reportTemplate.Length);
-                    fstream.Flush();
-                    fstream.Close();
-                }
-
-                var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
-                bytes = exporter.exportReportToStream(reportPath, reportData);
-
-
+                serverSetup.CreateReportAndGetPath(
+                    reportTemplate, 
+                    reportPath => bytes = ExportReportToPdf(reportData, reportPath)
+                );
             }
             catch (Exception ex)
             {
@@ -78,17 +44,6 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                 };
 
                 return message;
-            }
-            finally
-            {
-                try
-                {
-                    System.IO.File.Delete(reportPath);
-                }
-                catch (Exception)
-                {
-                    // TODO: cleanup will happen later
-                }
             }
 
             var result = new HttpResponseMessage(HttpStatusCode.OK)
@@ -104,45 +59,12 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 
         }
 
-        private static bool AuthFailed()
+        private static byte[] ExportReportToPdf(ReportData reportData, string reportPath)
         {
-            string user = Settings.GetSetting("Username");
-            string password = Settings.GetSetting("Password");
-            if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(password))
-            {
-                // auth required
-                var basicAuth = GetUserNameAndPassword(HttpContext.Current);
-                if (!basicAuth.HasValue)
-                {
-                    //Auth problem
-                    return true;
-                }
-                if (!string.Equals(user, basicAuth.Value.UserName, StringComparison.InvariantCultureIgnoreCase) ||
-                    !string.Equals(password, basicAuth.Value.Password, StringComparison.InvariantCulture))
-                {
-                    // auth problem
-                    return true;
-                }
-            }
-
-            return false;
+            byte[] bytes;
+            var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
+            bytes = exporter.exportReportToStream(reportPath, reportData);
+            return bytes;
         }
-
-        private static (string UserName, string Password)? GetUserNameAndPassword(HttpContext context)
-        {
-            var auth = context.Request.Headers.GetValues("Authorization")?.FirstOrDefault().Replace("Basic ", "");
-            var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(auth ?? ""));
-            if (string.IsNullOrWhiteSpace(credentials))
-            {
-                return null;
-            }
-
-            int separator = credentials.IndexOf(':');
-            string name = credentials.Substring(0, separator);
-            string password = credentials.Substring(separator + 1);
-
-            return (name, password);
-        }
-
     }
 }
