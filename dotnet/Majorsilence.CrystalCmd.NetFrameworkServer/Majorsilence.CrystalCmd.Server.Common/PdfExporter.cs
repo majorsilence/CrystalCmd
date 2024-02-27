@@ -11,14 +11,14 @@ using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
-using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class PdfExporter
     {
 
-        public byte[] exportReportToStream(string reportPath, Client.Data datafile)
+        public byte[] exportReportToStream(string reportPath, ReportData datafile)
         {
             using (var reportClientDocument = new ReportDocument())
             {

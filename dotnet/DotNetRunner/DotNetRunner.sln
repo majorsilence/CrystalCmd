@@ -6,6 +6,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetRunner", "DotNetRunne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{04F3F707-AAAC-42A3-9ECB-A6C3D5164B03}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Common", "..\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj", "{E96F8A23-3B51-4A6A-B7A5-7B7C68BD6619}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -20,6 +22,10 @@ Global
 		{04F3F707-AAAC-42A3-9ECB-A6C3D5164B03}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{04F3F707-AAAC-42A3-9ECB-A6C3D5164B03}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{04F3F707-AAAC-42A3-9ECB-A6C3D5164B03}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{E96F8A23-3B51-4A6A-B7A5-7B7C68BD6619}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E96F8A23-3B51-4A6A-B7A5-7B7C68BD6619}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{E96F8A23-3B51-4A6A-B7A5-7B7C68BD6619}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{E96F8A23-3B51-4A6A-B7A5-7B7C68BD6619}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

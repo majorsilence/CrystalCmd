@@ -11,9 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Ser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.NetframeworkConsole", "Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj", "{9746EF85-EB2E-411A-9609-5D485D78A987}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.CoreServer", "Majorsilence.CrystalCmd.CoreServer\Majorsilence.CrystalCmd.CoreServer.csproj", "{46D3AC55-C5F7-4586-A3B6-461959084155}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.CoreServer", "Majorsilence.CrystalCmd.CoreServer\Majorsilence.CrystalCmd.CoreServer.csproj", "{46D3AC55-C5F7-4586-A3B6-461959084155}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{FA93CE91-BB0F-498B-90FD-457090498CD3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Common", "Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj", "{FE5464A5-0F0F-4B18-9607-6FD3197E8504}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,6 +99,18 @@ Global
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Release|x64.Build.0 = Release|Any CPU
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Release|x86.ActiveCfg = Release|Any CPU
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Release|x86.Build.0 = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|x64.Build.0 = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Debug|x86.Build.0 = Debug|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|x64.ActiveCfg = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|x64.Build.0 = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE5464A5-0F0F-4B18-9607-6FD3197E8504}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
