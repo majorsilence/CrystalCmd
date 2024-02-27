@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Configuration;
 using System.Runtime.Remoting.Contexts;
-using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 using System.Security.AccessControl;
 using EmbedIO;
 using EmbedIO.Actions;
@@ -106,7 +106,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
 
                 var provider = await streamContent.ReadAsMultipartAsync();
-                Client.Data reportData = null;
+                ReportData reportData = null;
                 byte[] reportTemplate = null;
 
                 foreach (var file in provider.Contents)
@@ -115,7 +115,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
                     if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(await file.ReadAsStringAsync());
+                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<ReportData>(await file.ReadAsStringAsync());
                     }
                     else
                     {

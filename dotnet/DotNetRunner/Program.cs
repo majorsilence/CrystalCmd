@@ -1,4 +1,5 @@
 ﻿using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -15,6 +16,7 @@ namespace DotNetRunner
     class MainClass
     {
         static string exportUrl = "https://localhost:44355/export";
+        static string analyzerUrl = "https://localhost:44355/analyzer";
         public static async Task Main(string[] args)
         {
             CreateJsonForConsoleRunner();
@@ -25,7 +27,7 @@ namespace DotNetRunner
         {
             DataTable dt = GetTable();
 
-            var reportData = new Data()
+            var reportData = new ReportData()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -42,7 +44,7 @@ namespace DotNetRunner
         static async Task ConnectToServerWritePdfAsync()
         {
             DataTable dt = GetTable();
-            var reportData = new Data()
+            var reportData = new ReportData()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -51,7 +53,7 @@ namespace DotNetRunner
             reportData.AddData("EMPLOYEE", dt);
 
             var list = GetList();
-            var reportDataList = new Data()
+            var reportDataList = new ReportData()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -63,15 +65,15 @@ namespace DotNetRunner
 
             await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report_ienumerable.pdf", reportDataList);
 
-            await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new Data());
+            await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new ReportData());
 
-            var parameterReportData = new Data();
+            var parameterReportData = new ReportData();
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
             await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
 
-            var subreportParameterData = new Data();
+            var subreportParameterData = new ReportData();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
             {
                 Parameters = parameterReportData.Parameters,
@@ -79,12 +81,12 @@ namespace DotNetRunner
             });
             await CreatePdfFromReport("thereport_with_subreport_with_parameters.rpt", "thereport_with_subreport_with_parameters.pdf", subreportParameterData);
 
-            var subreportDatatableData = new Data();
+            var subreportDatatableData = new ReportData();
             subreportDatatableData.AddData("the_dotnet_dataset_report.rpt", "Employee", dt);
             await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset.pdf", subreportDatatableData);
 
 
-            var fullData = new Data();
+            var fullData = new ReportData();
             fullData.AddData("EMPLOYEE", dt);
             fullData.AddData("the_dotnet_dataset_report_with_params", "Employee", dt);
             fullData.Parameters = parameterReportData.Parameters;
@@ -95,7 +97,7 @@ namespace DotNetRunner
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport.pdf", fullData);
 
-            var emptySubreportData = new Data();
+            var emptySubreportData = new ReportData();
             emptySubreportData.SetEmptyTable("EMPLOYEE");
             emptySubreportData.SetEmptyTable("the_dotnet_dataset_report_with_params", "Employee");
             emptySubreportData.Parameters = parameterReportData.Parameters;
@@ -106,9 +108,61 @@ namespace DotNetRunner
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
 
+            var analyzerReportName = "the_dotnet_dataset_report_with_params_and_subreport.rpt";
+            using (var client = new HttpClient())
+            {
+                await ReportStream(
+                    "the_dotnet_dataset_report_with_params_and_subreport.rpt",
+                    stream => TestAnalyzer(stream, client)
+                );
+            }
         }
 
-        private static async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
+        private static async Task TestAnalyzer(Stream report, HttpClient httpClient)
+        {
+            var analyzer = new ReportAnalyzer(report, httpClient, "user", "password", analyzerUrl);
+            //var existingSubreport = subreportParameterData.SubReportDataTables.First();
+            //var subreportName = existingSubreport.ReportName;
+            /*var hasSubreport = analyzer.hasSubreport();
+            */
+
+            var reportAnalysis = await analyzer.FullAnalysis();
+
+            if (!reportAnalysis.HasSubReport())
+            {
+                throw new Exception($"Report does not have subreport.");
+            }
+
+            if (!reportAnalysis.DataTables.First(
+                    t => string.Equals(t.DataTableName, "employee", StringComparison.OrdinalIgnoreCase)
+                )
+                .ColumnNames
+                .Contains("EMPLOYEE_ID", StringComparer.OrdinalIgnoreCase))
+            {
+                throw new Exception($"Report does not have 'Employee' datatable field 'EMPLOYEE_ID'.");
+            }
+
+            if (!reportAnalysis.SubReports
+                .First(s => string.Equals(s.SubreportName, "the_dotnet_dataset_report_with_params", StringComparison.OrdinalIgnoreCase))
+                .DataTables.First(t => string.Equals(t.DataTableName, "employee", StringComparison.OrdinalIgnoreCase))
+                .ColumnNames
+                .Contains("EMPLOYEE_ID"))
+            {
+                throw new Exception($"Report does not have subreport datatable field.");
+            }
+
+            if (!reportAnalysis.SubReports
+                .First(s => string.Equals(s.SubreportName, "the_dotnet_dataset_report_with_params", StringComparison.OrdinalIgnoreCase))
+                .Parameters
+                .Contains("MyParameter"))
+            {
+                throw new Exception($"Report does not have subreport parameter.");
+            }
+
+            Console.WriteLine($"Analyzer test passed. Full output {reportAnalysis}.");
+        }
+
+        private static async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, ReportData reportData)
         {
             Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath}");
 
@@ -120,6 +174,14 @@ namespace DotNetRunner
                 {
                     stream.CopyTo(fstreamOut);
                 }
+            }
+        }
+
+        private static async Task ReportStream(string reportPath, Func<Stream, Task> reportHandler)
+        {
+            using (var fstream = new FileStream(reportPath, FileMode.Open))
+            {
+                await reportHandler(fstream);
             }
         }
 
@@ -156,7 +218,7 @@ namespace DotNetRunner
                 FIRST_NAME = "David",
                 LAST_NAME = "Indocin",
                 TestData = System.Text.Encoding.UTF8.GetBytes("Hello world")
-            }); 
+            });
             list.Add(new Employee()
             {
                 BIRTH_DATE = DateTime.Now,

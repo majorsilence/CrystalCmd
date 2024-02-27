@@ -1,4 +1,4 @@
-﻿namespace Majorsilence.CrystalCmd.Client
+﻿namespace Majorsilence.CrystalCmd.Common
 {
     public class SubReports
     {

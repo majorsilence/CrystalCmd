@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Majorsilence.CrystalCmd.Common;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -6,11 +7,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Majorsilence.CrystalCmd.Client
+namespace Majorsilence.CrystalCmd.Common
 {
-    public class Data
+    public class ReportData
     {
-        public Data()
+        public ReportData()
         {
             Parameters = new Dictionary<string, object>();
             MoveObjectPosition = new List<MoveObjects>();
@@ -19,11 +20,6 @@ namespace Majorsilence.CrystalCmd.Client
             SubReportParameters = new List<SubReportParameters>();
             EmptyDataTables = new List<string>();
             EmptySubReportDataTables = new List<SubReports>();
-            Suppress = new Dictionary<string, bool>();
-            Resize = new Dictionary<string, int>();
-            FormulaFieldText = new Dictionary<string, string>();
-            CanGrow = new Dictionary<string, bool>();
-            SortByField = new Dictionary<string, string>();
         }
 
         // public byte[] ReportFile { get; set; }
@@ -37,28 +33,6 @@ namespace Majorsilence.CrystalCmd.Client
         public IList<SubReports> SubReportDataTables { get; set; }
         public IList<SubReports> EmptySubReportDataTables { get; set; }
         public IList<SubReportParameters> SubReportParameters { get; set; }
-        /// <summary>
-        /// Object name, True/False suppress field/object
-        /// </summary>
-        public Dictionary<string, bool> Suppress { get; set; }
-        /// <summary>
-        /// Object name, new width
-        /// </summary>
-        public Dictionary<string, int> Resize { get; set; }
-        /// <summary>
-        /// Formula Field Name, New field value
-        /// </summary>
-        public Dictionary<string, string> FormulaFieldText { get; set; }
-
-        /// <summary>
-        /// Object name, True/False can grow
-        /// </summary>
-        public Dictionary<string, bool> CanGrow { get; set; }
-
-        /// <summary>
-        /// Table name, field name 
-        /// </summary>
-        public Dictionary<string, string> SortByField { get; set; }
 
         public void AddData(string name, DataTable dt)
         {
@@ -129,7 +103,8 @@ namespace Majorsilence.CrystalCmd.Client
             foreach (T tp in list)
             {
                 IList<string> fields = new List<string>();
-                foreach (var field in typeof(T).GetProperties()) {
+                foreach (var field in typeof(T).GetProperties())
+                {
 
                     var value = field.GetValue(tp, null);
 
@@ -141,8 +116,8 @@ namespace Majorsilence.CrystalCmd.Client
                     {
                         fields.Add(string.Concat("\"", value?.ToString()?.Replace("\"", "\"\""), "\""));
                     }
-                      
-                 
+
+
                 }
 
                 sb.AppendLine(string.Join(",", fields));

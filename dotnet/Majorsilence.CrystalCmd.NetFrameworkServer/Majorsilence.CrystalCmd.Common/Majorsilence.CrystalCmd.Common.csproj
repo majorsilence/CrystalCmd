@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
+	  <Description>
+		  CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+
+		  These are the common files between the client and server. 
+		  This will be mostly helpers and basic request / response objects.
+	  </Description>
+	  <Authors>Majorsilence</Authors>
+	  <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Version>1.0.15</Version>
+  </PropertyGroup>
+
+</Project>
