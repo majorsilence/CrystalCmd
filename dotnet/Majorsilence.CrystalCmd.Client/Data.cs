@@ -24,6 +24,7 @@ namespace Majorsilence.CrystalCmd.Client
             FormulaFieldText = new Dictionary<string, string>();
             CanGrow = new Dictionary<string, bool>();
             SortByField = new Dictionary<string, string>();
+            ExportAs = ExportTypes.PDF;
         }
 
         // public byte[] ReportFile { get; set; }
@@ -59,6 +60,8 @@ namespace Majorsilence.CrystalCmd.Client
         /// Table name, field name 
         /// </summary>
         public Dictionary<string, string> SortByField { get; set; }
+
+        public ExportTypes ExportAs { get; set; }
 
         public void AddData(string name, DataTable dt)
         {

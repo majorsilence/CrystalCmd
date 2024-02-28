@@ -125,6 +125,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
                 string reportPath = null;
                 byte[] bytes = null;
+                string fileExt = "pdf";
+                string mimeType = "application/octet-stream";
                 try
                 {
                     reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
@@ -139,8 +141,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     }
 
                     var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
-                    bytes = exporter.exportReportToStream(reportPath, reportData);
-                    
+                    var output = exporter.exportReportToStream(reportPath, reportData);
+                    bytes = output.Item1;
+                    fileExt = output.Item2;
+                    mimeType = output.Item3;
+
                 }
                 catch (Exception ex)
                 {
@@ -162,8 +167,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
                 
                 // Set the headers for content disposition and content type
-                ctx.Response.Headers.Add("Content-Disposition", "attachment; filename=report.pdf");
-                ctx.Response.ContentType = "application/octet-stream";
+                ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename=report.{fileExt}");
+                ctx.Response.ContentType = mimeType;
                 ctx.Response.ContentLength64 = bytes.Length;
                 ctx.Response.StatusCode = 200;
 

@@ -18,7 +18,13 @@ namespace Majorsilence.CrystalCmd.Server.Common
     public class PdfExporter
     {
 
-        public byte[] exportReportToStream(string reportPath, Client.Data datafile)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reportPath"></param>
+        /// <param name="datafile"></param>
+        /// <returns>byte array, file extension, mimetype</returns>
+        public Tuple<byte[], string, string> exportReportToStream(string reportPath, Client.Data datafile)
         {
             using (var reportClientDocument = new ReportDocument())
             {
@@ -184,8 +190,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
                 }
 
-
-                return ExportPDF(reportClientDocument);
+                return Export(datafile.ExportAs, reportClientDocument);
             }
         }
 
@@ -347,10 +352,62 @@ namespace Majorsilence.CrystalCmd.Server.Common
             rpt.Subreports[rptName].Database.Tables[idx].SetDataSource(dataSource);
         }
 
-        private byte[] ExportPDF(ReportDocument rpt)
+        private Tuple<byte[], string, string> Export(ExportTypes expFormatType, ReportDocument rpt)
         {
-            string fileName = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.pdf");
-            CrystalDecisions.Shared.ExportFormatType exp = ExportFormatType.PortableDocFormat;
+            CrystalDecisions.Shared.ExportFormatType exp;
+            string fileExt;
+            string mimetype;
+
+            switch (expFormatType)
+            {
+                case ExportTypes.CSV:
+                    exp = CrystalDecisions.Shared.ExportFormatType.CharacterSeparatedValues;
+                    fileExt="csv";
+                    mimetype = "text/csv";
+                    break;
+                case ExportTypes.CrystalReport:
+                    exp = CrystalDecisions.Shared.ExportFormatType.CrystalReport;
+                    fileExt="rpt";
+                    mimetype = "application/octet-stream";
+                    break;
+                case ExportTypes.Excel:
+                    exp = CrystalDecisions.Shared.ExportFormatType.Excel;
+                    fileExt="xls";
+                    mimetype = "application/vnd.ms-excel";
+                    break;
+                case ExportTypes.ExcelDataOnly:
+                    exp = CrystalDecisions.Shared.ExportFormatType.ExcelRecord;
+                    fileExt="xls";
+                    mimetype = "application/vnd.ms-excel";
+                    break;
+                case ExportTypes.PDF:
+                    exp = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
+                    fileExt="pdf";
+                    mimetype = "application/octet-stream";
+                    break;
+                case ExportTypes.RichText:
+                    exp = CrystalDecisions.Shared.ExportFormatType.RichText;
+                    fileExt="rtf";
+                    mimetype = "application/rtf";
+                    break;
+                case ExportTypes.TEXT:
+                    exp = CrystalDecisions.Shared.ExportFormatType.Text;
+                    fileExt="txt";
+                    mimetype = "text/plain";
+                    break;
+                case ExportTypes.WordDoc:
+                    exp = CrystalDecisions.Shared.ExportFormatType.WordForWindows;
+                    fileExt="doc";
+                    mimetype = "application/msword";
+                    break;
+                default:
+                    exp = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
+                    fileExt="pdf";
+                    mimetype = "application/octet-stream";
+                    break;
+            }
+
+            string fileName = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.{fileExt}");
             rpt.ExportToDisk(exp, fileName);
 
             byte[] myData;
@@ -370,7 +427,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 // fixme: data cleanup
             }
 
-            return myData;
+            return Tuple.Create(myData,  fileExt, mimetype);
         }
 
 

@@ -25,7 +25,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             if (!Request.Content.IsMimeMultipartContent())
                 throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
 
-            if(AuthFailed())
+            if (AuthFailed())
             {
                 var authproblem = new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 return authproblem;
@@ -52,6 +52,8 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 
             string reportPath = null;
             byte[] bytes = null;
+            string fileExt = "pdf";
+            string mimeType = "application/octet-stream";
             try
             {
                 reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
@@ -66,9 +68,10 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                 }
 
                 var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
-                bytes = exporter.exportReportToStream(reportPath, reportData);
-
-
+                var output = exporter.exportReportToStream(reportPath, reportData);
+                bytes = output.Item1;
+                fileExt = output.Item2;
+                mimeType = output.Item3;
             }
             catch (Exception ex)
             {
@@ -97,9 +100,9 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             };
             result.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
             {
-                FileName = "report.pdf"
+                FileName = $"report.{fileExt}"
             };
-            result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            result.Content.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
             return result;
 
         }
