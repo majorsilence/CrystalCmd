@@ -57,10 +57,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 {
                     Console.WriteLine($"Processing {dataItem} on thread {Thread.CurrentThread.ManagedThreadId}");
 
-                    var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
+                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
                     var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(System.IO.File.ReadAllText(dataItem.DataFile));
-                    var bytes = exporter.exportReportToStream(dataItem.RptFile, reportData);
-                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(dataItem.WorkingDir, "report.pdf") , bytes);
+                    var output = exporter.exportReportToStream(dataItem.RptFile, reportData);
+                    var bytes = output.Item1;
+                    var fileExt = output.Item2;
+                    var mimeType = output.Item3;
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(dataItem.WorkingDir, $"report.{fileExt}") , bytes);
                 }
             }
         }

@@ -140,7 +140,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                         fstream.Close();
                     }
 
-                    var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
+                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
                     var output = exporter.exportReportToStream(reportPath, reportData);
                     bytes = output.Item1;
                     fileExt = output.Item2;

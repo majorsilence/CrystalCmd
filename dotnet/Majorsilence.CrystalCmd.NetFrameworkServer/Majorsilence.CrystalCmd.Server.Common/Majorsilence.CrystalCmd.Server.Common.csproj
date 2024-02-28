@@ -108,7 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PdfExporter.cs" />
+    <Compile Include="Exporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\..\Majorsilence.CrystalCmd.Client\Data.cs">
       <Link>Models\Data.cs</Link>
