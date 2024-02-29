@@ -28,6 +28,38 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
 curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" http://127.0.0.1:4321/export --output testout.pdf
 ```
 
+## Server mode
+
+
+1. http://localhost:4321/status
+1. http://localhost:4321/export
+   - Returns pdf as bytestream
+   - Must be passed two post variables as byte arrays
+     - reporttemplate
+     - reportdata
+
+# Dotnet
+
+Use this project to generate test data from c# program
+
+Download the .net runtime from: https://origin.softwaredownloads.sap.com/public/site/index.html
+
+- Majorsilence.CrystalCmd.NetFrameworkServer
+    - net4.8 webapi project
+- Majorsilence.CrystalCmd.NetframeworkConsoleServer
+    - an embedio based console app/webserver
+    - can be run on Linux using wine
+
+
+# Crystal report examples
+
+https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
+
+
+# Java
+
+Basic info on the java version.   
+
 ## command line mode
 
 CrystalCmd upports running as a command line tool. Pass in path to report, data, and output fileand a pdf is generated.
@@ -42,19 +74,13 @@ example 2
 java -jar CrystalCmd.jar -reportpath "/home/peter/Projects/CrystalCmd/the_dataset_report.rpt" -datafile "/home/peter/Projects/CrystalCmd/test.json" -outpath "/home/peter/Projects/CrystalCmd/java/CrystalCmd/build/output.pdf"
 ```
 
-## Server mode
 
-CrystalCmd supports running in server mode. If you runn it with no command line arguments it
-starts a web server listending on port 4321. There are two end points that can be called.
 
-1. http://localhost:4321/status
-1. http://localhost:4321/export
-   - Returns pdf as bytestream
-   - Must be passed two post variables as byte arrays
-     - reporttemplate
-     - reportdata
+## Run the server
 
-Run the server.
+CrystalCmd supports running in server mode. If you run it with no command line arguments it
+starts a web server listening on port 4321. There are two end points that can be called.
+
 
 ```bash
 java -jar CrystalCmd.jar
@@ -102,8 +128,6 @@ crystalcmd -reportpath "/home/peter/Projects/CrystalWrapper/the_dataset_report.r
 sudo ./build_snap.sh
 ```
 
-# Java
-
 ## dev setup
 
 ```bash
@@ -135,16 +159,6 @@ sudo apt-get install openjdk-11-jre
 Package required libraries into generated JAR
 
 output as "CrystalCmd.jar" in folder ./CrystalCmd/java/CrystalCmd/build
-
-# Dot Net
-
-Use this project to generate test data from c# program
-
-Download the .net runtime from: https://origin.softwaredownloads.sap.com/public/site/index.html
-
-# Crystal report examples
-
-https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
 
 # Crystal reports Eclipse JAR library downloads
 
