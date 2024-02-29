@@ -108,6 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CrystalReportsAnalyzer.cs" />
     <Compile Include="Exporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\..\Majorsilence.CrystalCmd.Client\Data.cs">
@@ -131,12 +132,21 @@
     <Compile Include="..\..\Majorsilence.CrystalCmd.Client\ExportTypes.cs">
       <Link>Models\ExportTypes.cs</Link>
     </Compile>
+    <Compile Include="..\..\Majorsilence.CrystalCmd.Client\FullReportAnalysisResponse.cs">
+      <Link>Models\FullReportAnalysisResponse.cs</Link>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="WorkingFolder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj">
+      <Project>{95D616C2-2E8D-4BA7-ACB1-8C08634C84A0}</Project>
+      <Name>Majorsilence.CrystalCmd.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

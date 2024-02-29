@@ -209,6 +209,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\AnalyzerController.cs" />
     <Compile Include="Controllers\StatusController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
@@ -216,6 +217,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerSetup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -252,6 +254,7 @@
     <None Include=".dockerignore">
       <DependentUpon>Dockerfile</DependentUpon>
     </None>
+    <Content Include="EF.Reverse.POCO.v3.ttinclude" />
     <None Include="Scripts\jquery-3.6.3.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.3.js" />
     <Content Include="Scripts\jquery-3.6.3.min.js" />
@@ -309,6 +312,9 @@
       <Project>{4d494de8-8d1b-4587-817c-99bb35ca285e}</Project>
       <Name>Majorsilence.CrystalCmd.Server.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
