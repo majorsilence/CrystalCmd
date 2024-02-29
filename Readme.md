@@ -1,8 +1,10 @@
 WARNING. Do not use. This is one big experiment.
 
+If you are looking for a production crystal reports server look into [SAP Crystal Server](https://www.sap.com/canada/products/technology-platform/crystal-server.html).
+
 # What is CrystalCmd
 
-CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+CrystalCmd is a Java and C#/dotnet program to load json files into crystal reports and produce PDFs.
 
 Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
 
