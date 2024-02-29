@@ -15,12 +15,13 @@ using System.Web.Http;
 using Majorsilence.CrystalCmd.Client;
 
 
+
 namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 {
     public class AnalyzerController : ApiController
     {
         [HttpPost]
-        public async Task<HttpResponseMessage> FullAnalysis()
+        public async Task<FullReportAnalysisResponse> FullAnalysis()
         {
             var serverSetup = new ServerSetup();
             serverSetup.CheckAuthAndMimeType(Request);
@@ -34,10 +35,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                 reportPath => response = analyzer.GetFullAnalysis(reportPath)
             );
 
-            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            {
-                Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(response))
-            };
+            return response;
         }
     }
 }

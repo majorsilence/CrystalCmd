@@ -9,11 +9,13 @@ namespace Majorsilence.CrystalCmd.Client
             Parameters = new string[0];
             DataTables = new DataTableAnalysisDto[0];
             SubReports = new FullSubReportAnalysisDto[0];
+            ReportObjects = new ReportObjectsDto[0];
         }
 
         public IEnumerable<string> Parameters { get; set; }
         public IEnumerable<DataTableAnalysisDto> DataTables { get; set; }
         public IEnumerable<FullSubReportAnalysisDto> SubReports { get; set; }
+        public IEnumerable<ReportObjectsDto> ReportObjects { get; set; }
 
         public class FullSubReportAnalysisDto
         {
@@ -37,6 +39,13 @@ namespace Majorsilence.CrystalCmd.Client
 
             public string DataTableName { get; set; }
             public IEnumerable<string> ColumnNames { get; set; }
+        }
+
+        public class ReportObjectsDto
+        {
+            public string ObjectName { get; set; }
+            public int Width { get; set; }
+            public int TopPosition { get; set; }
         }
     }
 }
