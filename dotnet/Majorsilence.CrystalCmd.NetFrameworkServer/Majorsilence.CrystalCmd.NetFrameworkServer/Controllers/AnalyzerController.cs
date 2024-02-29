@@ -21,7 +21,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
     public class AnalyzerController : ApiController
     {
         [HttpPost]
-        public async Task<FullReportAnalysisResponse> FullAnalysis()
+        public async Task<FullReportAnalysisResponse> Post()
         {
             var serverSetup = new ServerSetup();
             serverSetup.CheckAuthAndMimeType(Request);

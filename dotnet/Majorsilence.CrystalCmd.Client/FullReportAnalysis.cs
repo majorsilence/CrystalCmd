@@ -7,16 +7,19 @@ namespace Majorsilence.CrystalCmd.Client
 {
     public class FullReportAnalysis
     {
-        internal FullReportAnalysis(IEnumerable<string> parameters, IEnumerable<DataTableAnalysis> dataTables, IEnumerable<FullSubReportAnalysis> subReports)
+        internal FullReportAnalysis(IEnumerable<string> parameters, IEnumerable<DataTableAnalysis> dataTables, IEnumerable<FullSubReportAnalysis> subReports,
+            IEnumerable<FullReportAnalysisResponse.ReportObjectsDto> reportObjects)
         {
             Parameters = parameters;
             DataTables = dataTables;
             SubReports = subReports;
+            ReportObjects = reportObjects;
         }
 
         public IEnumerable<FullSubReportAnalysis> SubReports { get; }
         public IEnumerable<string> Parameters { get; }
         public IEnumerable<DataTableAnalysis> DataTables { get; }
+        public IEnumerable<FullReportAnalysisResponse.ReportObjectsDto> ReportObjects { get; set; }
 
         public bool HasSubReport() => SubReports?.Any() ?? false;
 
