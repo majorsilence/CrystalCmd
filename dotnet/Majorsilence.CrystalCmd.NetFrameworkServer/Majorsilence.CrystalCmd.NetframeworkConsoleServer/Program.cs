@@ -20,6 +20,8 @@ using EmbedIO.Actions;
 using EmbedIO.Files;
 using Majorsilence.CrystalCmd.Server.Common;
 using Swan.Logging;
+using System.Runtime.Remoting.Messaging;
+using System.Net.Mime;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -44,14 +46,14 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             {
                 // Once we've registered our modules and configured them, we call the RunAsync() method.
                 await server.RunAsync();
-                
+
                 while (true)
                 {
                     await Task.Delay(1000);
                 }
             }
         }
-        
+
         // Create and configure our web server.
         private static WebServer CreateWebServer(string url)
         {
@@ -60,13 +62,18 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     .WithMode(HttpListenerMode.EmbedIO))
                 .WithModule(new ActionModule("/status", HttpVerbs.Any, async (ctx) =>
                     {
-                         await SendResponse( "/status", ctx.Request.Headers, ctx.Request.InputStream,
-                            ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx); 
+                        await SendResponse("/status", ctx.Request.Headers, ctx.Request.InputStream,
+                           ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                     }))
                 .WithModule(new ActionModule("/export", HttpVerbs.Any, async (ctx) =>
                 {
-                    await SendResponse( "/export", ctx.Request.Headers, ctx.Request.InputStream,
-                        ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx); 
+                    await SendResponse("/export", ctx.Request.Headers, ctx.Request.InputStream,
+                        ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
+                }))
+                .WithModule(new ActionModule("/analyzer", HttpVerbs.Any, async (ctx) =>
+                {
+                    await SendResponse("/analyzer", ctx.Request.Headers, ctx.Request.InputStream,
+                                     ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                 }));
 
             // Listen for state changes.
@@ -85,11 +92,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         {
             if (string.Equals(rawurl, "/status", StringComparison.InvariantCultureIgnoreCase))
             {
-              //  return (200, "I'm alive", "text/plain; charset=UTF-8", inputContentEncoding);
+                //  return (200, "I'm alive", "text/plain; charset=UTF-8", inputContentEncoding);
                 ctx.SendStringAsync("I'm alive", "text/plain", Encoding.UTF8);
                 return;
             }
-            else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase) ||
+                string.Equals(rawurl, "/analyzer", StringComparison.InvariantCultureIgnoreCase))
             {
                 var creds = UsernameAndPassword(headers);
                 string user = Settings.GetSetting("Username");
@@ -123,10 +131,10 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     }
                 }
 
+         
+
+
                 string reportPath = null;
-                byte[] bytes = null;
-                string fileExt = "pdf";
-                string mimeType = "application/octet-stream";
                 try
                 {
                     reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
@@ -139,23 +147,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                         await fstream.FlushAsync();
                         fstream.Close();
                     }
-
-                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
-                    var output = exporter.exportReportToStream(reportPath, reportData);
-                    bytes = output.Item1;
-                    fileExt = output.Item2;
-                    mimeType = output.Item3;
-
                 }
                 catch (Exception ex)
                 {
                     Console.Error.WriteLine(ex);
 
                     ctx.Response.StatusCode = 500;
-                    return;
-                }
-                finally
-                {
                     try
                     {
                         System.IO.File.Delete(reportPath);
@@ -164,23 +161,93 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     {
                         // TODO: cleanup will happen later
                     }
+                    return;
                 }
-                
-                // Set the headers for content disposition and content type
-                ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename=report.{fileExt}");
-                ctx.Response.ContentType = mimeType;
-                ctx.Response.ContentLength64 = bytes.Length;
-                ctx.Response.StatusCode = 200;
 
-                // Write the byte array to the response stream
-                await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
-                await ctx.Response.OutputStream.FlushAsync();
+                if (string.Equals(rawurl, "/analyzer", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await AnalyzerResults(ctx, reportPath);
+                    return;
+                }
+                else
+                {
+                    await ExportReport(ctx, reportData, reportPath);
+                    return;
+                }
 
-                // Ensure that all headers and content are sent
-                ctx.Response.Close();
-                return;
             }
             ctx.Response.StatusCode = 400;
+        }
+
+        private static async Task AnalyzerResults(IHttpContext ctx, string reportPath)
+        {
+            var analyzer = new CrystalReportsAnalyzer();
+            var response = analyzer.GetFullAnalysis(reportPath);
+            // Convert the response object to JSON
+            string jsonResponse = JsonConvert.SerializeObject(response);
+
+            // Convert the JSON string to bytes
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonResponse);
+
+            // Set the headers for content disposition and content type
+            ctx.Response.ContentType = "application/json";
+            ctx.Response.ContentLength64 = jsonBytes.Length;
+            ctx.Response.StatusCode = 200;
+
+            // Write the byte array to the response stream
+            await ctx.Response.OutputStream.WriteAsync(jsonBytes, 0, jsonBytes.Length);
+            await ctx.Response.OutputStream.FlushAsync();
+
+            // Ensure that all headers and content are sent
+            ctx.Response.Close();
+        }
+
+        private static async Task ExportReport(IHttpContext ctx, Data reportData, string reportPath)
+        {
+            byte[] bytes = null;
+            string fileExt = "pdf";
+            string mimeType = "application/octet-stream";
+            try
+            {
+
+                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
+                var output = exporter.exportReportToStream(reportPath, reportData);
+                bytes = output.Item1;
+                fileExt = output.Item2;
+                mimeType = output.Item3;
+
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+
+                ctx.Response.StatusCode = 500;
+                return;
+            }
+            finally
+            {
+                try
+                {
+                    System.IO.File.Delete(reportPath);
+                }
+                catch (Exception)
+                {
+                    // TODO: cleanup will happen later
+                }
+            }
+
+            // Set the headers for content disposition and content type
+            ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename=report.{fileExt}");
+            ctx.Response.ContentType = mimeType;
+            ctx.Response.ContentLength64 = bytes.Length;
+            ctx.Response.StatusCode = 200;
+
+            // Write the byte array to the response stream
+            await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+            await ctx.Response.OutputStream.FlushAsync();
+
+            // Ensure that all headers and content are sent
+            ctx.Response.Close();
         }
 
         private static Tuple<string, string> UsernameAndPassword(NameValueCollection headers)
@@ -213,11 +280,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             return (200, "");
         }
 
-        
+
         static Dictionary<string, List<string>> GetAllEndPoints()
         {
             Dictionary<string, List<string>> listofends = new Dictionary<string, List<string>>();
-           // listofends.Add("0.0.0.0", AddEndpoints("0.0.0.0"));
+            // listofends.Add("0.0.0.0", AddEndpoints("0.0.0.0"));
 
             // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
