@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Client;
+using static Majorsilence.CrystalCmd.Client.FullReportAnalysisResponse;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
@@ -23,6 +24,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     Parameters = GetReportParameters(reportDocument),
                     SubReports = GetSubreports(reportDocument),
                     DataTables = GetDataTables(reportDocument),
+                    ReportObjects = GetReportObjects(reportDocument)
                 };
             }
         }
@@ -91,6 +93,25 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     parameters.Add(parameter.ParameterFieldName);
             }
             return parameters;
+        }
+
+        private IEnumerable<ReportObjectsDto> GetReportObjects(ReportDocument reportDocument)
+        {
+            var reportObjects = new List<ReportObjectsDto>();
+
+            foreach (Section section in reportDocument.ReportDefinition.Sections)
+            {
+                foreach (ReportObject reportObject in section.ReportObjects)
+                {
+                    reportObjects.Add(new ReportObjectsDto()
+                    {
+                        ObjectName = reportObject.Name,
+                        Width = reportObject.Width,
+                        TopPosition = reportObject.Top
+                    });
+                }
+            }
+            return reportObjects;
         }
     }
 }
