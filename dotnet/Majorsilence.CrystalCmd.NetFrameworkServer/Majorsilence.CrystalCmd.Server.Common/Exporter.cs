@@ -383,7 +383,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 case ExportTypes.PDF:
                     exp = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
                     fileExt="pdf";
-                    mimetype = "application/octet-stream";
+                    mimetype = "application/pdf";
                     break;
                 case ExportTypes.RichText:
                     exp = CrystalDecisions.Shared.ExportFormatType.RichText;
@@ -403,7 +403,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 default:
                     exp = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
                     fileExt="pdf";
-                    mimetype = "application/octet-stream";
+                    mimetype = "application/pdf";
                     break;
             }
 
