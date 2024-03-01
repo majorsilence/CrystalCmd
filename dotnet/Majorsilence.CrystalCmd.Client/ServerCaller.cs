@@ -26,7 +26,7 @@ namespace Majorsilence.CrystalCmd.Client
 
             using (var form = new MultipartFormDataContent())
             {
-                form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), typeof(T).Name);
+                form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
                 form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
 
                 var request = new HttpRequestMessage()

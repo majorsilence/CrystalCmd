@@ -111,6 +111,24 @@
     <Compile Include="CrystalReportsAnalyzer.cs" />
     <Compile Include="PdfExporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+	<Compile Include="..\..\Majorsilence.CrystalCmd.Client\Data.cs">
+      <Link>Models\Data.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Majorsilence.CrystalCmd.Client\MoveObjects.cs">
+      <Link>Models\MoveObjects.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Majorsilence.CrystalCmd.Client\MovePosition.cs">
+      <Link>Models\MovePosition.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Majorsilence.CrystalCmd.Client\MoveType.cs">
+      <Link>Models\MoveType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Majorsilence.CrystalCmd.Client\SubReports.cs">
+      <Link>Models\SubReports.cs</Link>
+    </Compile>
+	  <Compile Include="..\..\Majorsilence.CrystalCmd.Client\SubReportParameters.cs">
+      <Link>Models\SubReportParameters.cs</Link>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="WorkingFolder.cs" />
   </ItemGroup>

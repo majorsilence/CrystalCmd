@@ -34,7 +34,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             foreach (var file in provider.Contents)
             {
                 string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
-                if (string.Equals(name, typeof(T).Name, StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                 {
                     report.data = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(await file.ReadAsStringAsync());
                 }

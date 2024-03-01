@@ -27,7 +27,7 @@ namespace DotNetRunner
         {
             DataTable dt = GetTable();
 
-            var reportData = new ReportData()
+            var reportData = new Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -44,7 +44,7 @@ namespace DotNetRunner
         static async Task ConnectToServerWritePdfAsync()
         {
             DataTable dt = GetTable();
-            var reportData = new ReportData()
+            var reportData = new Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -53,7 +53,7 @@ namespace DotNetRunner
             reportData.AddData("EMPLOYEE", dt);
 
             var list = GetList();
-            var reportDataList = new ReportData()
+            var reportDataList = new Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -65,15 +65,15 @@ namespace DotNetRunner
 
             await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report_ienumerable.pdf", reportDataList);
 
-            await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new ReportData());
+            await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new Data());
 
-            var parameterReportData = new ReportData();
+            var parameterReportData = new Data();
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
             await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
 
-            var subreportParameterData = new ReportData();
+            var subreportParameterData = new Data();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
             {
                 Parameters = parameterReportData.Parameters,
@@ -81,12 +81,12 @@ namespace DotNetRunner
             });
             await CreatePdfFromReport("thereport_with_subreport_with_parameters.rpt", "thereport_with_subreport_with_parameters.pdf", subreportParameterData);
 
-            var subreportDatatableData = new ReportData();
+            var subreportDatatableData = new Data();
             subreportDatatableData.AddData("the_dotnet_dataset_report.rpt", "Employee", dt);
             await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset.pdf", subreportDatatableData);
 
 
-            var fullData = new ReportData();
+            var fullData = new Data();
             fullData.AddData("EMPLOYEE", dt);
             fullData.AddData("the_dotnet_dataset_report_with_params", "Employee", dt);
             fullData.Parameters = parameterReportData.Parameters;
@@ -97,7 +97,7 @@ namespace DotNetRunner
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport.pdf", fullData);
 
-            var emptySubreportData = new ReportData();
+            var emptySubreportData = new Data();
             emptySubreportData.SetEmptyTable("EMPLOYEE");
             emptySubreportData.SetEmptyTable("the_dotnet_dataset_report_with_params", "Employee");
             emptySubreportData.Parameters = parameterReportData.Parameters;
@@ -162,7 +162,7 @@ namespace DotNetRunner
             Console.WriteLine($"Analyzer test passed. Full output {reportAnalysis}.");
         }
 
-        private static async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, ReportData reportData)
+        private static async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
             Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath}");
 

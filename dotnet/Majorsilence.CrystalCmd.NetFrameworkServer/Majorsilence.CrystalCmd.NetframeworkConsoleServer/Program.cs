@@ -20,6 +20,7 @@ using EmbedIO.Actions;
 using EmbedIO.Files;
 using Majorsilence.CrystalCmd.Server.Common;
 using Swan.Logging;
+using Majorsilence.CrystalCmd.Client;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -106,7 +107,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
 
                 var provider = await streamContent.ReadAsMultipartAsync();
-                ReportData reportData = null;
+                Data reportData = null;
                 byte[] reportTemplate = null;
 
                 foreach (var file in provider.Contents)
@@ -115,7 +116,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
                     if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<ReportData>(await file.ReadAsStringAsync());
+                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Data>(await file.ReadAsStringAsync());
                     }
                     else
                     {

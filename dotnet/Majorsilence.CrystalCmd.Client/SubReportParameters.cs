@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Majorsilence.CrystalCmd.Common
+namespace Majorsilence.CrystalCmd.Client
 {
     public class SubReportParameters
     {

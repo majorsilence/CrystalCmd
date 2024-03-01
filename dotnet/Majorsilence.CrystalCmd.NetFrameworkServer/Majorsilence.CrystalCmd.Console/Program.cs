@@ -1,4 +1,5 @@
-﻿using Majorsilence.CrystalCmd.Common;
+﻿using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -59,7 +60,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     Console.WriteLine($"Processing {dataItem} on thread {Thread.CurrentThread.ManagedThreadId}");
 
                     var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();
-                    var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<ReportData>(System.IO.File.ReadAllText(dataItem.DataFile));
+                    var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Data>(System.IO.File.ReadAllText(dataItem.DataFile));
                     var bytes = exporter.exportReportToStream(dataItem.RptFile, reportData);
                     System.IO.File.WriteAllBytes(System.IO.Path.Combine(dataItem.WorkingDir, "report.pdf") , bytes);
                 }

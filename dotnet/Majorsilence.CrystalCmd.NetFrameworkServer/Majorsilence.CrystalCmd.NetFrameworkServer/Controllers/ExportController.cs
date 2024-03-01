@@ -1,4 +1,5 @@
-﻿using Majorsilence.CrystalCmd.Common;
+﻿using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.Common;
 using Majorsilence.CrystalCmd.Server.Common;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             var serverSetup = new ServerSetup();
             serverSetup.CheckAuthAndMimeType(Request);
 
-            var (reportData, reportTemplate) = await serverSetup.GetTemplateAndData<ReportData>(Request);
+            var (reportData, reportTemplate) = await serverSetup.GetTemplateAndData<Data>(Request);
 
             byte[] bytes = null;
             try
@@ -59,7 +60,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 
         }
 
-        private static byte[] ExportReportToPdf(ReportData reportData, string reportPath)
+        private static byte[] ExportReportToPdf(Data reportData, string reportPath)
         {
             byte[] bytes;
             var exporter = new Majorsilence.CrystalCmd.Server.Common.PdfExporter();

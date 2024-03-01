@@ -1,5 +1,4 @@
-﻿using Majorsilence.CrystalCmd.Common;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -22,13 +21,13 @@ namespace Majorsilence.CrystalCmd.Client
             this.password = password;
         }
 
-        public Stream Generate(ReportData reportData, Stream report)
+        public Stream Generate(Data reportData, Stream report)
         {
             return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report,
                 System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
         }
 
-        public Stream Generate(ReportData reportData, Stream report, HttpClient httpClient)
+        public Stream Generate(Data reportData, Stream report, HttpClient httpClient)
         {
             return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report, httpClient,
                 System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
@@ -55,7 +54,7 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public async Task<Stream> GenerateAsync(ReportData reportData, Stream report,
+        public async Task<Stream> GenerateAsync(Data reportData, Stream report,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             using (var httpClient = new HttpClient())
@@ -85,7 +84,7 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public Task<Stream> GenerateAsync(ReportData reportData, Stream report, HttpClient httpClient,
+        public Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var serverCaller = new ServerCaller(httpClient, serverUrl);
