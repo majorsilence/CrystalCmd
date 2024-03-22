@@ -4,9 +4,8 @@ using System.Text;
 
 namespace Majorsilence.CrystalCmd.Client
 {
-    public class SubReportParameters
+    [System.Obsolete("This class is obsolete, use Majorsilence.CrystalCmd.Common.SubReportParameters instead.")]
+    public class SubReportParameters : Majorsilence.CrystalCmd.Common.SubReportParameters
     {
-        public string ReportName { get; set; }
-        public Dictionary<string, object> Parameters { get; set; }
     }
 }

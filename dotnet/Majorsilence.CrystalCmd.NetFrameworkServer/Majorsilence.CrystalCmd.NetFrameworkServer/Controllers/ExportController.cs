@@ -34,7 +34,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             var provider = new MultipartMemoryStreamProvider();
             await Request.Content.ReadAsMultipartAsync(provider);
 
-            Client.Data reportData = null;
+            CrystalCmd.Common.Data reportData = null;
             byte[] reportTemplate = null;
 
             foreach (var file in provider.Contents)
@@ -42,7 +42,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                 string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
                 if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(await file.ReadAsStringAsync());
+                    reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
                 }
                 else
                 {

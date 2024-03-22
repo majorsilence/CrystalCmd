@@ -10,17 +10,17 @@ namespace Majorsilence.CrystalCmd.Tests
     public class ExporterTest
     {
 
-        [TestCase(Client.ExportTypes.PDF, "application/pdf", "pdf")]
-        [TestCase(Client.ExportTypes.WordDoc, "application/msword", "doc")]
-        [TestCase(Client.ExportTypes.ExcelDataOnly, "application/vnd.ms-excel", "xls")]
-        [TestCase(Client.ExportTypes.Excel, "application/vnd.ms-excel", "xls")]
-        [TestCase(Client.ExportTypes.CSV, "text/csv", "csv")]
-        [TestCase(Client.ExportTypes.RichText, "application/rtf", "rtf")]
-        [TestCase(Client.ExportTypes.TEXT, "text/plain", "txt")]
-        public void ExportTest(Client.ExportTypes exportType, string expectedMimeType, string expectedExtension)
+        [TestCase(CrystalCmd.Common.ExportTypes.PDF, "application/pdf", "pdf")]
+        [TestCase(CrystalCmd.Common.ExportTypes.WordDoc, "application/msword", "doc")]
+        [TestCase(CrystalCmd.Common.ExportTypes.ExcelDataOnly, "application/vnd.ms-excel", "xls")]
+        [TestCase(CrystalCmd.Common.ExportTypes.Excel, "application/vnd.ms-excel", "xls")]
+        [TestCase(CrystalCmd.Common.ExportTypes.CSV, "text/csv", "csv")]
+        [TestCase(CrystalCmd.Common.ExportTypes.RichText, "application/rtf", "rtf")]
+        [TestCase(CrystalCmd.Common.ExportTypes.TEXT, "text/plain", "txt")]
+        public void ExportTest(CrystalCmd.Common.ExportTypes exportType, string expectedMimeType, string expectedExtension)
         {
             var export = new Majorsilence.CrystalCmd.Server.Common.Exporter();
-            var result = export.exportReportToStream("thereport.rpt", new Client.Data()
+            var result = export.exportReportToStream("thereport.rpt", new CrystalCmd.Common.Data()
             {
                 ExportAs = exportType
             });
@@ -32,12 +32,12 @@ namespace Majorsilence.CrystalCmd.Tests
             Assert.That(fileExt, Is.EqualTo(expectedExtension));
             Assert.That(mimeType, Is.EqualTo(expectedMimeType));
 
-            if (exportType == Client.ExportTypes.PDF)
+            if (exportType == CrystalCmd.Common.ExportTypes.PDF)
             {
                 var text = ExtractTextFromPdf(bytes);
                 Assert.That(text.Contains("Test Report"));
             }
-            if(exportType == Client.ExportTypes.CSV || exportType == Client.ExportTypes.TEXT)
+            if(exportType == CrystalCmd.Common.ExportTypes.CSV || exportType == CrystalCmd.Common.ExportTypes.TEXT)
             {
                 Assert.That(UTF8Encoding.UTF8.GetString(bytes).Contains("Test Report"));
             }

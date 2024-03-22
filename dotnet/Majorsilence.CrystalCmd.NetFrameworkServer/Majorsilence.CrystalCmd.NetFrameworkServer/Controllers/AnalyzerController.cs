@@ -12,8 +12,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
-using Majorsilence.CrystalCmd.Client;
-
 
 
 namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
@@ -21,15 +19,15 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
     public class AnalyzerController : ApiController
     {
         [HttpPost]
-        public async Task<FullReportAnalysisResponse> Post()
+        public async Task<CrystalCmd.Common.FullReportAnalysisResponse> Post()
         {
             var serverSetup = new ServerSetup();
             serverSetup.CheckAuthAndMimeType(Request);
 
-            var (reportData, reportTemplate) = await serverSetup.GetTemplateAndData<FullReportAnalysisResponse>(Request);
+            var (reportData, reportTemplate) = await serverSetup.GetTemplateAndData<CrystalCmd.Common.FullReportAnalysisResponse>(Request);
 
             var analyzer = new CrystalReportsAnalyzer();
-            FullReportAnalysisResponse response = null;
+            CrystalCmd.Common.FullReportAnalysisResponse response = null;
             serverSetup.CreateReportAndGetPath(
                 reportTemplate,
                 reportPath => response = analyzer.GetFullAnalysis(reportPath)

@@ -1,8 +1,5 @@
-﻿using System;
-
-namespace Majorsilence.CrystalCmd.Client
+﻿namespace Majorsilence.CrystalCmd.Common
 {
-    [Obsolete("This enum is obsolete, use Majorsilence.CrystalCmd.Common.ExportTypes instead.")]
     public enum ExportTypes
     {
         CSV,

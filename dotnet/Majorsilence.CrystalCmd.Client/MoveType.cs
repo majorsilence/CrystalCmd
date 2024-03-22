@@ -1,5 +1,8 @@
-﻿namespace Majorsilence.CrystalCmd.Client
+﻿using System;
+
+namespace Majorsilence.CrystalCmd.Client
 {
+    [Obsolete("This class is obsolete, use Majorsilence.CrystalCmd.Common.MoveType instead.")]
     public enum MoveType
     {
         ABSOLUTE = 1,

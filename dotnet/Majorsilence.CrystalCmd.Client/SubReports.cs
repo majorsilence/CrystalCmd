@@ -1,9 +1,9 @@
-﻿namespace Majorsilence.CrystalCmd.Client
+﻿using System;
+
+namespace Majorsilence.CrystalCmd.Client
 {
-    public class SubReports
+    [Obsolete]
+    public class SubReports : Majorsilence.CrystalCmd.Common.SubReports
     {
-        public string ReportName { get; set; }
-        public string TableName { get; set; }
-        public string DataTable { get; set; }
     }
 }
