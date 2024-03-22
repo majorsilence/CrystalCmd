@@ -5,6 +5,20 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
+		<Description>
+			Common server code for CrystalCmd.  This is the server side code that is used to generate crystal reports.  This code is used by the server and client code.
+			This package can be used to load json files into a CrystalReports ReportDcoument and then display in a windows form.
+			
+			CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
+
+			Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
+		</Description>
+		<Authors>Majorsilence</Authors>
+		<RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.0.19</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="System.Configuration" />
