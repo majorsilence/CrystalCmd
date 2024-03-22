@@ -4,7 +4,7 @@ run_x86_service () {
     WINEPREFIX=/majorsilence-wine-x86
     WINEARCH=win32
     sleep 2s
-    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer/x86/Release/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
+    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer/x86/Release/net48/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
     sleep 2s
 }
 
@@ -12,7 +12,7 @@ run_x64_service () {
     WINEPREFIX=/majorsilence-wine
     WINEARCH=win64
     sleep 2s
-    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer/x64/Release/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
+    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer/x64/Release/net48/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
     sleep 2s
 }
 
