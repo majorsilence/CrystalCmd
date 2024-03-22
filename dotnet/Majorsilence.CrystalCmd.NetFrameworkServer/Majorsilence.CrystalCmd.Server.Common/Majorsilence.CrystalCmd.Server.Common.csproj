@@ -18,7 +18,7 @@
 		<Authors>Majorsilence</Authors>
 		<RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.0.19</Version>
+		<Version>1.0.20</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="System.Configuration" />

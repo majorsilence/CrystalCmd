@@ -4,6 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<Platforms>AnyCPU;x64;x86</Platforms>
+		<Version>1.0.20</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj" />
