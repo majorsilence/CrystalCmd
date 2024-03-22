@@ -11,13 +11,12 @@ using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
-using Majorsilence.CrystalCmd.Client;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class CrystalDocumentWrapper
     {
-        public ReportDocument Create(string reportPath, Client.Data datafile)
+        public ReportDocument Create(string reportPath, CrystalCmd.Common.Data datafile)
         {
             var reportClientDocument = new ReportDocument();
 
@@ -420,16 +419,16 @@ namespace Majorsilence.CrystalCmd.Server.Common
             return array;
         }
 
-        private void MoveReportObject(MoveObjects item, ReportDocument rpt)
+        private void MoveReportObject(CrystalCmd.Common.MoveObjects item, ReportDocument rpt)
         {
-            if (item.Type == MoveType.ABSOLUTE)
+            if (item.Type == CrystalCmd.Common.MoveType.ABSOLUTE)
             {
                 switch (item.Pos)
                 {
-                    case MovePosition.LEFT:
+                    case CrystalCmd.Common.MovePosition.LEFT:
                         rpt.ReportDefinition.ReportObjects[item.ObjectName].Left = item.Move;
                         break;
-                    case MovePosition.TOP:
+                    case CrystalCmd.Common.MovePosition.TOP:
                         rpt.ReportDefinition.ReportObjects[item.ObjectName].Top = item.Move;
                         break;
                 }
@@ -438,10 +437,10 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 switch (item.Pos)
                 {
-                    case MovePosition.LEFT:
+                    case CrystalCmd.Common.MovePosition.LEFT:
                         rpt.ReportDefinition.ReportObjects[item.ObjectName].Left += item.Move;
                         break;
-                    case MovePosition.TOP:
+                    case CrystalCmd.Common.MovePosition.TOP:
                         rpt.ReportDefinition.ReportObjects[item.ObjectName].Top += item.Move;
                         break;
                 }

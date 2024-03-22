@@ -1,10 +1,7 @@
 ﻿namespace Majorsilence.CrystalCmd.Client
 {
-    public class MoveObjects
+    [System.Obsolete("This class is obsolete, use Majorsilence.CrystalCmd.Common.MoveObjects instead.")]
+    public class MoveObjects : Majorsilence.CrystalCmd.Common.MoveObjects
     {
-        public string ObjectName { get; set; }
-        public int Move { get; set; }
-        public MoveType Type { get; set; }
-        public MovePosition Pos { get; set; }
     }
 }

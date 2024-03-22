@@ -5,21 +5,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Majorsilence.CrystalCmd.Client;
-using static Majorsilence.CrystalCmd.Client.FullReportAnalysisResponse;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class CrystalReportsAnalyzer
     {
 
-        public FullReportAnalysisResponse GetFullAnalysis(string reportPath)
+        public CrystalCmd.Common.FullReportAnalysisResponse GetFullAnalysis(string reportPath)
         {
             using (var reportDocument = new ReportDocument())
             {
                 reportDocument.Load(reportPath);
 
-                return new FullReportAnalysisResponse()
+                return new CrystalCmd.Common.FullReportAnalysisResponse()
                 {
                     Parameters = GetReportParameters(reportDocument),
                     SubReports = GetSubreports(reportDocument),
@@ -29,9 +27,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
         }
 
-        private IEnumerable<FullReportAnalysisResponse.FullSubReportAnalysisDto> GetSubreports(ReportDocument reportDocument)
+        private IEnumerable<CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto> GetSubreports(ReportDocument reportDocument)
         {
-            var subreports = new List<FullReportAnalysisResponse.FullSubReportAnalysisDto>();
+            var subreports = new List<CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto>();
             foreach (ReportDocument subreport in reportDocument.Subreports)
             {
                 subreports.Add(GetSubreport(reportDocument, subreport));
@@ -39,9 +37,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
             return subreports;
         }
 
-        private FullReportAnalysisResponse.FullSubReportAnalysisDto GetSubreport(ReportDocument parentReport, ReportDocument subreport)
+        private CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto GetSubreport(ReportDocument parentReport, ReportDocument subreport)
         {
-            return new FullReportAnalysisResponse.FullSubReportAnalysisDto()
+            return new CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto()
             {
                 SubreportName = subreport.Name,
                 Parameters = GetSubreportParameters(parentReport, subreport.Name),
@@ -49,12 +47,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
             };
         }
 
-        private IEnumerable<FullReportAnalysisResponse.DataTableAnalysisDto> GetDataTables(ReportDocument reportDocument)
+        private IEnumerable<CrystalCmd.Common.FullReportAnalysisResponse.DataTableAnalysisDto> GetDataTables(ReportDocument reportDocument)
         {
-            var dataTables = new List<FullReportAnalysisResponse.DataTableAnalysisDto>();
+            var dataTables = new List<CrystalCmd.Common.FullReportAnalysisResponse.DataTableAnalysisDto>();
             foreach (Table table in reportDocument.Database.Tables)
             {
-                dataTables.Add(new FullReportAnalysisResponse.DataTableAnalysisDto()
+                dataTables.Add(new CrystalCmd.Common.FullReportAnalysisResponse.DataTableAnalysisDto()
                 {
                     DataTableName = table.Name,
                     ColumnNames = GetDataTableColumns(table)
@@ -95,15 +93,15 @@ namespace Majorsilence.CrystalCmd.Server.Common
             return parameters;
         }
 
-        private IEnumerable<ReportObjectsDto> GetReportObjects(ReportDocument reportDocument)
+        private IEnumerable<CrystalCmd.Common.FullReportAnalysisResponse.ReportObjectsDto> GetReportObjects(ReportDocument reportDocument)
         {
-            var reportObjects = new List<ReportObjectsDto>();
+            var reportObjects = new List<CrystalCmd.Common.FullReportAnalysisResponse.ReportObjectsDto>();
 
             foreach (Section section in reportDocument.ReportDefinition.Sections)
             {
                 foreach (ReportObject reportObject in section.ReportObjects)
                 {
-                    reportObjects.Add(new ReportObjectsDto()
+                    reportObjects.Add(new CrystalCmd.Common.FullReportAnalysisResponse.ReportObjectsDto()
                     {
                         ObjectName = reportObject.Name,
                         Width = reportObject.Width,

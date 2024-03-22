@@ -58,7 +58,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     Console.WriteLine($"Processing {dataItem} on thread {Thread.CurrentThread.ManagedThreadId}");
 
                     var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
-                    var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(System.IO.File.ReadAllText(dataItem.DataFile));
+                    var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(System.IO.File.ReadAllText(dataItem.DataFile));
                     var output = exporter.exportReportToStream(dataItem.RptFile, reportData);
                     var bytes = output.Item1;
                     var fileExt = output.Item2;

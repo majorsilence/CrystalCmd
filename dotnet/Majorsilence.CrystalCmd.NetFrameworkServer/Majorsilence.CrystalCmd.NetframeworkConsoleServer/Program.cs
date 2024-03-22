@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Configuration;
 using System.Runtime.Remoting.Contexts;
-using Majorsilence.CrystalCmd.Client;
 using System.Security.AccessControl;
 using EmbedIO;
 using EmbedIO.Actions;
@@ -114,7 +113,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
 
                 var provider = await streamContent.ReadAsMultipartAsync();
-                Client.Data reportData = null;
+                CrystalCmd.Common.Data reportData = null;
                 byte[] reportTemplate = null;
 
                 foreach (var file in provider.Contents)
@@ -123,7 +122,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
                     if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<Client.Data>(await file.ReadAsStringAsync());
+                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
                     }
                     else
                     {
@@ -202,7 +201,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             ctx.Response.Close();
         }
 
-        private static async Task ExportReport(IHttpContext ctx, Data reportData, string reportPath)
+        private static async Task ExportReport(IHttpContext ctx, CrystalCmd.Common.Data reportData, string reportPath)
         {
             byte[] bytes = null;
             string fileExt = "pdf";

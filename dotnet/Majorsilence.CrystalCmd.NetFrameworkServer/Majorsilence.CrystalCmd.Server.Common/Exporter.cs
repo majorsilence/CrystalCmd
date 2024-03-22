@@ -11,7 +11,7 @@ using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
-using Majorsilence.CrystalCmd.Client;
+
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
@@ -24,7 +24,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
         /// <param name="reportPath"></param>
         /// <param name="datafile"></param>
         /// <returns>byte array, file extension, mimetype</returns>
-        public Tuple<byte[], string, string> exportReportToStream(string reportPath, Client.Data datafile)
+        public Tuple<byte[], string, string> exportReportToStream(string reportPath, CrystalCmd.Common.Data datafile)
         {
             var crystalWrapper = new CrystalDocumentWrapper();
             using (var reportClientDocument = crystalWrapper.Create(reportPath, datafile))
@@ -33,7 +33,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
         }
 
-        private Tuple<byte[], string, string> Export(ExportTypes expFormatType, ReportDocument rpt)
+        private Tuple<byte[], string, string> Export(CrystalCmd.Common.ExportTypes expFormatType, ReportDocument rpt)
         {
             CrystalDecisions.Shared.ExportFormatType exp;
             string fileExt;
@@ -41,42 +41,42 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             switch (expFormatType)
             {
-                case ExportTypes.CSV:
+                case CrystalCmd.Common.ExportTypes.CSV:
                     exp = CrystalDecisions.Shared.ExportFormatType.CharacterSeparatedValues;
                     fileExt = "csv";
                     mimetype = "text/csv";
                     break;
-                case ExportTypes.CrystalReport:
+                case CrystalCmd.Common.ExportTypes.CrystalReport:
                     exp = CrystalDecisions.Shared.ExportFormatType.CrystalReport;
                     fileExt = "rpt";
                     mimetype = "application/octet-stream";
                     break;
-                case ExportTypes.Excel:
+                case CrystalCmd.Common.ExportTypes.Excel:
                     exp = CrystalDecisions.Shared.ExportFormatType.Excel;
                     fileExt = "xls";
                     mimetype = "application/vnd.ms-excel";
                     break;
-                case ExportTypes.ExcelDataOnly:
+                case CrystalCmd.Common.ExportTypes.ExcelDataOnly:
                     exp = CrystalDecisions.Shared.ExportFormatType.ExcelRecord;
                     fileExt = "xls";
                     mimetype = "application/vnd.ms-excel";
                     break;
-                case ExportTypes.PDF:
+                case CrystalCmd.Common.ExportTypes.PDF:
                     exp = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
                     fileExt = "pdf";
                     mimetype = "application/pdf";
                     break;
-                case ExportTypes.RichText:
+                case CrystalCmd.Common.ExportTypes.RichText:
                     exp = CrystalDecisions.Shared.ExportFormatType.RichText;
                     fileExt = "rtf";
                     mimetype = "application/rtf";
                     break;
-                case ExportTypes.TEXT:
+                case CrystalCmd.Common.ExportTypes.TEXT:
                     exp = CrystalDecisions.Shared.ExportFormatType.Text;
                     fileExt = "txt";
                     mimetype = "text/plain";
                     break;
-                case ExportTypes.WordDoc:
+                case CrystalCmd.Common.ExportTypes.WordDoc:
                     exp = CrystalDecisions.Shared.ExportFormatType.WordForWindows;
                     fileExt = "doc";
                     mimetype = "application/msword";

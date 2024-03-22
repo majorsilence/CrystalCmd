@@ -20,4 +20,8 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="System.Net.Http" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+  </ItemGroup>
 </Project>

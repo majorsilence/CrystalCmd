@@ -1,8 +1,5 @@
-﻿using System;
-
-namespace Majorsilence.CrystalCmd.Client
+﻿namespace Majorsilence.CrystalCmd.Common
 {
-    [Obsolete("This class is obsolete, use Majorsilence.CrystalCmd.Common.ReportType instead.")]
     public enum ReportType
     {
         /// <summary>

@@ -36,32 +36,6 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\Data.cs">
-			<Link>Models\Data.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\MoveObjects.cs">
-			<Link>Models\MoveObjects.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\MovePosition.cs">
-			<Link>Models\MovePosition.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\MoveType.cs">
-			<Link>Models\MoveType.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\SubReports.cs">
-			<Link>Models\SubReports.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\SubReportParameters.cs">
-			<Link>Models\SubReportParameters.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\ExportTypes.cs">
-			<Link>Models\ExportTypes.cs</Link>
-		</Compile>
-		<Compile Include="..\..\Majorsilence.CrystalCmd.Client\FullReportAnalysisResponse.cs">
-			<Link>Models\FullReportAnalysisResponse.cs</Link>
-		</Compile>
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="ChoETL" Version="1.2.1.5" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -73,5 +47,8 @@
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
 	</ItemGroup>
 </Project>

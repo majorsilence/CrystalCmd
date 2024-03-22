@@ -321,6 +321,10 @@
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj">
+      <Project>{89b263c1-8155-4ace-a1a1-2331ff54270c}</Project>
+      <Name>Majorsilence.CrystalCmd.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj">
       <Project>{4d494de8-8d1b-4587-817c-99bb35ca285e}</Project>
       <Name>Majorsilence.CrystalCmd.Server.Common</Name>
