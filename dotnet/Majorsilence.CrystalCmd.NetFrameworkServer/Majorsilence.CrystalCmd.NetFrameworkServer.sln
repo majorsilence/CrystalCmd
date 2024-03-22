@@ -5,17 +5,17 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.NetFrameworkServer", "Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.csproj", "{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.NetframeworkConsoleServer", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetframeworkConsoleServer", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Server.Common", "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj", "{4D494DE8-8D1B-4587-817C-99BB35CA285E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server.Common", "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj", "{4D494DE8-8D1B-4587-817C-99BB35CA285E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.NetframeworkConsole", "Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj", "{9746EF85-EB2E-411A-9609-5D485D78A987}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetframeworkConsole", "Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj", "{9746EF85-EB2E-411A-9609-5D485D78A987}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.CoreServer", "Majorsilence.CrystalCmd.CoreServer\Majorsilence.CrystalCmd.CoreServer.csproj", "{46D3AC55-C5F7-4586-A3B6-461959084155}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{FA93CE91-BB0F-498B-90FD-457090498CD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Tests", "Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj", "{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Tests", "Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj", "{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,14 +55,14 @@ Global
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x64.Build.0 = Debug|Any CPU
-		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x86.ActiveCfg = Debug|x86
-		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x86.Build.0 = Debug|x86
+		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Debug|x86.Build.0 = Debug|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x64.ActiveCfg = Release|Any CPU
 		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x64.Build.0 = Release|Any CPU
-		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x86.ActiveCfg = Release|x86
-		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x86.Build.0 = Release|x86
+		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x86.ActiveCfg = Release|Any CPU
+		{4D494DE8-8D1B-4587-817C-99BB35CA285E}.Release|x86.Build.0 = Release|Any CPU
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Debug|x64.ActiveCfg = Debug|x64
@@ -103,8 +103,8 @@ Global
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x64.ActiveCfg = Debug|x64
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x64.Build.0 = Debug|x64
-		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x86.Build.0 = Debug|Any CPU
+		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x86.ActiveCfg = Debug|x86
+		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Debug|x86.Build.0 = Debug|x86
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}.Release|x64.ActiveCfg = Release|x64
