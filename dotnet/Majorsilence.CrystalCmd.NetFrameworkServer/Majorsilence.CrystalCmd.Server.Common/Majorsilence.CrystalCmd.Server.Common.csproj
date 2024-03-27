@@ -10,7 +10,7 @@
 		<Description>
 			Common server code for CrystalCmd.  This is the server side code that is used to generate crystal reports.  This code is used by the server and client code.
 			This package can be used to load json files into a CrystalReports ReportDcoument and then display in a windows form.
-			
+
 			CrystalCmd is a Java program to load json files into crystal reports and produce PDFs.
 
 			Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
@@ -20,11 +20,18 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>1.0.21</Version>
 	</PropertyGroup>
+	<PropertyGroup>
+		<UseOldCrystalReportsReferences>no</UseOldCrystalReportsReferences>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(UseOldCrystalReportsReferences)' == 'yes'">
+		<PackageId>Majorsilence.CrystalCmd.Server.Common.ObsoleteCrystal</PackageId>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Reference Include="System.Configuration" />
 		<Reference Include="System.Web" />
 	</ItemGroup>
-	<ItemGroup>
+	<ItemGroup Condition=" '$(UseOldCrystalReportsReferences)' != 'yes' ">
 		<Reference Include="CrystalDecisions.Windows.Forms, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
 			<HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\CrystalDecisions.Windows.Forms\v4.0_13.0.4000.0__692fbea5521e1304\CrystalDecisions.Windows.Forms.dll</HintPath>
 		</Reference>
@@ -33,6 +40,17 @@
 		</Reference>
 		<Reference Include="CrystalDecisions.Shared, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
 			<HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\CrystalDecisions.Shared\v4.0_13.0.4000.0__692fbea5521e1304\CrystalDecisions.Shared.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(UseOldCrystalReportsReferences)' == 'yes' ">
+		<Reference Include="CrystalDecisions.Windows.Forms, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
+			<HintPath>C:\Windows\assembly\GAC_MSIL\CrystalDecisions.Windows.Forms\13.0.2000.0__692fbea5521e1304\CrystalDecisions.Windows.Forms.dll</HintPath>
+		</Reference>
+		<Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
+			<HintPath>C:\Windows\assembly\GAC_MSIL\CrystalDecisions.CrystalReports.Engine\13.0.2000.0__692fbea5521e1304\CrystalDecisions.CrystalReports.Engine.dll</HintPath>
+		</Reference>
+		<Reference Include="CrystalDecisions.Shared, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
+			<HintPath>C:\Windows\assembly\GAC_MSIL\CrystalDecisions.Shared\13.0.2000.0__692fbea5521e1304\CrystalDecisions.Shared.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
@@ -49,6 +67,6 @@
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
 	</ItemGroup>
 </Project>
