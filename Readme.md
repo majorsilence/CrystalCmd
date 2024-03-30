@@ -51,6 +51,8 @@ Download the .net runtime from: https://origin.softwaredownloads.sap.com/public/
     - can be run on Linux using wine
 
 
+See the [dotnet/Readme.md](https://github.com/majorsilence/CrystalCmd/tree/main/dotnet) file for more info..
+
 # Crystal report examples
 
 https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
