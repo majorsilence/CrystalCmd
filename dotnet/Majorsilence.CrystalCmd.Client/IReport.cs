@@ -6,12 +6,12 @@ namespace Majorsilence.CrystalCmd.Client
 {
     public interface IReport
     {
-        Task<Stream> GenerateAsync(Data reportData, Stream report,
+        Task<Stream> GenerateAsync(Common.Data reportData, Stream report,
                System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-        Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient,
+        Task<Stream> GenerateAsync(Common.Data reportData, Stream report, HttpClient httpClient,
                     System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
-        Stream Generate(Data reportData, Stream report);
-        Stream Generate(Data reportData, Stream report, HttpClient httpClient);
+        Stream Generate(Common.Data reportData, Stream report);
+        Stream Generate(Common.Data reportData, Stream report, HttpClient httpClient);
     }
 }
