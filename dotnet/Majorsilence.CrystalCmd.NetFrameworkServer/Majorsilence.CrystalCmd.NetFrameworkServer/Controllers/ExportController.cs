@@ -56,7 +56,12 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             string mimeType = "application/octet-stream";
             try
             {
-                reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
+                string workingDir = WorkingFolder.GetMajorsilenceTempFolder();
+                reportPath = Path.Combine(workingDir, $"{Guid.NewGuid().ToString()}.rpt");
+                if (!Directory.Exists(workingDir))
+                {
+                    Directory.CreateDirectory(workingDir);
+                }
                 // System.IO.File.WriteAllBytes(reportPath, reportTemplate);
                 // Using System.IO.File.WriteAllBytes randomly causes problems where the system still 
                 // has the file open when crystal attempts to load it and crystal fails.
