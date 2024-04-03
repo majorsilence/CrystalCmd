@@ -21,13 +21,13 @@ namespace Majorsilence.CrystalCmd.Client
             this.password = password;
         }
 
-        public Stream Generate(Data reportData, Stream report)
+        public Stream Generate(Common.Data reportData, Stream report)
         {
             return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report,
                 System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
         }
 
-        public Stream Generate(Data reportData, Stream report, HttpClient httpClient)
+        public Stream Generate(Common.Data reportData, Stream report, HttpClient httpClient)
         {
             return System.Threading.Tasks.Task.Run(async () => await GenerateAsync(reportData, report, httpClient,
                 System.Threading.CancellationToken.None)).GetAwaiter().GetResult();
@@ -54,7 +54,7 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public async Task<Stream> GenerateAsync(Data reportData, Stream report,
+        public async Task<Stream> GenerateAsync(Common.Data reportData, Stream report,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             using (var httpClient = new HttpClient())
@@ -84,7 +84,7 @@ namespace Majorsilence.CrystalCmd.Client
         /// }
         ///</code>
         /// </example>
-        public async Task<Stream> GenerateAsync(Data reportData, Stream report, HttpClient httpClient,
+        public async Task<Stream> GenerateAsync(Common.Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
