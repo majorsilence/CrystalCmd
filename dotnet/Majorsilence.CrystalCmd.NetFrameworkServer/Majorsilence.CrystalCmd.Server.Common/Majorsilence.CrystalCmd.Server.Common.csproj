@@ -25,6 +25,7 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(UseOldCrystalReportsReferences)' == 'yes'">
 		<PackageId>Majorsilence.CrystalCmd.Server.Common.ObsoleteCrystal</PackageId>
+		<AssemblyName>Majorsilence.CrystalCmd.Server.Common.ObsoleteCrystal</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>
