@@ -21,13 +21,16 @@ using Majorsilence.CrystalCmd.Server.Common;
 using Swan.Logging;
 using System.Runtime.Remoting.Messaging;
 using System.Net.Mime;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
     internal class Program
     {
-
         static int port = 44355;
+        private static HealthCheckTask _backgroundHealthTask;
+        private static ServiceProvider _serviceProvider;
 
         static async Task Main(string[] args)
         {
@@ -37,6 +40,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 System.IO.Directory.Delete(workingfolder, true);
             }
             System.IO.Directory.CreateDirectory(workingfolder);
+
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+            _serviceProvider = serviceCollection.BuildServiceProvider();
+            var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+
+            string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
+            _backgroundHealthTask = new HealthCheckTask(logger, rptPath);
+            _backgroundHealthTask.Start();
 
             var url = $"http://*:{port}/";
 
@@ -64,6 +77,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                         await SendResponse("/status", ctx.Request.Headers, ctx.Request.InputStream,
                            ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                     }))
+                .WithModule(new ActionModule("/healthz", HttpVerbs.Any, async (ctx) =>
+                {
+                    await SendResponse(ctx.Request.RawUrl, ctx.Request.Headers, ctx.Request.InputStream,
+                       ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
+                }))
                 .WithModule(new ActionModule("/export", HttpVerbs.Any, async (ctx) =>
                 {
                     await SendResponse("/export", ctx.Request.Headers, ctx.Request.InputStream,
@@ -89,10 +107,25 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
              IHttpContext ctx
            )
         {
-            if (string.Equals(rawurl, "/status", StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(rawurl, "/status", StringComparison.InvariantCultureIgnoreCase)
+                || string.Equals(rawurl, "/healthz", StringComparison.InvariantCultureIgnoreCase)
+                || string.Equals(rawurl, "/healthz/live", StringComparison.InvariantCultureIgnoreCase))
             {
                 //  return (200, "I'm alive", "text/plain; charset=UTF-8", inputContentEncoding);
-                ctx.SendStringAsync("I'm alive", "text/plain", Encoding.UTF8);
+                await ctx.SendStringAsync("I'm alive", "text/plain", Encoding.UTF8);
+                return;
+            }
+            else if (string.Equals(rawurl, "/healthz/ready", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (Server.Common.HealthCheckTask.IsHealthy)
+                {
+                    // Return a 200 OK status code
+                    await ctx.SendStringAsync("Ready", "text/plain", Encoding.UTF8);
+                    return;
+                }
+                //  return (200, "I'm alive", "text/plain; charset=UTF-8", inputContentEncoding);
+                ctx.Response.StatusCode = 500;
+                await ctx.SendStringAsync("Internal Server Error", "text/plain", Encoding.UTF8);
                 return;
             }
             else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase) ||
@@ -208,8 +241,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             string mimeType = "application/octet-stream";
             try
             {
-
-                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
+                var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(logger);
                 var output = exporter.exportReportToStream(reportPath, reportData);
                 bytes = output.Item1;
                 fileExt = output.Item2;
@@ -315,6 +348,18 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
             return listofends;
         }
-    }
 
+        static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddLogging(configure => { 
+                configure.ClearProviders();
+                configure.AddConsole();
+            })
+            .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => { 
+                return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
+            });
+        }
+    }
 }

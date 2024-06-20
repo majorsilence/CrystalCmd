@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +13,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 {
     internal class Program
     {
+        private static ServiceProvider _serviceProvider;
         public static async Task Main(string[] args)
         {
             foreach (var t in args)
@@ -21,6 +24,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     Environment.Exit(0);
                 }
             }
+
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+            _serviceProvider = serviceCollection.BuildServiceProvider();
+            
 
             string baseFolder = Server.Common.Settings.GetSetting("CrystalCmdWorkingFolder");
             var dataQueue = new ConcurrentQueue<(string, string, string)>();
@@ -57,7 +65,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 {
                     Console.WriteLine($"Processing {dataItem} on thread {Thread.CurrentThread.ManagedThreadId}");
 
-                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
+                    var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(logger);
                     var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(System.IO.File.ReadAllText(dataItem.DataFile));
                     var output = exporter.exportReportToStream(dataItem.RptFile, reportData);
                     var bytes = output.Item1;
@@ -110,6 +119,19 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             Console.WriteLine("");
             Console.WriteLine(
                 ".\\Majorsilence.CrystalCmd.Console.exe");
+        }
+
+        static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddLogging(configure => {
+                configure.ClearProviders();
+                configure.AddConsole();
+            })
+            .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => {
+                return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
+            });
         }
     }
 }

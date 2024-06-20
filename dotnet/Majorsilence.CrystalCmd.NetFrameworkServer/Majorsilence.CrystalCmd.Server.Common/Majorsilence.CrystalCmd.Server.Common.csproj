@@ -57,6 +57,7 @@
 	<ItemGroup>
 		<PackageReference Include="ChoETL" Version="1.2.1.5" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="System.CodeDom" Version="4.4.0" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
@@ -66,6 +67,7 @@
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />

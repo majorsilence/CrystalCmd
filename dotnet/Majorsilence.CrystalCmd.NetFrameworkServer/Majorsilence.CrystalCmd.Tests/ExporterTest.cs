@@ -1,5 +1,7 @@
 ﻿using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 using System;
 using System.Text;
@@ -10,6 +12,15 @@ namespace Majorsilence.CrystalCmd.Tests
     public class ExporterTest
     {
 
+        private readonly Mock<ILogger> _mockLogger;
+
+        public ExporterTest()
+        {
+            // Set up the mock logger
+            _mockLogger = new Mock<ILogger>();
+        }
+
+
         [TestCase(CrystalCmd.Common.ExportTypes.PDF, "application/pdf", "pdf")]
         [TestCase(CrystalCmd.Common.ExportTypes.WordDoc, "application/msword", "doc")]
         [TestCase(CrystalCmd.Common.ExportTypes.ExcelDataOnly, "application/vnd.ms-excel", "xls")]
@@ -19,7 +30,8 @@ namespace Majorsilence.CrystalCmd.Tests
         [TestCase(CrystalCmd.Common.ExportTypes.TEXT, "text/plain", "txt")]
         public void ExportTest(CrystalCmd.Common.ExportTypes exportType, string expectedMimeType, string expectedExtension)
         {
-            var export = new Majorsilence.CrystalCmd.Server.Common.Exporter();
+        
+            var export = new Majorsilence.CrystalCmd.Server.Common.Exporter(_mockLogger.Object);
             var result = export.exportReportToStream("thereport.rpt", new CrystalCmd.Common.Data()
             {
                 ExportAs = exportType

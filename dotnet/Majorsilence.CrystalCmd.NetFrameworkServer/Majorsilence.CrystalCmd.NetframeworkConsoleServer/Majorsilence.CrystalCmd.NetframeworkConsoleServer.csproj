@@ -6,6 +6,11 @@
 		<Platforms>AnyCPU;x64;x86</Platforms>
 		<Version>1.0.24</Version>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Include="..\..\..\thereport.rpt" Link="thereport.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="CrystalDecisions.Windows.Forms, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
@@ -19,6 +24,8 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="ChoETL" Version="1.2.1.5" />
 		<PackageReference Include="EmbedIO" Version="3.5.2" />
