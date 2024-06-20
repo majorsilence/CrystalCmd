@@ -373,3 +373,4 @@ testout.pdf
 /java/CrystalCmd/target/classes
 /docker/CrystalCmd_jar
 /dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.NetframeworkConsoleServer/*.zip
+dotnet/build
