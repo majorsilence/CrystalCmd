@@ -11,12 +11,18 @@ using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
+using Microsoft.Extensions.Logging;
 
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class Exporter
     {
+        private readonly ILogger _logger;
+        public Exporter(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// 
@@ -26,7 +32,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
         /// <returns>byte array, file extension, mimetype</returns>
         public Tuple<byte[], string, string> exportReportToStream(string reportPath, CrystalCmd.Common.Data datafile)
         {
-            var crystalWrapper = new CrystalDocumentWrapper();
+            var crystalWrapper = new CrystalDocumentWrapper(_logger);
             using (var reportClientDocument = crystalWrapper.Create(reportPath, datafile))
             {
                 return Export(datafile.ExportAs, reportClientDocument);

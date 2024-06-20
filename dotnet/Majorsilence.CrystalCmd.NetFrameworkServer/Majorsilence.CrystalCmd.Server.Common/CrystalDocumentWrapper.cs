@@ -11,11 +11,18 @@ using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
+using Microsoft.Extensions.Logging;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
     public class CrystalDocumentWrapper
     {
+        private readonly ILogger _logger;
+        public CrystalDocumentWrapper(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         public ReportDocument Create(string reportPath, CrystalCmd.Common.Data datafile)
         {
             var reportClientDocument = new ReportDocument();
@@ -42,7 +49,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    _logger.LogError(ex, "Error while setting data source");
                 }
             }
 
@@ -58,7 +65,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    _logger.LogError(ex, "Error while setting empty data source");
                 }
             }
 
@@ -82,7 +89,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    _logger.LogError(ex, "Error while setting sub report data source");
                 }
             }
 
@@ -99,7 +106,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    _logger.LogError(ex, "Error while setting empty sub report data source");
                 }
             }
 
@@ -140,7 +147,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    _logger.LogError(ex, "Error while setting sub report parameters");
                 }
             }
 
@@ -177,7 +184,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (System.IndexOutOfRangeException iore)
                 {
-                    Console.Error.WriteLine(iore);
+                    _logger.LogError(iore, "Error while moving report object");
                 }
 
             }
@@ -195,7 +202,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             reportClientDocument.ReportDefinition.ReportObjects[item.Key].Width = item.Value;
         }
 
-        private static void SetSuppress(ReportDocument reportClientDocument, KeyValuePair<string, bool> item)
+        private void SetSuppress(ReportDocument reportClientDocument, KeyValuePair<string, bool> item)
         {
             try
             {
@@ -206,7 +213,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
             catch (IndexOutOfRangeException ex)
             {
-                Console.Error.WriteLine(ex);
+                _logger.LogError(ex, "Error while setting suppress");
             }
         }
 
@@ -225,7 +232,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
             else
             {
-                Console.WriteLine(name);
+                _logger.LogWarning("Parameter not found: " + name);
             }
         }
 

@@ -1,4 +1,6 @@
 ﻿using Majorsilence.CrystalCmd.Server.Common;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -18,6 +20,11 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
 {
     public class ExportController : ApiController
     {
+        private readonly ILogger _logger;
+        public ExportController()
+        {
+            _logger = WebApiApplication.ServiceProvider.GetService<ILogger>();
+        }
 
         [HttpPost]
         public async Task<HttpResponseMessage> Post()
@@ -72,7 +79,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
                     fstream.Close();
                 }
 
-                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter();
+                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
                 var output = exporter.exportReportToStream(reportPath, reportData);
                 bytes = output.Item1;
                 fileExt = output.Item2;

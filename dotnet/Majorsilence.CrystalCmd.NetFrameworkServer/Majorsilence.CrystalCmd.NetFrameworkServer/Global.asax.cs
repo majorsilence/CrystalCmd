@@ -1,4 +1,7 @@
-﻿using Majorsilence.CrystalCmd.Server.Common;
+﻿using Majorsilence.CrystalCmd.NetFrameworkServer.Controllers;
+using Majorsilence.CrystalCmd.Server.Common;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NSwag.AspNet.Owin;
 using System;
 using System.Collections.Generic;
@@ -13,6 +16,9 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 {
     public class WebApiApplication : System.Web.HttpApplication
     {
+        private static HealthCheckTask _backgroundHealthTask;
+        public static IServiceProvider ServiceProvider { get; private set; }
+
         protected void Application_Start()
         {
             string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
@@ -28,7 +34,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
                 {
                     settings.MiddlewareBasePath = "/swagger";
                     //settings.GeneratorSettings.DefaultUrlTemplate = "api/{controller}/{id}";  //this is the default one
-                    settings.GeneratorSettings.DefaultUrlTemplate = "api/{controller}/{action}/{id}";
+                    settings.GeneratorSettings.DefaultUrlTemplate = "{controller}/{action}/{id}";
                 });
             });
 
@@ -37,6 +43,35 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+            ServiceProvider = serviceCollection.BuildServiceProvider();
+            var logger = ServiceProvider.GetService<ILogger>();
+
+            string rptFilePath = Server.MapPath("~/bin/thereport.rpt");
+            _backgroundHealthTask = new HealthCheckTask(logger, rptFilePath);
+            _backgroundHealthTask.Start();
+        }
+
+        protected void Application_End(object sender, EventArgs e)
+        {
+            _backgroundHealthTask?.Stop();
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
+            services.AddLogging(configure => {
+                configure.ClearProviders();
+                configure.AddConsole();
+            })
+           .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => {
+                return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
+            });
         }
     }
+
+
 }
