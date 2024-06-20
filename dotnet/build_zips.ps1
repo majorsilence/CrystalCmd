@@ -76,6 +76,8 @@ if ($LastExitCode -ne 0) { throw "Compress-Archive, NetFrameworkServer failed" }
 
 Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version.zip"
 
+Write-Output "Copying nuget packages"
+Get-ChildItem -Recurse *.nupkg | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
 
 Write-Output "Creating sbom files"
 New-Item -ItemType Directory -Force -Path $CURRENTPATH\build\sbom
