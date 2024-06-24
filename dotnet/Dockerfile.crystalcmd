@@ -20,7 +20,7 @@ RUN apt update && apt install libarchive-tools curl -y \
     && mkdir -p /CrystalCMD \
     && cd /CrystalCMD \
     && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsoleServer_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
-    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsoleServer/ \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/ \
     && apt remove curl libarchive-tools -y \
     && rm -rf /tmp/* \
     && apt clean \
