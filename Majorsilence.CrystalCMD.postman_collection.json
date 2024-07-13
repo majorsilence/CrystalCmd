@@ -1,0 +1,192 @@
+{
+	"info": {
+		"_postman_id": "86ef6b05-9b26-4f36-811b-394811073f0d",
+		"name": "Majorsilence.CrystalCMD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "970238"
+	},
+	"item": [
+		{
+			"name": "export",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{crystalcmd-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{crystalcmd-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "reportdata",
+							"type": "file",
+							"src": "test.json"
+						},
+						{
+							"key": "report",
+							"type": "file",
+							"src": "thereport.rpt"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/export",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"export"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "analyzer",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{crystalcmd-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{crystalcmd-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "reportdata",
+							"type": "file",
+							"src": "test.json"
+						},
+						{
+							"key": "report",
+							"type": "file",
+							"src": "thereport.rpt"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/analyzer",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"analyzer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "status - legacy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/status",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "healthz",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/healthz",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "healthz/live",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/healthz/live",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"healthz",
+						"live"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "healthz/ready",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{crystalcmd-url}}/healthz/ready",
+					"protocol": "https",
+					"host": [
+						"{{crystalcmd-url}}"
+					],
+					"path": [
+						"healthz",
+						"ready"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
