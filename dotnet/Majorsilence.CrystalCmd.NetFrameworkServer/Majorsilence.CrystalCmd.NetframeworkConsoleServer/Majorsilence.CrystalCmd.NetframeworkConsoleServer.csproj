@@ -33,7 +33,7 @@
 		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
 		<PackageReference Include="System.CodeDom" Version="4.4.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
