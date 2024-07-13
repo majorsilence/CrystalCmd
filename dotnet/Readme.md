@@ -64,3 +64,7 @@ using (var outstream = new MemoryStream())
     }
 }
 ```
+
+# Postman Collection
+
+[Majorsilence.CrystalCMD.postman_collection.json](../Majorsilence.CrystalCMD.postman_collection.json)

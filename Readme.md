@@ -38,6 +38,10 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
      - reporttemplate
      - reportdata
 
+# Postman Collection
+
+[Majorsilence.CrystalCMD.postman_collection.json](Majorsilence.CrystalCMD.postman_collection.json)
+
 # Dotnet
 
 Use this project to generate test data from c# program
