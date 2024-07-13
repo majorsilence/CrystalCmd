@@ -30,7 +30,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
             RouteTable.Routes.MapOwinPath("swagger", app =>
             {
-                app.UseSwaggerUi3(typeof(WebApiApplication).Assembly, settings =>
+                app.UseSwaggerUi(typeof(WebApiApplication).Assembly, settings =>
                 {
                     settings.MiddlewareBasePath = "/swagger";
                     //settings.GeneratorSettings.DefaultUrlTemplate = "api/{controller}/{id}";  //this is the default one
