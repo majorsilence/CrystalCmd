@@ -167,8 +167,6 @@ namespace Majorsilence.CrystalCmd.Common
 
             foreach (DataRow row in dt.Rows)
             {
-                //BitConverter.ToString("heloo");
-
                 IList<string> fields = new List<string>();
 
                 foreach (var field in row.ItemArray)
