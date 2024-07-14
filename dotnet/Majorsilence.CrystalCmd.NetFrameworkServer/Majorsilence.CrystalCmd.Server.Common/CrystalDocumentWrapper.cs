@@ -319,7 +319,9 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {FieldValueType.StringField, typeof(string) },
             {FieldValueType.DateTimeField, typeof(DateTime) },
             {FieldValueType.DateField, typeof(DateTime) },
-            {FieldValueType.TimeField, typeof(DateTime) }
+            {FieldValueType.TimeField, typeof(DateTime) },
+            {FieldValueType.BlobField, typeof(byte[]) },
+            {FieldValueType.UnknownField, typeof(object) }
         };
 
         private void SetDataSource(string tableName, DataTable val, ReportDocument rpt)
