@@ -36,6 +36,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private async Task DoWorkAsync(CancellationToken cancellationToken)
         {
+            int failCount = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -50,11 +51,19 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     
                     IsHealthy = result != null && result.Item1 != null && result.Item1.Length > 1000;
                     _logger.LogInformation("HealthCheckTask: IsHealthy = " + IsHealthy);
+                    failCount = 0;
                 }
                 catch (Exception ex)
                 {
                     IsHealthy = false;
+                    failCount++;
                     _logger.LogError(ex, "HealthCheckTask: Error while exporting report to pdf");
+                    if (failCount > 1)
+                   {
+                        _logger.LogError("HealthCheckTask: Too many errors, stopping the process");
+                        Stop();
+                        System.Environment.Exit(1);
+                    }
                 }
 
                 // check every 60 seconds if export to pdf is still working
