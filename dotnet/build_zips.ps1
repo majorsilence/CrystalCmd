@@ -9,8 +9,11 @@ If (Test-Path "C:\BuildTools\MSBuild\Current\Bin\MSBuild.exe") {
 ElseIf (Test-Path "C:\BuildTools\MSBuild\17.0\Bin\MSBuild.exe") {
 	$MSBUILD = "C:\BuildTools\MSBuild\17.0\Bin\MSBuild.exe"
 }
-Else {
+ElseIf (Test-Path "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe") {
 	$MSBUILD = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+}
+else {
+	$MSBUILD="msbuild"
 }
 
 function clean_bin_obj() {
