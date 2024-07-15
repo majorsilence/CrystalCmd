@@ -5,7 +5,7 @@ run_x86_service () {
     WINEARCH=win32
     sleep 2s
     xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/x86/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
-    sleep 2s
+    sleep 5s
 }
 
 run_x64_service () {
@@ -13,7 +13,7 @@ run_x64_service () {
     WINEARCH=win64
     sleep 2s
     xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/x64/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
-    sleep 2s
+    sleep 5s
 }
 
 if [[ -z "${OVERRIDE_WINEARCH_AS_X64}" ]]; then
