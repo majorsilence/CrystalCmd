@@ -1,0 +1,4 @@
+*.log
+packages/
+Majorsilence.CrystalCmd.NetFrameworkServer/
+Majorsilence.CrystalCmd.Client/

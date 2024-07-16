@@ -1,27 +1,14 @@
 #!/usr/bin/env bash
 
-run_x86_service () {
-    WINEPREFIX=/majorsilence-wine-x86
-    WINEARCH=win32
-    sleep 2s
-    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/x86/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
-    sleep 5s
-}
-
 run_x64_service () {
     WINEPREFIX=/majorsilence-wine
     WINEARCH=win64
     sleep 2s
-    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/x64/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
+    xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe &
     sleep 5s
 }
 
-if [[ -z "${OVERRIDE_WINEARCH_AS_X64}" ]]; then
-    echo "OVERRIDE_WINEARCH_AS_X64 not set.  Defaulting to win32"
-    run_x86_service
-else
-    run_x64_service
-fi
+run_x64_service
 
 echo "Running $WINEARCH"
 
