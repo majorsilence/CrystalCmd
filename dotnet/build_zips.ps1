@@ -47,20 +47,11 @@ Write-Output "Version: $Version"
 Write-Output "Nuget Restore"
 dotnet restore
 
-Write-Output "Building x86"
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer.sln" -maxcpucount /verbosity:minimal /property:Configuration="Release" /property:Platform="x86" /target:clean /target:rebuild
-if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer.sln, failed" }
+& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer.sln" -maxcpucount /verbosity:minimal /property:Configuration="Release" /target:clean /target:rebuild
+if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer, failed" }
 
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetframeworkConsoleServer" /p:Configuration=Release /p:Platform=x86 /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version\x86"
-if ($LastExitCode -ne 0) { throw "Publish solution x64, NetframeworkConsoleServer.sln, failed" }
-
-
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer.sln" -maxcpucount /verbosity:minimal /property:Configuration="Release" /property:Platform="x64" /target:clean /target:rebuild
-if ($LastExitCode -ne 0) { throw "Building solution x64, NetFrameworkServer, failed" }
-
-Write-Output "Building x64"
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer" -maxcpucount /verbosity:minimal /property:Configuration="Release" /property:Platform="x64" /target:clean /target:rebuild /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp"
-if ($LastExitCode -ne 0) { throw "Publish solution x64, NetFrameworkServer, failed " }
+& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer" -maxcpucount /verbosity:minimal /property:Configuration="Release" /target:clean /target:rebuild /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp"
+if ($LastExitCode -ne 0) { throw "Publish solution, NetFrameworkServer, failed " }
 
 mkdir  "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version"
 
@@ -68,8 +59,8 @@ copy-item "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp\_P
 
 Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force
 
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetframeworkConsoleServer" /p:Configuration=Release /p:Platform=x64 /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version\x64"
-if ($LastExitCode -ne 0) { throw "Publish solution x64, NetframeworkConsoleServer, failed" }
+& "$MSBUILD" "Majorsilence.CrystalCmd.NetframeworkConsoleServer" /p:Configuration=Release /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version"
+if ($LastExitCode -ne 0) { throw "Publish solution, NetframeworkConsoleServer, failed" }
 
 
 Write-Output "Creating zip files"
@@ -97,4 +88,4 @@ if (!(Test-Path -Path ".\packages\NUnit.ConsoleRunner.3.17.0"))
 	nuget "Install" "NUnit.Console" "-OutputDirectory" "packages" "-Version" "3.17.0"
 }
 
-& ".\packages\NUnit.ConsoleRunner.3.17.0\tools\nunit3-console.exe" $CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\bin\x64\Release\net48\Majorsilence.CrystalCmd.Tests.dll -result:".\build\test-results.xml"
+& ".\packages\NUnit.ConsoleRunner.3.17.0\tools\nunit3-console.exe" $CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\bin\Release\net48\Majorsilence.CrystalCmd.Tests.dll -result:".\build\test-results.xml"
