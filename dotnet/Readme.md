@@ -25,12 +25,12 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
 DataTable dt = new DataTable();
 
 // init reprt data
-var reportData = new Majorsilence.CrystalCmd.Client.Data()
+var reportData = new Majorsilence.CrystalCmd.Common.Data()
 {
     DataTables = new Dictionary<string, string>(),
-    MoveObjectPosition = new List<Majorsilence.CrystalCmd.Client.MoveObjects>(),
+    MoveObjectPosition = new List<Majorsilence.CrystalCmd.Common.MoveObjects>(),
     Parameters = new Dictionary<string, object>(),
-    SubReportDataTables = new List<Majorsilence.CrystalCmd.Client.SubReports>()
+    SubReportDataTables = new List<Majorsilence.CrystalCmd.Common.SubReports>()
 };
 
 // add as many data tables as needed.  The client library will do the necessary conversions to json/csv.
