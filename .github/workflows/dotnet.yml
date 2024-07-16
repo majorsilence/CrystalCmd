@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Build
-      run: cd dotnet && ./build_zips.ps1
+      run: choco install CrystalReports2010Runtime -y && cd dotnet && ./build_zips.ps1
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
