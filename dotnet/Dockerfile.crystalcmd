@@ -1,4 +1,4 @@
-FROM majorsilence/dotnet_framework_wine:9.0
+FROM majorsilence/dotnet_framework_wine:9.0.2
 
 ARG DEBIAN_FRONTEND=noninteractive
 

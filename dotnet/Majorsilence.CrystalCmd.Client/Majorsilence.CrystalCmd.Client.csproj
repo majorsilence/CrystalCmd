@@ -11,7 +11,13 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version>1.0.26</Version>
+
+	<PackageReadmeFile>Readme.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\Readme.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
