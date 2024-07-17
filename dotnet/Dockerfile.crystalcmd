@@ -1,4 +1,4 @@
-FROM majorsilence/dotnet_framework_wine:9.0.3
+FROM majorsilence/dotnet_framework_wine:9.0.6
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -16,15 +16,15 @@ ENV CRYSTALCMD_VERSION=$A_CRYSTALCMD_VERSION
 ENV WINEPREFIX=$A_WINEPREFIX
 ENV WINEARCH=$A_WINEARCH
 
-RUN apt update && apt install libarchive-tools curl -y \
+RUN apk update && apk add --no-cache libarchive-tools curl bash unixodbc \
+    && ln -s /bin/bash /usr/bin/bash \
+    && ln -s /usr/lib/libodbc.so.2 /usr/lib/libodbc.so \
     && mkdir -p /CrystalCMD \
     && cd /CrystalCMD \
     && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsoleServer_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
     && mv /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/ \
-    && apt remove curl libarchive-tools -y \
-    && rm -rf /tmp/* \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && apk del curl libarchive-tools \
+    && rm -rf /tmp/*
 
 COPY startup.sh /CrystalCMD/startup.sh
 RUN chmod gou+x /CrystalCMD/startup.sh
