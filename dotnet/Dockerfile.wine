@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM alpine:3.20
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -8,23 +8,13 @@ ADD VERSION_WINE .
 
 # Install Wine
 # https://wiki.winehq.org/Ubuntu
-RUN apt-get update \
-    && apt install -y wget software-properties-common gnupg2 \
-    && dpkg --add-architecture i386 \
-    && apt-get update \
-    && mkdir -pm755 /etc/apt/keyrings \
-    && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
-    && wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources \
-    && apt update \
-    && mkdir -p /tmp && cd /tmp/ \
-    && apt install -y winehq-stable winbind cabextract xvfb \
+RUN apk update \
+    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind \
     # Clean
-    && rm -rf /tmp/* \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
     && chmod +x winetricks \
-    && cp winetricks /usr/local/bin
+    && cp winetricks /usr/local/bin \
+    && rm -rf /tmp/*
 
 # Turn off Fixme warnings
 #ENV WINEDEBUG=fixme-all
@@ -40,7 +30,8 @@ RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
     && winetricks -q dotnet48 \
     && winetricks -q gdiplus \
-    && wine msiexec /i /root/CR13SP35MSI64_0-80007712.MSI /qn \
+    && winetricks corefonts \
+    && wine64 msiexec /i /root/CR13SP35MSI64_0-80007712.MSI /qn \
     && wineserver -k
 
 # Crystal reports
