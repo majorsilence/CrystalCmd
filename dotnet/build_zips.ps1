@@ -57,7 +57,13 @@ mkdir  "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version"
 
 copy-item "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp\_PublishedWebsites\Majorsilence.CrystalCmd.NetFrameworkServer\*" "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version" -Recurse -Force
 
-Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force
+try {
+	Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force
+}
+catch {
+	Start-Sleep -Seconds 3
+	Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 & "$MSBUILD" "Majorsilence.CrystalCmd.NetframeworkConsoleServer" /p:Configuration=Release /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version"
 if ($LastExitCode -ne 0) { throw "Publish solution, NetframeworkConsoleServer, failed" }
