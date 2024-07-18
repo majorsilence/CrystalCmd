@@ -24,8 +24,8 @@ jobs:
       if: success() || failure() # run this step even if previous step failed
       with:
         name: unit tests
-        path: "**/TestResults/*.trx"
-        reporter: dotnet-trx
+        path: "**/TestResults/*.xml"
+        reporter: dotnet-nunit
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
