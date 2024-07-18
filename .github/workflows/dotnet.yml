@@ -19,6 +19,13 @@ jobs:
         dotnet-version: 8.0.x
     - name: Build
       run: cd dotnet && choco install CrystalReports2010Runtime -y --source . && ./build_zips.ps1
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure() # run this step even if previous step failed
+      with:
+        name: unit tests
+        path: "**/TestResults/*.trx"
+        reporter: dotnet-trx
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
