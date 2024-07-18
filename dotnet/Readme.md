@@ -68,7 +68,7 @@ using (var outstream = new MemoryStream())
 # Server
 
 ```bash
-docker run -p 44355:44355 -e OVERRIDE_WINEARCH_AS_X64='yes' majorsilence/dotnet_framework_wine_crystalcmd:latest
+docker run -p 44355:44355 -e OVERRIDE_WINEARCH_AS_X64='yes' majorsilence/dotnet_framework_wine_crystalcmd:1.0.25-alpine
 ```
 
 ## Build docker images
