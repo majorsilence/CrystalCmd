@@ -18,9 +18,9 @@ run_x64_service
 echo "Running $WINEARCH"
 
 while true; do
-    responsecode=$(wget --server-response http://127.0.0.1:44355/status 2>&1 | awk '/^  HTTP/{print $2}')
+    responsecode=$(wget --server-response http://127.0.0.1:44355/healthz/ready 2>&1 | awk '/^  HTTP/{print $2}')
     if [ "$responsecode" != "200" ] ; then
-        wget --server-response http://127.0.0.1:44355/status
+        wget --server-response http://127.0.0.1:44355/healthz/ready
         break;
     fi
     sleep 1
