@@ -81,6 +81,10 @@ Get-ChildItem -Recurse "$CURRENTPATH\*.nupkg" | Where-Object { $_.FullName -notm
 
 Write-Output "Creating sbom files"
 New-Item -ItemType Directory -Force -Path $CURRENTPATH\build\sbom
+if (!(Get-Command -Name CycloneDX -ErrorAction SilentlyContinue)) {
+	dotnet tool install --global CycloneDX
+}
+
 dotnet CycloneDX "Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.csproj" --set-name "Majorsilence.CrystalCmd.NetFrameworkServer" --set-version "$Version" --set-type "Application" --github-username "$env:GITHUB_SBOM_USERNAME" --github-token "$env:GITHUB_SBOM" -o "$CURRENTPATH\build\sbom" --filename "majorsilence-NetFrameworkServer-bom.xml"
 if ($LastExitCode -ne 0) { throw "CycloneDX, NetFrameworkServer failed" }
 
