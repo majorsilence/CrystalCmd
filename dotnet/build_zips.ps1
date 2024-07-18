@@ -98,4 +98,5 @@ if (!(Test-Path -Path ".\packages\NUnit.ConsoleRunner.3.17.0"))
 	nuget "Install" "NUnit.Console" "-OutputDirectory" "packages" "-Version" "3.17.0"
 }
 
-& ".\packages\NUnit.ConsoleRunner.3.17.0\tools\nunit3-console.exe" $CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\bin\Release\net48\Majorsilence.CrystalCmd.Tests.dll -result:".\build\test-results.xml"
+New-Item -ItemType Directory -Path ".\build\TestResults" -Force | Out-Null
+& ".\packages\NUnit.ConsoleRunner.3.17.0\tools\nunit3-console.exe" $CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\bin\Release\net48\Majorsilence.CrystalCmd.Tests.dll -result:".\build\TestResults\test-results.xml"
