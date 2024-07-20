@@ -55,6 +55,9 @@ using (var outstream = new MemoryStream())
 [Majorsilence.CrystalCMD.postman_collection.json](https://github.com/majorsilence/CrystalCmd/blob/main/Majorsilence.CrystalCMD.postman_collection.json)
 
 # Server requirements
+
+See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.com/docs/SUPPORT_CONTENT/crystalreports/3354091173.html)
+
 - Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
   - CR for Visual Studio SP35 CR Runtime 64-bit
   - CR for Visual Studio SP35 CR Runtime 32-bit
