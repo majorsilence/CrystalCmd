@@ -28,9 +28,7 @@ ENV WINEPREFIX=/majorsilence-wine
 ENV WINEARCH=win64
 RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
-    && winetricks -q dotnet48 \
-    && winetricks -q gdiplus \
-    && winetricks corefonts \
+    && winetricks -q corefonts gdiplus winhttp dotnet48 \
     && wine64 msiexec /i /root/CR13SP35MSI64_0-80007712.MSI /qn \
     && wineserver -k
 
