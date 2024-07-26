@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Net
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.CoreServer", "Majorsilence.CrystalCmd.CoreServer\Majorsilence.CrystalCmd.CoreServer.csproj", "{46D3AC55-C5F7-4586-A3B6-461959084155}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{FA93CE91-BB0F-498B-90FD-457090498CD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{FA93CE91-BB0F-498B-90FD-457090498CD3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Tests", "Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj", "{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403}"
 EndProject

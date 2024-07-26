@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<OutputType>Library</OutputType>
@@ -55,17 +55,17 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="ChoETL" Version="1.2.1.66" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="System.CodeDom" Version="8.0.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
-		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
-		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+		<PackageReference Include="ChoETL" />
+		<PackageReference Include="Microsoft.CSharp" />
+		<PackageReference Include="Microsoft.Extensions.Logging" />
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="System.CodeDom" />
+		<PackageReference Include="System.ComponentModel.Annotations" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" />
+		<PackageReference Include="System.Data.DataSetExtensions" />
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="System.Reflection.Emit" />
+		<PackageReference Include="System.Reflection.Emit.Lightweight" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
