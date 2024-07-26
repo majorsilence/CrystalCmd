@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net48;net6.0;net8.0</TargetFrameworks>
@@ -25,5 +25,9 @@ Originally was designed as toy, a proof of concept, to see if mono and now .net 
 
   <ItemGroup>
     <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>	
   </ItemGroup>
 </Project>
