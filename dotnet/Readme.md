@@ -1,35 +1,20 @@
 
+**CrystalCMD** is a C#/dotnet program that loads JSON files into Crystal Reports to produce PDFs. Initially an experimental proof of concept, it demonstrates generating Crystal Reports on Linux using the .NET framework (wine).
 
-Use this project to generate test data from c# program
+**Key Features:**
 
-Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
-    - CR for Visual Studio SP35 CR Runtime 64-bit
-    - CR for Visual Studio SP35 CR Runtime 32-bit
+- PDF Generation: Converts JSON (and embedded csv) data into PDF reports with Crystal Reports templates.
+- Command Line & Server Modes: Supports both modes; server mode is recommended for better performance.
+- Cross-Platform: Works on Linux and can run .NET implementations using Wine.
 
-Majorsilence.CrystalCmd.NetFrameworkServer
-net4.8 webapi project
-Majorsilence.CrystalCmd.NetframeworkConsoleServer
-an embedio based console app/webserver
-can be run on Linux using wine
+# Client
 
-# server
-
-```bash
-docker run majorsilence/dotnet_framework_wine_crystalcmd:latest
-```
-
-## build docker images
-
-See Dockerfile.wine, Dockerfile.crystalcmd, and build.sh.
-
-# client
-
-## nuget package
+## Nuget package
 ```powershell
 dotnet add package Majorsilence.CrystalCmd.Client
 ```
 
-## curl example
+## Curl example
 
 ```bash
 curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_dataset_report.rpt" http://127.0.0.1:4321/export --output testout.pdf
@@ -40,12 +25,12 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
 DataTable dt = new DataTable();
 
 // init reprt data
-var reportData = new Majorsilence.CrystalCmd.Client.Data()
+var reportData = new Majorsilence.CrystalCmd.Common.Data()
 {
     DataTables = new Dictionary<string, string>(),
-    MoveObjectPosition = new List<Majorsilence.CrystalCmd.Client.MoveObjects>(),
+    MoveObjectPosition = new List<Majorsilence.CrystalCmd.Common.MoveObjects>(),
     Parameters = new Dictionary<string, object>(),
-    SubReportDataTables = new List<Majorsilence.CrystalCmd.Client.SubReports>()
+    SubReportDataTables = new List<Majorsilence.CrystalCmd.Common.SubReports>()
 };
 
 // add as many data tables as needed.  The client library will do the necessary conversions to json/csv.
@@ -67,4 +52,30 @@ using (var outstream = new MemoryStream())
 
 # Postman Collection
 
-[Majorsilence.CrystalCMD.postman_collection.json](../Majorsilence.CrystalCMD.postman_collection.json)
+[Majorsilence.CrystalCMD.postman_collection.json](https://github.com/majorsilence/CrystalCmd/blob/main/Majorsilence.CrystalCMD.postman_collection.json)
+
+# Server requirements
+
+See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.com/docs/SUPPORT_CONTENT/crystalreports/3354091173.html)
+
+- Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
+  - CR for Visual Studio SP35 CR Runtime 64-bit
+  - CR for Visual Studio SP35 CR Runtime 32-bit
+
+- Majorsilence.CrystalCmd.NetFrameworkServer
+  - net4.8 webapi project
+- Majorsilence.CrystalCmd.NetframeworkConsoleServer
+  - an embedio based console app/webserver
+  - can be run on Linux using wine
+
+# Server
+
+```bash
+docker run -p 44355:44355 -e OVERRIDE_WINEARCH_AS_X64='yes' majorsilence/dotnet_framework_wine_crystalcmd:1.0.25-alpine
+```
+
+## Build docker images
+
+See Dockerfile.wine, Dockerfile.crystalcmd, and build.sh.
+
+

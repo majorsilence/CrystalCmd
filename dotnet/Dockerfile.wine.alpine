@@ -1,0 +1,39 @@
+FROM alpine:3.20
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+
+ADD VERSION_WINE .
+
+# Install Wine
+# https://wiki.winehq.org/Ubuntu
+RUN apk update \
+    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind \
+    # Clean
+    && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
+    && chmod +x winetricks \
+    && cp winetricks /usr/local/bin \
+    && rm -rf /tmp/*
+
+# Turn off Fixme warnings
+#ENV WINEDEBUG=fixme-all
+
+# TODO: download from the crystal reports site. 
+# These files must be manually downloaded before running docker build
+COPY CR13SP35MSI64_0-80007712.MSI /root/CR13SP35MSI64_0-80007712.MSI
+
+# Setup a Wine prefix
+ENV WINEPREFIX=/majorsilence-wine
+ENV WINEARCH=win64
+RUN mkdir -p /majorsilence-wine \
+    && winecfg && wineboot -u \
+    && winetricks -q corefonts gdiplus winhttp dotnet48 \
+    && wine64 msiexec /i /root/CR13SP35MSI64_0-80007712.MSI /qn \
+    && wineserver -k
+
+# Crystal reports
+# https://origin.softwaredownloads.sap.com/public/site/index.html
+
+
+ENTRYPOINT ["/usr/bin/bash"]

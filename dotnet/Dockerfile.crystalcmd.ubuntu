@@ -1,0 +1,31 @@
+FROM majorsilence/dotnet_framework_wine:9.0.8-ubuntu
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+
+ADD VERSION_CRYSTALCMD .
+
+ARG A_CRYSTALCMD_VERSION="1.0.25"
+ARG A_WINEPREFIX="/majorsilence-wine"
+ARG A_WINEARCH="win64"
+
+# Turn off Fixme warnings
+ENV WINEDEBUG=fixme-all
+ENV CRYSTALCMD_VERSION=$A_CRYSTALCMD_VERSION
+ENV WINEPREFIX=$A_WINEPREFIX
+ENV WINEARCH=$A_WINEARCH
+
+RUN apt update && apt install libarchive-tools curl -y \
+    && mkdir -p /CrystalCMD \
+    && cd /CrystalCMD \
+    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsoleServer_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/ \
+    && apt remove curl libarchive-tools -y \
+    && rm -rf /tmp/* \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY startup.sh /CrystalCMD/startup.sh
+RUN chmod gou+x /CrystalCMD/startup.sh
+CMD ["/CrystalCMD/startup.sh"]
