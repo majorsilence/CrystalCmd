@@ -23,6 +23,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Net.Mime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -74,22 +75,22 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     .WithMode(HttpListenerMode.EmbedIO))
                 .WithModule(new ActionModule("/status", HttpVerbs.Any, async (ctx) =>
                     {
-                        await SendResponse("/status", ctx.Request.Headers, ctx.Request.InputStream,
+                        await SendResponse_Wrapper("/status", ctx.Request.Headers, ctx.Request.InputStream,
                            ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                     }))
                 .WithModule(new ActionModule("/healthz", HttpVerbs.Any, async (ctx) =>
                 {
-                    await SendResponse(ctx.Request.RawUrl, ctx.Request.Headers, ctx.Request.InputStream,
+                    await SendResponse_Wrapper(ctx.Request.RawUrl, ctx.Request.Headers, ctx.Request.InputStream,
                        ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                 }))
                 .WithModule(new ActionModule("/export", HttpVerbs.Any, async (ctx) =>
                 {
-                    await SendResponse("/export", ctx.Request.Headers, ctx.Request.InputStream,
+                    await SendResponse_Wrapper("/export", ctx.Request.Headers, ctx.Request.InputStream,
                         ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                 }))
                 .WithModule(new ActionModule("/analyzer", HttpVerbs.Any, async (ctx) =>
                 {
-                    await SendResponse("/analyzer", ctx.Request.Headers, ctx.Request.InputStream,
+                    await SendResponse_Wrapper("/analyzer", ctx.Request.Headers, ctx.Request.InputStream,
                                      ctx.Request.ContentEncoding, ctx.Request.ContentType, ctx);
                 }));
 
@@ -97,6 +98,27 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             server.StateChanged += (s, e) => $"WebServer New State - {e.NewState}".Info();
 
             return server;
+        }
+
+
+        static async Task
+    SendResponse_Wrapper(string rawurl, System.Collections.Specialized.NameValueCollection headers,
+      Stream inputStream,
+      System.Text.Encoding inputContentEncoding,
+      string contentType,
+      IHttpContext ctx
+    )
+        {
+            try
+            {
+                await SendResponse(rawurl, headers, inputStream, inputContentEncoding, contentType, ctx);
+            }
+            catch (Exception ex)
+            {
+                var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+                logger.LogError(ex, "Error processing request");
+                ctx.Response.StatusCode = 500;
+            }
         }
 
         static async Task
@@ -182,7 +204,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(ex);
+                    var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+                    logger.LogError(ex, "Error saving report file");
 
                     ctx.Response.StatusCode = 500;
                     try
@@ -251,7 +274,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex);
+                var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+                logger.LogError(ex, "Error exporting report");
 
                 ctx.Response.StatusCode = 500;
                 return;

@@ -4,10 +4,15 @@ If you are looking for a production crystal reports server look into [SAP Crysta
 
 # What is CrystalCmd
 
-CrystalCmd is a Java and C#/dotnet program to load json files into crystal reports and produce PDFs.
+**CrystalCMD** is a Java and C#/dotnet program that loads JSON files into Crystal Reports to produce PDFs. Initially an experimental proof of concept, it demonstrates generating Crystal Reports on Linux using Java and .NET framework (wine).
 
-Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
+The main focus is the c#/dotnet implementation running within Windows/IIS and Linux/Wine.
 
+**Key Features:**
+
+- PDF Generation: Converts JSON (and embedded csv) data into PDF reports with Crystal Reports templates.
+- Command Line & Server Modes: Supports both modes; server mode is recommended for better performance.
+- Cross-Platform: Works on Linux and can run .NET implementations using Wine.
 # Example usage
 
 Note that, when using the command line option, this is very slow and highly recommended to use the server option.
@@ -46,9 +51,11 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
 
 Use this project to generate test data from c# program
 
-Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
-    - CR for Visual Studio SP35 CR Runtime 64-bit
-    - CR for Visual Studio SP35 CR Runtime 32-bit
+See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.com/docs/SUPPORT_CONTENT/crystalreports/3354091173.html).
+
+- Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
+  - CR for Visual Studio SP35 CR Runtime 64-bit
+  - CR for Visual Studio SP35 CR Runtime 32-bit
 
 - Majorsilence.CrystalCmd.NetFrameworkServer
     - net4.8 webapi project

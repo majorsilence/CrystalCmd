@@ -1,5 +1,6 @@
 ﻿using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
+using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -18,6 +19,13 @@ namespace Majorsilence.CrystalCmd.Tests
         {
             // Set up the mock logger
             _mockLogger = new Mock<ILogger>();
+
+            string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
+            if (!System.IO.Directory.Exists(workingfolder))
+            {
+                System.IO.Directory.CreateDirectory(workingfolder);
+            }
+           
         }
 
 
