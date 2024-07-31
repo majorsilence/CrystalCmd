@@ -24,6 +24,7 @@ using System.Net.Mime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
+using System.Web;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -153,11 +154,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             else if (string.Equals(rawurl, "/export", StringComparison.InvariantCultureIgnoreCase) ||
                 string.Equals(rawurl, "/analyzer", StringComparison.InvariantCultureIgnoreCase))
             {
-                var creds = UsernameAndPassword(headers);
+                var creds = CustomServerSecurity.GetUserNameAndPassword(headers);
+                var token = CustomServerSecurity.GetBearerToken(headers);
                 string user = Settings.GetSetting("Username");
                 string password = Settings.GetSetting("Password");
-                var expected_creds = Tuple.Create(user, password);
-                var callResult = Authenticate(creds, expected_creds);
+                string jwtKey = Settings.GetSetting("JwtKey");
+                var expected_creds = (user, password);
+                var callResult = Authenticate(creds, expected_creds, jwtKey, token);
                 if (callResult.StatusCode != 200)
                 {
                     ctx.Response.StatusCode = callResult.StatusCode;
@@ -185,7 +188,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     }
                 }
 
-         
+
 
 
                 string reportPath = null;
@@ -306,82 +309,38 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             ctx.Response.Close();
         }
 
-        private static Tuple<string, string> UsernameAndPassword(NameValueCollection headers)
+        static (int StatusCode, string message) Authenticate((string UserName, string Password)? credentials,
+            (string UserName, string Password) expected_credentials,
+            string jwtKey, string token)
         {
-            string authHeader = headers["Authorization"];
-            if (authHeader != null && authHeader.StartsWith("Basic"))
+
+            if (!string.IsNullOrWhiteSpace(jwtKey))
             {
-                //Extract credentials
-                string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
-                //the coding should be iso or you could use ASCII and UTF-8 decoder
-                Encoding encoding = Encoding.GetEncoding("iso-8859-1");
-                string usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
-
-                int seperatorIndex = usernamePassword.IndexOf(':');
-
-                string username = usernamePassword.Substring(0, seperatorIndex);
-                string password = usernamePassword.Substring(seperatorIndex + 1);
-
-                return Tuple.Create(username, password);
+                if (!string.IsNullOrWhiteSpace(token) && TokenVerifier.VerifyToken(token, jwtKey))
+                {
+                    return (200, "");
+                }
             }
-            return null;
-        }
 
-        static (int StatusCode, string message) Authenticate(Tuple<string, string> credentials, Tuple<string, string> expected_credentials)
-        {
-            if (credentials?.Item1 != expected_credentials.Item1 || credentials?.Item2 != expected_credentials.Item2)
+            if (!string.Equals(credentials?.UserName, expected_credentials.UserName, StringComparison.InvariantCultureIgnoreCase)
+                || !string.Equals(credentials?.Password, expected_credentials.Password, StringComparison.InvariantCulture))
             {
                 return (401, "Unauthorized");
             }
             return (200, "");
         }
 
-
-        static Dictionary<string, List<string>> GetAllEndPoints()
-        {
-            Dictionary<string, List<string>> listofends = new Dictionary<string, List<string>>();
-            // listofends.Add("0.0.0.0", AddEndpoints("0.0.0.0"));
-
-            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
-            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-
-            foreach (NetworkInterface network in networkInterfaces)
-            {
-                // Read the IP configuration for each network
-                IPInterfaceProperties properties = network.GetIPProperties();
-
-                // Each network interface may have multiple IP addresses
-                foreach (IPAddressInformation address in properties.UnicastAddresses)
-                {
-                    if (address.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
-                    {
-                        string ipaddress = address.Address.ToString();
-                        listofends.Add(ipaddress, AddEndpoints(ipaddress));
-                    }
-                }
-            }
-
-            return listofends;
-        }
-
-        private static List<string> AddEndpoints(string address)
-        {
-            List<string> listofends = new List<string>();
-            listofends.Add("http://" + address + $":{port}/status/");
-            listofends.Add("http://" + address + $":{port}/export/");
-
-            return listofends;
-        }
-
         static void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => { 
+            services.AddLogging(configure =>
+            {
                 configure.ClearProviders();
                 configure.AddConsole();
             })
             .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
 
-            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => { 
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
+            {
                 return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
             });
         }

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net48</TargetFramework>
+	  <OutputType>Library</OutputType>
+	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
+	  <Authors>Majorsilence</Authors>
+	  <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Version>1.0.26</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+  </ItemGroup>
+
+</Project>

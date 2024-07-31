@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Common", "Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj", "{89B263C1-8155-4ACE-A1A1-2331FF54270C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Server.Common.Security", "Majorsilence.CrystalCmd.Server.Common.Security\Majorsilence.CrystalCmd.Server.Common.Security.csproj", "{73E1DF88-956E-4781-942C-807D4E9E40F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{89B263C1-8155-4ACE-A1A1-2331FF54270C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89B263C1-8155-4ACE-A1A1-2331FF54270C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89B263C1-8155-4ACE-A1A1-2331FF54270C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73E1DF88-956E-4781-942C-807D4E9E40F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73E1DF88-956E-4781-942C-807D4E9E40F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73E1DF88-956E-4781-942C-807D4E9E40F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73E1DF88-956E-4781-942C-807D4E9E40F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

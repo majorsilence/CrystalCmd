@@ -8,6 +8,7 @@ using System.Web.Http;
 using System.Web;
 using System;
 using System.Linq;
+using System.Collections.Specialized;
 
 public class ServerSetup
 {
@@ -75,14 +76,25 @@ public class ServerSetup
         }
     }
 
-    private static bool AuthFailed()
+    public static bool AuthFailed()
     {
         string user = Settings.GetSetting("Username");
         string password = Settings.GetSetting("Password");
+        string jwtKey = Settings.GetSetting("JwtKey");
+
+        if (!string.IsNullOrWhiteSpace(jwtKey))
+        {
+            var token = CustomServerSecurity.GetBearerToken(HttpContext.Current.Request.Headers);
+            if (!string.IsNullOrWhiteSpace(token) && TokenVerifier.VerifyToken(token, jwtKey))
+            {
+                return false;
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(password))
         {
             // auth required
-            var basicAuth = GetUserNameAndPassword(HttpContext.Current);
+            var basicAuth = CustomServerSecurity.GetUserNameAndPassword(HttpContext.Current.Request.Headers);
             if (!basicAuth.HasValue)
             {
                 //Auth problem
@@ -98,21 +110,4 @@ public class ServerSetup
 
         return false;
     }
-
-    private static (string UserName, string Password)? GetUserNameAndPassword(HttpContext context)
-    {
-        var auth = context.Request.Headers.GetValues("Authorization")?.FirstOrDefault().Replace("Basic ", "");
-        var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(auth ?? ""));
-        if (string.IsNullOrWhiteSpace(credentials))
-        {
-            return null;
-        }
-
-        int separator = credentials.IndexOf(':');
-        string name = credentials.Substring(0, separator);
-        string password = credentials.Substring(separator + 1);
-
-        return (name, password);
-    }
-
 }
