@@ -4,12 +4,7 @@
 	  <TargetFramework>net48</TargetFramework>
 	  <OutputType>Library</OutputType>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	  <PackageProjectUrl>https://github.com/majorsilence/CrystalCmd</PackageProjectUrl>
-	  <Authors>Majorsilence</Authors>
-	  <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <Version>1.0.26</Version>
+	  <Version>1.0.27</Version>
   </PropertyGroup>
 
   <ItemGroup>
