@@ -14,7 +14,7 @@
 		<Authors>Majorsilence</Authors>
 		<RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.0.27</Version>
+		<Version>1.0.28</Version>
 	</PropertyGroup>
 
 </Project>
