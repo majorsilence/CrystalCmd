@@ -11,6 +11,9 @@ namespace Majorsilence.CrystalCmd.Client
         readonly string userAgent;
         readonly string username;
         readonly string password;
+        readonly string bearerToken;
+
+        [Obsolete("Use the constructor that takes a bearer token.")]
         public Report(string serverUrl = "https://c.majorsilence.com/export",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
             string username = "", string password = "")
@@ -20,6 +23,16 @@ namespace Majorsilence.CrystalCmd.Client
             this.username = username;
             this.password = password;
         }
+
+        public Report(string serverUrl = "https://c.majorsilence.com/export",
+           string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
+           string bearerToken = "")
+        {
+            this.serverUrl = serverUrl;
+            this.userAgent = userAgent;
+            this.bearerToken = bearerToken;
+        }
+
 
         public Stream Generate(Common.Data reportData, Stream report)
         {
@@ -100,10 +113,16 @@ namespace Majorsilence.CrystalCmd.Client
                     Method = HttpMethod.Post,
                     RequestUri = new Uri(serverUrl)
                 };
-                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+
+                if(!string.IsNullOrWhiteSpace(bearerToken))
+                {
+                    request.Headers.Add("Authorization", $"Bearer {bearerToken}");
+                }
+                else if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
                 {
                     request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                 }
+
                 request.Headers.Add("User-Agent", userAgent);
 
                 HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
