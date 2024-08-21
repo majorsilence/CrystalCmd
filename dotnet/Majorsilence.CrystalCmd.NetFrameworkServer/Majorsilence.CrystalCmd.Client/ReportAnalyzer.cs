@@ -11,12 +11,13 @@ namespace Majorsilence.CrystalCmd.Client
 {
     public class ReportAnalyzer
     {
-        HttpClient _client;
+        readonly HttpClient _client;
         Stream _report;
-        string _serverUrl;
-        string _username;
-        string _password;
-        string _userAgent;
+        readonly string _serverUrl;
+        readonly string _username;
+        readonly string _password;
+        readonly string _userAgent;
+        readonly string _bearerToken;
         public ReportAnalyzer(Stream report, HttpClient client,
             string username, string password, string serverUrl = "https://c.majorsilence.com/analyzer",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0")
@@ -26,6 +27,17 @@ namespace Majorsilence.CrystalCmd.Client
             _serverUrl = serverUrl;
             _username = username;
             _password = password;
+            _userAgent = userAgent;
+        }
+
+        public ReportAnalyzer(Stream report, HttpClient client,
+            string bearerToken, string serverUrl = "https://c.majorsilence.com/analyzer",
+            string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0")
+        {
+            _report = report;
+            _client = client;
+            _serverUrl = serverUrl;
+            _bearerToken = bearerToken;
             _userAgent = userAgent;
         }
 
@@ -50,7 +62,7 @@ namespace Majorsilence.CrystalCmd.Client
         {
             var serverCaller = new ServerCaller(_client, _serverUrl);
             using (var response = await serverCaller.GenerateAsync(reportRequest, report, analyzerEndPoint,
-                _username, _password, _userAgent, cancellationToken))
+                _username, _password, _userAgent, _bearerToken, cancellationToken))
             {
                 using (var responseReader = new StreamReader(response))
                 {

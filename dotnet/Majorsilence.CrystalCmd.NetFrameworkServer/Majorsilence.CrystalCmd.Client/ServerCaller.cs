@@ -19,7 +19,7 @@ namespace Majorsilence.CrystalCmd.Client
 
         public async Task<Stream> GenerateAsync<T>(T requestData, Stream report,
             string endPoint, string username, string password,
-            string userAgent,
+            string userAgent, string bearerToken,
             System.Threading.CancellationToken cancellationToken = default)
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(requestData);
@@ -35,7 +35,12 @@ namespace Majorsilence.CrystalCmd.Client
                     Method = HttpMethod.Post,
                     RequestUri = new Uri(_baseUrl + endPoint)
                 };
-                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+
+                if(!string.IsNullOrWhiteSpace(bearerToken))
+                {
+                    request.Headers.Add("Authorization", $"Bearer {bearerToken}");
+                }
+                else if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
                 {
                     request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                 }
