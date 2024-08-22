@@ -42,7 +42,6 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
-            BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);

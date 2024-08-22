@@ -33,7 +33,6 @@
 		<PackageReference Include="System.CodeDom" />
 		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="System.Text.Json" />
-		<PackageReference Include="WebGrease" />
 		<PackageReference Include="Microsoft.AspNet.Web.Optimization" />
 		<PackageReference Include="Microsoft.AspNet.WebApi.Core" />
 		<PackageReference Include="Microsoft.AspNet.WebApi.WebHost" />
