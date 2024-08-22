@@ -44,6 +44,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform" />
+		<PackageReference Include="NReco.Logging.File" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />

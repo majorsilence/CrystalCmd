@@ -2,11 +2,14 @@
 using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NReco.Logging.File;
 using NSwag.AspNet.Owin;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
+using System.Web.Hosting;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
@@ -60,13 +63,22 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
 
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => {
-                configure.ClearProviders();
-                configure.AddConsole();
-            })
-           .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+            string logFile = Settings.GetSetting("LogFile");
+            if (!Path.IsPathRooted(logFile))
+            {
+                string appDataFolder = HostingEnvironment.MapPath("~/App_Data");
+                logFile = Path.Combine(appDataFolder, logFile);
+            }
 
-            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => {
+            services.AddLogging(configure =>
+            {
+                configure.ClearProviders();
+                configure.AddFile(logFile);
+            })
+            .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
+            {
                 return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
             });
         }

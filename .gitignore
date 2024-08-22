@@ -375,3 +375,4 @@ testout.pdf
 /dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.NetframeworkConsoleServer/*.zip
 dotnet/build
 *.MSI
+/dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.NetFrameworkServer/App_Data/crystalcmd_log.txt
