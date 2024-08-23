@@ -70,9 +70,32 @@ See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.co
 
 # Server
 
+## Docker run
 ```bash
 docker run -p 44355:44355 -e OVERRIDE_WINEARCH_AS_X64='yes' majorsilence/dotnet_framework_wine_crystalcmd:1.0.25-alpine
 ```
+
+## Windows Service Run
+
+Use nssm or powershell to register the Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe.
+
+```powershell
+$serviceName = "CrystalCmdService"
+$exePath = "C:\Path\To\Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe"
+$displayName = "Crystal Command Service"
+$description = "A service for Majorsilence Crystal Command"
+
+New-Service -Name $serviceName -BinaryPathName $exePath -DisplayName $displayName -Description $description -StartupType Automatic
+
+# Set the service to restart on failure
+sc.exe failure $serviceName reset= 0 actions= restart/60000/restart/60000/restart/60000
+
+# Verify service configuration
+Get-Service -Name $serviceName
+sc.exe qc $serviceName
+sc.exe qfailure $serviceName
+```
+
 
 ## Build docker images
 
