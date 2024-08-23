@@ -30,7 +30,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
     internal class Program
     {
-        static int port = 44355;
+      
         private static HealthCheckTask _backgroundHealthTask;
         private static ServiceProvider _serviceProvider;
 
@@ -53,6 +53,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
             _backgroundHealthTask.Start();
 
+            int port = 44355;
+            int.TryParse(Settings.GetSetting("Port"), out port);
             var url = $"http://*:{port}/";
 
             // Our web server is disposable.
