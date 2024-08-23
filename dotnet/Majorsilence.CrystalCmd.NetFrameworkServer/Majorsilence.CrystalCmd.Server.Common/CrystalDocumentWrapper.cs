@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI.WebControls;
 using System.Windows.Documents;
+using System.Windows.Navigation;
 using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
@@ -25,11 +26,25 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         public ReportDocument Create(string reportPath, CrystalCmd.Common.Data datafile)
         {
-            var reportClientDocument = new ReportDocument();
+            ReportDocument reportClientDocument=null;
+            try
+            {
+                reportClientDocument = new ReportDocument();
 
-            //reportClientDocument.ReportAppServer = "inproc:jrc";
-            reportClientDocument.Load(reportPath);
-
+                //reportClientDocument.ReportAppServer = "inproc:jrc";
+                reportClientDocument.Load(reportPath);
+                ProcessReport(reportClientDocument, datafile);
+                return reportClientDocument;
+            }
+            catch(Exception ex)
+            {
+                reportClientDocument?.Close();
+                reportClientDocument?.Dispose();
+               _logger.LogError(ex, "Error while creating report");
+            }
+            return null;
+        }
+        private void ProcessReport(ReportDocument reportClientDocument, CrystalCmd.Common.Data datafile) { 
 
             foreach (var table in datafile.DataTables)
             {
@@ -188,8 +203,6 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
 
             }
-
-            return reportClientDocument;
         }
 
         private static void SetFormulaText(ReportDocument reportClientDocument, KeyValuePair<string, string> item)
