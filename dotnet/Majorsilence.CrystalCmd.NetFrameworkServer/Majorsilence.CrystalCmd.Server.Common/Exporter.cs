@@ -36,8 +36,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
             using (var reportClientDocument = crystalWrapper.Create(reportPath, datafile))
             {
                 var result = Export(datafile.ExportAs, reportClientDocument);
-                reportClientDocument.Close();
-                reportClientDocument.Dispose();
+                reportClientDocument?.Close();
+                reportClientDocument?.Dispose();
                 return result;
             }
         }
