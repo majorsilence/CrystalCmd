@@ -50,7 +50,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
             string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
-            _backgroundHealthTask = new HealthCheckTask(logger, rptPath);
+            _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
             _backgroundHealthTask.Start();
 
             var url = $"http://*:{port}/";

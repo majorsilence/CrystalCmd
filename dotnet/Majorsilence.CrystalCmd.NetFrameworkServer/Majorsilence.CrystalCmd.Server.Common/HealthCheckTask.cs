@@ -3,6 +3,7 @@ using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,11 +17,13 @@ namespace Majorsilence.CrystalCmd.Server.Common
         public static bool IsHealthy { get; private set; } = false;
         private readonly string _rptFilePath;
         private readonly ILogger _logger;
+        private readonly bool _failureShouldExitProcess;
 
-        public HealthCheckTask(ILogger logger, string rptFilePath)
+        public HealthCheckTask(ILogger logger, string rptFilePath, bool failureShouldExitProcess)
         {
             _logger = logger;
             _rptFilePath = rptFilePath;
+            _failureShouldExitProcess = failureShouldExitProcess;
         }
 
         public void Start()
@@ -53,6 +56,21 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     _logger.LogInformation("HealthCheckTask: IsHealthy = " + IsHealthy);
                     failCount = 0;
                 }
+                catch (COMException ex) when (ex.Message.Contains("maximum report processing jobs limit"))
+                {                
+                    failCount++;
+                    _logger.LogError(ex, "HealthCheckTask: Error while exporting report to pdf");
+                    if (failCount > 5)
+                    {
+                        IsHealthy = false;
+                        _logger.LogError("HealthCheckTask: Too many errors, stopping the process");
+                        Stop();
+                        if (_failureShouldExitProcess)
+                        {
+                            System.Environment.Exit(1);
+                        }
+                    }
+                }
                 catch (Exception ex)
                 {
                     IsHealthy = false;
@@ -62,7 +80,10 @@ namespace Majorsilence.CrystalCmd.Server.Common
                    {
                         _logger.LogError("HealthCheckTask: Too many errors, stopping the process");
                         Stop();
-                        System.Environment.Exit(1);
+                        if (_failureShouldExitProcess)
+                        {
+                            System.Environment.Exit(1);
+                        }
                     }
                 }
 
