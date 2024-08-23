@@ -52,7 +52,7 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             var logger = ServiceProvider.GetService<ILogger>();
 
             string rptFilePath = Server.MapPath("~/bin/thereport.rpt");
-            _backgroundHealthTask = new HealthCheckTask(logger, rptFilePath);
+            _backgroundHealthTask = new HealthCheckTask(logger, rptFilePath, false);
             _backgroundHealthTask.Start();
         }
 
