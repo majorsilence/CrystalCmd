@@ -73,9 +73,15 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
             services.AddLogging(configure =>
             {
                 configure.ClearProviders();
-                configure.AddFile(logFile);
+                configure.AddFile(logFile, (options) => {
+                    options.Append = true;
+                    options.FileSizeLimitBytes = 5000000;
+                    options.MaxRollingFiles = 10;
+                });
             })
-            .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+            .Configure<LoggerFilterOptions>(options => {
+                options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information;
+            });
 
             services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
             {
