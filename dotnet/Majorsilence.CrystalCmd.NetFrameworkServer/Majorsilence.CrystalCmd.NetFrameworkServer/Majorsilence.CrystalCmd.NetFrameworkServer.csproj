@@ -3,7 +3,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<Platforms>AnyCPU;x64;x86</Platforms>
-		<Version>1.0.31</Version>
+		<Version>1.0.32</Version>
 		<SetRoslynToolPath>false</SetRoslynToolPath>
 	</PropertyGroup>
 	<ItemGroup>
