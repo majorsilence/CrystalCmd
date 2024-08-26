@@ -41,8 +41,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 reportClientDocument?.Close();
                 reportClientDocument?.Dispose();
                _logger.LogError(ex, "Error while creating report");
+                throw;
             }
-            return null;
         }
         private void ProcessReport(ReportDocument reportClientDocument, CrystalCmd.Common.Data datafile) { 
 
