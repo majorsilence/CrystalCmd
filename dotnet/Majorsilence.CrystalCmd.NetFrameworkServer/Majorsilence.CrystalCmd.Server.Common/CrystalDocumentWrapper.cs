@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -390,7 +391,13 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
                         for (int i = 0; i < headers.Length; i++)
                         {
-                            dt.Columns.Add(headers[i], Type.GetType($"System.{columntypes[i]}", false, true));
+                            var columnType = Type.GetType($"System.{columntypes[i]}", false, true);
+                            if (columnType == null || columnType.Assembly != typeof(string).Assembly)
+                            {
+                                columnType = typeof(string);
+                            }
+       
+                            dt.Columns.Add(headers[i], columnType);
                         }
                         continue;
                     }
