@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Majorsilence.CrystalCmd.Tests
@@ -25,7 +27,7 @@ namespace Majorsilence.CrystalCmd.Tests
             {
                 System.IO.Directory.CreateDirectory(workingfolder);
             }
-           
+
         }
 
 
@@ -38,7 +40,7 @@ namespace Majorsilence.CrystalCmd.Tests
         [TestCase(CrystalCmd.Common.ExportTypes.TEXT, "text/plain", "txt")]
         public void ExportTest(CrystalCmd.Common.ExportTypes exportType, string expectedMimeType, string expectedExtension)
         {
-        
+
             var export = new Majorsilence.CrystalCmd.Server.Common.Exporter(_mockLogger.Object);
             var result = export.exportReportToStream("thereport.rpt", new CrystalCmd.Common.Data()
             {
@@ -57,13 +59,13 @@ namespace Majorsilence.CrystalCmd.Tests
                 var text = ExtractTextFromPdf(bytes);
                 Assert.That(text.Contains("Test Report"));
             }
-            if(exportType == CrystalCmd.Common.ExportTypes.CSV || exportType == CrystalCmd.Common.ExportTypes.TEXT)
+            if (exportType == CrystalCmd.Common.ExportTypes.CSV || exportType == CrystalCmd.Common.ExportTypes.TEXT)
             {
                 Assert.That(UTF8Encoding.UTF8.GetString(bytes).Contains("Test Report"));
             }
 
         }
-
+     
         private static string ExtractTextFromPdf(byte[] reportData)
         {
             PdfReader reader = new PdfReader(reportData);
