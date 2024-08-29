@@ -19,9 +19,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
             using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration()
             {
                 MaxLineSize = int.MaxValue / 5,
-            }).WithFirstLineHeader().QuoteAllFields())
+            }).WithFirstLineHeader()
+                .QuoteAllFields()
+                .Configure(c => c.Encoding = Encoding.UTF8)
+                .Configure(c => c.MayContainEOLInData = true)
+                )
             {
-                reader.Configuration.MayContainEOLInData = true;
                 int rowIdx = 0;
                 ChoDynamicObject e;
 
