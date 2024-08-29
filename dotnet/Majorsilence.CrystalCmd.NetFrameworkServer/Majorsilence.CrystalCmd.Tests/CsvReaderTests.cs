@@ -53,6 +53,16 @@ namespace Majorsilence.CrystalCmd.Tests
             Assert.That(dtFromCsv.Columns.Contains("BIRTH_DATE"));
             Assert.That(dtFromCsv.Columns.Contains("TestData"));
             Assert.That(dtFromCsv.Columns.Contains("Special.Column.That.Is.Larger"));
+
+            var row1 = dtFromCsv.Rows[0];
+            Assert.That(row1["Special.Column"], Is.EqualTo("Test column name with period"));
+            Assert.That(row1["EMPLOYEE_ID"], Is.EqualTo(25));
+            Assert.That(row1["LAST_NAME"], Is.EqualTo("Indocin, Hi there"));
+            Assert.That(row1["FIRST_NAME"], Is.EqualTo("David"));
+            Assert.That(row1["BIRTH_DATE"], Is.EqualTo(new DateTime(1984, 6, 19)));
+            Assert.That(row1["TestData"], Is.EqualTo(System.Text.Encoding.UTF8.GetBytes("Hello world")));
+            Assert.That(row1["Special.Column.That.Is.Larger"], Is.EqualTo("bigger"));
+
         }
 
         static DataTable GetTable()
@@ -69,7 +79,7 @@ namespace Majorsilence.CrystalCmd.Tests
 
             // Here we add five DataRows.
             table.Rows.Add("Test column name with period", 25, "Indocin, Hi there", "bigger", "David",
-                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+                new DateTime(1984, 6, 19), System.Text.Encoding.UTF8.GetBytes("Hello world"));
             table.Rows.Add("Test column name with period", 50, "Enebrel", "bigger", "Sam",
                 DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
             table.Rows.Add("Test column name with period", 10, "Hydralazine", "bigger", "Christoff",
