@@ -47,6 +47,12 @@ namespace Majorsilence.CrystalCmd.Tests
 
             var dtFromCsv = CsvReader.CreateTableEtl(reportData.DataTables.FirstOrDefault().Value);
             Assert.That(dtFromCsv.Columns.Contains("Special.Column"));
+            Assert.That(dtFromCsv.Columns.Contains("EMPLOYEE_ID"));
+            Assert.That(dtFromCsv.Columns.Contains("LAST_NAME"));
+            Assert.That(dtFromCsv.Columns.Contains("FIRST_NAME"));
+            Assert.That(dtFromCsv.Columns.Contains("BIRTH_DATE"));
+            Assert.That(dtFromCsv.Columns.Contains("TestData"));
+            Assert.That(dtFromCsv.Columns.Contains("Special.Column.That.Is.Larger"));
         }
 
         static DataTable GetTable()
@@ -56,17 +62,24 @@ namespace Majorsilence.CrystalCmd.Tests
             table.Columns.Add("Special.Column", typeof(string));
             table.Columns.Add("EMPLOYEE_ID", typeof(int));
             table.Columns.Add("LAST_NAME", typeof(string));
+            table.Columns.Add("Special.Column.That.Is.Larger", typeof(string));
             table.Columns.Add("FIRST_NAME", typeof(string));
             table.Columns.Add("BIRTH_DATE", typeof(DateTime));
             table.Columns.Add("TestData", typeof(byte[]));
 
             // Here we add five DataRows.
-            table.Rows.Add("Test column name with period", 25, "Indocin, Hi there", "David", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
-            table.Rows.Add("Test column name with period", 50, "Enebrel", "Sam", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
-            table.Rows.Add("Test column name with period", 10, "Hydralazine", "Christoff", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
-            table.Rows.Add("Test column name with period", 21, "Combivent", "Janet", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
-            table.Rows.Add("Test column name with period", 100, "Dilantin", "Melanie", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
-            table.Rows.Add("Test column name with period", 101, "Hello", "World", DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 25, "Indocin, Hi there", "bigger", "David",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 50, "Enebrel", "bigger", "Sam",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 10, "Hydralazine", "bigger", "Christoff",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 21, "Combivent", "bigger", "Janet",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 100, "Dilantin", "bigger", "Melanie",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
+            table.Rows.Add("Test column name with period", 101, "Hello", "bigger", "World",
+                DateTime.Now, System.Text.Encoding.UTF8.GetBytes("Hello world"));
             return table;
         }
     }
