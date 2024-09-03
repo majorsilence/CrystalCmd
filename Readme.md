@@ -1,18 +1,32 @@
-WARNING. Do not use. This is one big experiment.
-
 If you are looking for a production crystal reports server look into [SAP Crystal Server](https://www.sap.com/canada/products/technology-platform/crystal-server.html).
 
 # What is CrystalCmd
 
-**CrystalCMD** is a Java and C#/dotnet program that loads JSON files into Crystal Reports to produce PDFs. Initially an experimental proof of concept, it demonstrates generating Crystal Reports on Linux using Java and .NET framework (wine).
+**CrystalCMD** is a C#/dotnet and Java program that loads JSON files into Crystal Reports to produce PDFs. Initially an experimental proof of concept, it demonstrates generating Crystal Reports on Linux using Java and .NET framework (wine).
 
 The main focus is the c#/dotnet implementation running within Windows/IIS and Linux/Wine.
 
 **Key Features:**
 
-- PDF Generation: Converts JSON (and embedded csv) data into PDF reports with Crystal Reports templates.
+- PDF Generation: Converts JSON (with embedded csv) data into PDF reports with Crystal Reports templates.
 - Command Line & Server Modes: Supports both modes; server mode is recommended for better performance.
 - Cross-Platform: Works on Linux and can run .NET implementations using Wine.
+
+# Use cases
+- Provide a path for porting a asp.net framework site from windows and iis to asp.net dotnet core net6.0 or newer on linux
+- Provide support for developers to work on projects that use dotnet crystal reports while using a mac
+- Provide a way to fence off legacy crystal reports behind a web api
+
+# Development
+CrystalCMD is developed with the following work flow:
+
+* Nothing happens for months/years
+* Someone needs it to do something it doesn't already do
+* That person implements that something and submits a pull request
+* Repeat if it doesn't have a feature that you want it to have, add it
+    * If it has a bug you need fixed, fix it
+
+
 # Example usage
 
 Note that, when using the command line option, this is very slow and highly recommended to use the server option.
