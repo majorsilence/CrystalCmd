@@ -192,6 +192,11 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 SetResize(reportClientDocument, item);
             }
 
+            foreach (var item in datafile.ObjectText)
+            {
+                SetObjectText(reportClientDocument, item);
+            }
+
             foreach (var x in datafile.MoveObjectPosition)
             {
                 try
@@ -203,6 +208,14 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     _logger.LogError(iore, "Error while moving report object");
                 }
 
+            }
+        }
+
+        private static void SetObjectText(ReportDocument reportClientDocument, KeyValuePair<string, string> item)
+        {
+            if (reportClientDocument.ReportDefinition.ReportObjects[item.Key] is TextObject)
+            {
+                (reportClientDocument.ReportDefinition.ReportObjects[item.Key] as TextObject).Text = item.Value;
             }
         }
 

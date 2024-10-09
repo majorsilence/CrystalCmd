@@ -25,6 +25,7 @@ namespace Majorsilence.CrystalCmd.Common
             CanGrow = new Dictionary<string, bool>();
             SortByField = new Dictionary<string, string>();
             ExportAs = ExportTypes.PDF;
+            ObjectText = new Dictionary<string, string> ();
         }
 
         // public byte[] ReportFile { get; set; }
@@ -60,6 +61,8 @@ namespace Majorsilence.CrystalCmd.Common
         /// Table name, field name 
         /// </summary>
         public Dictionary<string, string> SortByField { get; set; }
+
+        public Dictionary<string, string> ObjectText { get; set; }
 
         public ExportTypes ExportAs { get; set; }
 
