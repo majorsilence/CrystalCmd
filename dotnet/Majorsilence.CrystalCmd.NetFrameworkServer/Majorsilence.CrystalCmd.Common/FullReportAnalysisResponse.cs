@@ -46,6 +46,7 @@ namespace Majorsilence.CrystalCmd.Common
             public string ObjectName { get; set; }
             public int Width { get; set; }
             public int TopPosition { get; set; }
+            public string ObjectValue { get; set; }
         }
     }
 }

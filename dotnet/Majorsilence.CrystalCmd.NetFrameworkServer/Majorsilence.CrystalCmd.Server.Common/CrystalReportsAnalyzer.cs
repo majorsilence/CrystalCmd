@@ -1,4 +1,5 @@
-﻿using CrystalDecisions.CrystalReports.Engine;
+﻿using ChoETL;
+using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
 using System;
 using System.Collections.Generic;
@@ -105,7 +106,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     {
                         ObjectName = reportObject.Name,
                         Width = reportObject.Width,
-                        TopPosition = reportObject.Top
+                        TopPosition = reportObject.Top,
+                        ObjectValue = reportObject is TextObject ? (reportObject as TextObject).Text : reportObject.ToString()
                     });
                 }
             }
