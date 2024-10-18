@@ -34,6 +34,7 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 		<PackageReference Include="System.CodeDom" />
 		<PackageReference Include="System.ComponentModel.Annotations" />
+		<PackageReference Include="NReco.Logging.File" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />

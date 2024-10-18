@@ -25,12 +25,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using System.Web;
+using System.Web.Hosting;
+using NReco.Logging.File;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
     internal class Program
     {
-      
+
         private static HealthCheckTask _backgroundHealthTask;
         private static ServiceProvider _serviceProvider;
 
@@ -334,12 +336,33 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         static void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure =>
+            string logFile = Settings.GetSetting("LogFile");
+            if (!string.IsNullOrWhiteSpace(logFile))
             {
-                configure.ClearProviders();
-                configure.AddConsole();
-            })
-            .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+                services.AddLogging(configure =>
+                {
+                    configure.ClearProviders();
+                    configure.AddFile(logFile, (options) =>
+                    {
+                        options.Append = true;
+                        options.FileSizeLimitBytes = 5000000;
+                        options.MaxRollingFiles = 10;
+                    });
+                })
+               .Configure<LoggerFilterOptions>(options =>
+               {
+                   options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information;
+               });
+            }
+            else
+            {
+                services.AddLogging(configure =>
+                {
+                    configure.ClearProviders();
+                    configure.AddConsole();
+                })
+                .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+            }
 
             services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
             {
