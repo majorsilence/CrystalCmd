@@ -64,24 +64,38 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer
         private void ConfigureServices(IServiceCollection services)
         {
             string logFile = Settings.GetSetting("LogFile");
-            if (!Path.IsPathRooted(logFile))
+            if (!string.IsNullOrWhiteSpace(logFile))
             {
-                string appDataFolder = HostingEnvironment.MapPath("~/App_Data");
-                logFile = Path.Combine(appDataFolder, logFile);
-            }
+                if (!Path.IsPathRooted(logFile))
+                {
+                    string appDataFolder = HostingEnvironment.MapPath("~/App_Data");
+                    logFile = Path.Combine(appDataFolder, logFile);
+                }
 
-            services.AddLogging(configure =>
-            {
-                configure.ClearProviders();
-                configure.AddFile(logFile, (options) => {
-                    options.Append = true;
-                    options.FileSizeLimitBytes = 5000000;
-                    options.MaxRollingFiles = 10;
+                services.AddLogging(configure =>
+                {
+                    configure.ClearProviders();
+                    configure.AddFile(logFile, (options) =>
+                    {
+                        options.Append = true;
+                        options.FileSizeLimitBytes = 5000000;
+                        options.MaxRollingFiles = 10;
+                    });
+                })
+                .Configure<LoggerFilterOptions>(options =>
+                {
+                    options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information;
                 });
-            })
-            .Configure<LoggerFilterOptions>(options => {
-                options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information;
-            });
+            }
+            else
+            {
+                services.AddLogging(configure =>
+                {
+                    configure.ClearProviders();
+                    configure.AddConsole();
+                })
+                .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
+            }
 
             services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
             {
