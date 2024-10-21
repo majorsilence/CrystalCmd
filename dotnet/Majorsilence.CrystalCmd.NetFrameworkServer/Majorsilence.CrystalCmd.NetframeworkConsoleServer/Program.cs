@@ -27,6 +27,7 @@ using System.Runtime.InteropServices;
 using System.Web;
 using System.Web.Hosting;
 using NReco.Logging.File;
+using System.Reflection;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -336,8 +337,32 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         static void ConfigureServices(IServiceCollection services)
         {
+            string externalLogAssemblyPath = Settings.GetSetting("ExternalLogsAssemblyFilePath");
             string logFile = Settings.GetSetting("LogFile");
-            if (!string.IsNullOrWhiteSpace(logFile))
+            if (!string.IsNullOrWhiteSpace(externalLogAssemblyPath))
+            {
+                string className = Settings.GetSetting("ExternalLogsAssemblyClassName");
+                string functionName = Settings.GetSetting("ExternalLogsAssemblyFunctionName");
+
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+                var assembly = Assembly.LoadFrom(externalLogAssemblyPath);
+                var externalLogsHelperType = assembly.GetType(className);
+                var addLoggerMethod = externalLogsHelperType.GetMethod(functionName, BindingFlags.Static | BindingFlags.Public);
+
+                services.AddLogging(configure =>
+                {
+                    configure.ClearProviders();
+
+                    addLoggerMethod.Invoke(null, new object[] { configure });
+
+                })
+               .Configure<LoggerFilterOptions>(options =>
+               {
+                   options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information;
+               });
+            }
+            else if (!string.IsNullOrWhiteSpace(logFile))
             {
                 services.AddLogging(configure =>
                 {
@@ -368,6 +393,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             {
                 return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
             });
+        }
+
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            string assemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, args.Name.Split(',')[0] + ".dll");
+            if (File.Exists(assemblyPath))
+            {
+                return Assembly.LoadFrom(assemblyPath);
+            }
+            return null;
         }
     }
 }

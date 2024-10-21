@@ -32,7 +32,6 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 		<PackageReference Include="System.CodeDom" />
 		<PackageReference Include="System.ComponentModel.Annotations" />
-		<PackageReference Include="System.Text.Json" />
 		<PackageReference Include="Microsoft.AspNet.Web.Optimization" />
 		<PackageReference Include="Microsoft.AspNet.WebApi.Core" />
 		<PackageReference Include="Microsoft.AspNet.WebApi.WebHost" />
@@ -45,6 +44,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform" />
 		<PackageReference Include="NReco.Logging.File" />
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
