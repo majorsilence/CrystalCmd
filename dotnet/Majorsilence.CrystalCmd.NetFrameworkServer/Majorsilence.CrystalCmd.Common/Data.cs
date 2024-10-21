@@ -66,6 +66,8 @@ namespace Majorsilence.CrystalCmd.Common
 
         public ExportTypes ExportAs { get; set; }
 
+        public string TraceId { get; set; }
+
         public void AddData(string name, DataTable dt)
         {
             string csv = DataTable2Csv(dt);

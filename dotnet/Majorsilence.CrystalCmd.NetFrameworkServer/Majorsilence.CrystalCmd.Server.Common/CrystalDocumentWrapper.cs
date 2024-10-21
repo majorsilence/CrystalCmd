@@ -20,6 +20,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
     public class CrystalDocumentWrapper
     {
         private readonly ILogger _logger;
+        private string _traceId;
+        
         public CrystalDocumentWrapper(ILogger logger)
         {
             _logger = logger;
@@ -27,6 +29,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         public ReportDocument Create(string reportPath, CrystalCmd.Common.Data datafile)
         {
+            _traceId = datafile.TraceId ?? "";
             ReportDocument reportClientDocument=null;
             try
             {
@@ -41,7 +44,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 reportClientDocument?.Close();
                 reportClientDocument?.Dispose();
-               _logger.LogError(ex, "Error while creating report");
+               _logger.LogError(ex, $"Error while creating report {_traceId}");
                 throw;
             }
         }
@@ -105,7 +108,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting sub report data source");
+                    _logger.LogError(ex, $"Error while setting sub report ({table.ReportName}) data source ({table.TableName})");
                 }
             }
 
@@ -122,7 +125,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting empty sub report data source");
+                    _logger.LogError(ex, $"Error while setting empty sub report ({emptySubreport.ReportName}) data source ({emptySubreport.TableName})");
                 }
             }
 
@@ -163,7 +166,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting sub report parameters");
+                    _logger.LogError(ex, $"Error while setting sub report ({subreport.ReportName}) parameters");
                 }
             }
 
@@ -205,7 +208,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (System.IndexOutOfRangeException iore)
                 {
-                    _logger.LogError(iore, "Error while moving report object");
+                    _logger.LogError(iore, $"Error while moving report object ({x.ObjectName})");
                 }
 
             }
@@ -240,7 +243,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
             catch (IndexOutOfRangeException ex)
             {
-                _logger.LogError(ex, "Error while setting suppress");
+                _logger.LogError(ex, $"Error while setting suppress ({item.Key})");
             }
         }
 
@@ -365,18 +368,17 @@ namespace Majorsilence.CrystalCmd.Server.Common
         {
             if (string.IsNullOrWhiteSpace(reportTableName))
             {
-                rpt.Subreports[rptName].SetDataSource(dataSource);
+                rpt.Subreports[rptName]?.SetDataSource(dataSource);
             }
             else
             {
-                rpt.Subreports[rptName].Database.Tables[reportTableName].SetDataSource(dataSource);
+                rpt.Subreports[rptName]?.Database?.Tables[reportTableName]?.SetDataSource(dataSource);
             }
-
         }
 
         private void SetSubReport(string rptName, int idx, DataTable dataSource, ReportDocument rpt)
         {
-            rpt.Subreports[rptName].Database.Tables[idx].SetDataSource(dataSource);
+            rpt.Subreports[rptName]?.Database?.Tables[idx]?.SetDataSource(dataSource);
         }
 
         private void MoveReportObject(CrystalCmd.Common.MoveObjects item, ReportDocument rpt)
