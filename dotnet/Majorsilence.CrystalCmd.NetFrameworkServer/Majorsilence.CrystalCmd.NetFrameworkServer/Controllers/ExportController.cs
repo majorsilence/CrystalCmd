@@ -87,6 +87,8 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error exporting report ({TraceId})", reportData?.TraceId ?? "");
+
                 var message = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
                     Content = new StringContent(ex.Message + System.Environment.NewLine + ex.StackTrace)
