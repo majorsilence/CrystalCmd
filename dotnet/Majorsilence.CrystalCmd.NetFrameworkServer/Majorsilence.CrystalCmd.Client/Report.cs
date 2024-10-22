@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Client
@@ -114,7 +118,7 @@ namespace Majorsilence.CrystalCmd.Client
                     RequestUri = new Uri(serverUrl)
                 };
 
-                if(!string.IsNullOrWhiteSpace(bearerToken))
+                if (!string.IsNullOrWhiteSpace(bearerToken))
                 {
                     request.Headers.Add("Authorization", $"Bearer {bearerToken}");
                 }
@@ -135,7 +139,7 @@ namespace Majorsilence.CrystalCmd.Client
                     {
                         using (var x = new StreamReader(await content))
                         {
-                            errorMessage = x.ReadToEnd();
+                            errorMessage = await x.ReadToEndAsync();
                         }
                     }
                     response.EnsureSuccessStatusCode();
@@ -146,6 +150,70 @@ namespace Majorsilence.CrystalCmd.Client
                 }
 
                 return await content;
+            }
+        }
+
+        /// <summary>
+        /// Post heartbeat using gzip compression.  Use this to drastically reduce bandwidth.
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async System.Threading.Tasks.Task<Stream> GenerateViaCompressedPostAsync(Common.Data reportData, Stream report, HttpClient httpClient,
+            System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            using (var ms = new MemoryStream())
+            {
+                await report.CopyToAsync(ms);
+                var streamingValue = new Common.StreamedRequest()
+                {
+                    ReportData = reportData,
+                    Template = ms.ToArray()
+                };
+
+                using (var request = new System.Net.Http.HttpRequestMessage())
+                using (var inputContent = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(streamingValue)))
+                using (var compressedContent = new CompressedContent(inputContent, "gzip"))
+                {
+                    inputContent.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request.Content = compressedContent;
+                    request.Method = new System.Net.Http.HttpMethod("POST");
+                    request.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+                    request.RequestUri = new Uri(serverUrl);
+
+                    if (!string.IsNullOrWhiteSpace(bearerToken))
+                    {
+                        request.Headers.Add("Authorization", $"Bearer {bearerToken}");
+                    }
+                    else if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                    {
+                        request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
+                    }
+
+                    request.Headers.Add("User-Agent", userAgent);
+
+                    var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+
+                    var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    string errorMessage = "";
+                    try
+                    {
+                        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                        {
+                            using (var x = new StreamReader(await content))
+                            {
+                                errorMessage = await x.ReadToEndAsync();
+                            }
+                        }
+                        response.EnsureSuccessStatusCode();
+                    }
+                    catch (HttpRequestException hrex)
+                    {
+                        throw new HttpRequestException(errorMessage, hrex);
+                    }
+
+                    return await content;
+                }
             }
         }
 

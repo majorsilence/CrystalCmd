@@ -28,6 +28,8 @@ using System.Web;
 using System.Web.Hosting;
 using NReco.Logging.File;
 using System.Reflection;
+using Majorsilence.CrystalCmd.Common;
+using System.IO.Compression;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -172,29 +174,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     return;
                 }
 
-                var streamContent = new StreamContent(inputStream);
-                streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
-
-                var provider = await streamContent.ReadAsMultipartAsync();
                 CrystalCmd.Common.Data reportData = null;
                 byte[] reportTemplate = null;
-
-                foreach (var file in provider.Contents)
-                {
-                    // https://stackoverflow.com/questions/7460088/reading-file-input-from-a-multipart-form-data-post
-                    string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
-                    if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
-                    }
-                    else
-                    {
-                        reportTemplate = await file.ReadAsByteArrayAsync();
-                    }
-                }
-
-
-
+                var results = await ReadInput(inputStream, contentType, headers);
+                reportData = results.ReportData;
+                reportTemplate = results.Template;
 
                 string reportPath = null;
                 try
@@ -240,6 +224,60 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
             }
             ctx.Response.StatusCode = 400;
+        }
+
+        private static async Task<(Data ReportData, byte[] Template)> ReadInput(Stream inputStream, string contentType,
+            System.Collections.Specialized.NameValueCollection headers)
+        {
+            var streamContent = new StreamContent(inputStream);
+            Data reportData = null;
+            byte[] reportTemplate = null;
+
+            if (contentType.ToLower().Contains("gzip") || string.Equals(headers["Content-Encoding"] ?? "", "gzip", StringComparison.OrdinalIgnoreCase))
+            {
+                var result = await CompressedStreamInput(streamContent);
+                reportData = result.ReportData;
+                reportTemplate = result.Template;
+            }
+            else
+            {
+                streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+
+                var provider = await streamContent.ReadAsMultipartAsync();
+                foreach (var file in provider.Contents)
+                {
+                    // https://stackoverflow.com/questions/7460088/reading-file-input-from-a-multipart-form-data-post
+                    string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
+                    if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
+                    }
+                    else
+                    {
+                        reportTemplate = await file.ReadAsByteArrayAsync();
+                    }
+                }
+            }
+
+            return (reportData, reportTemplate);
+        }
+
+        private static async Task<(Data ReportData, byte[] Template)> CompressedStreamInput(StreamContent content)
+        {
+            // Decompress the content
+            using (var originalStream = await content.ReadAsStreamAsync())
+            using (var decompressedStream = new GZipStream(originalStream, CompressionMode.Decompress))
+            using (var memoryStream = new MemoryStream())
+            {
+                await decompressedStream.CopyToAsync(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                // Replace the original content with the decompressed content
+                content = new StreamContent(memoryStream);
+
+                var input = await content.ReadAsStringAsync();
+                var dto = JsonConvert.DeserializeObject<StreamedRequest>(input);
+                return (dto.ReportData, dto.Template);
+            }
         }
 
         private static async Task AnalyzerResults(IHttpContext ctx, string reportPath)

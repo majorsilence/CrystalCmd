@@ -161,6 +161,31 @@ namespace Majorsilence.CrystalCmd.Tests
 
         }
 
+        [Test]
+        public async Task Test_ServerCompressedStream()
+        {
+            DataTable dt = GetTable();
+            var reportData = new Common.Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<Common.MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportData.AddData("EMPLOYEE", dt);
+
+            var list = GetList();
+            var reportDataList = new Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportDataList.AddData("Employee", list);
+
+            await CreatePdfFromReportCompressedStream("the_dotnet_dataset_report.rpt", "the_dataset_report.pdf", reportData);
+
+            Assert.That(System.IO.File.Exists("the_dataset_report.pdf"));
+        }
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
             Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath}");
@@ -171,7 +196,22 @@ namespace Majorsilence.CrystalCmd.Tests
                 var rpt = new Client.Report(this.exportUrl, username: this.username, password: this.password);
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
                 {
-                    stream.CopyTo(fstreamOut);
+                    await stream.CopyToAsync(fstreamOut);
+                }
+            }
+        }
+        private async Task CreatePdfFromReportCompressedStream(string reportPath, string pdfOutputPath, Data reportData)
+        {
+            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
+            using (var httpClient = new HttpClient())
+            using (var fstream = new FileStream(reportPath, FileMode.Open))
+            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                var rpt = new Client.Report(this.exportUrl, username: this.username, password: this.password);
+                using (var stream = await rpt.GenerateViaCompressedPostAsync(reportData, fstream, httpClient))
+                {
+                    await stream.CopyToAsync(fstreamOut);
                 }
             }
         }
