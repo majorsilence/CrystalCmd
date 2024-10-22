@@ -362,29 +362,57 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private void SetDataSource(string tableName, DataTable val, ReportDocument rpt)
         {
-            rpt.Database.Tables[tableName].SetDataSource(val);
+            foreach (CrystalDecisions.CrystalReports.Engine.Table table in rpt.Database.Tables)
+            {
+                if (string.Equals(table.Name, tableName, StringComparison.OrdinalIgnoreCase))
+                {
+                    rpt.Database.Tables[tableName]?.SetDataSource(val);
+                    return;
+                }
+            }
+            _logger.LogWarning("Table not found: {TableName} ({TraceId})", tableName, _traceId);
         }
 
         private void SetDataSource(int idx, DataTable val, ReportDocument rpt)
         {
-            rpt.Database.Tables[idx].SetDataSource(val);
-        }
+            int tableCount = rpt.Database.Tables.Count;
+            // crystal indexes start at 1
+            if (idx > tableCount)
+            {
+                _logger.LogWarning("Table not found: {TableName} ({TraceId})", idx, _traceId);
+                return;
+            }
 
+            rpt.Database.Tables[idx]?.SetDataSource(val);
+        }
         private void SetSubReport(string rptName, string reportTableName, DataTable dataSource, ReportDocument rpt)
         {
             if (string.IsNullOrWhiteSpace(reportTableName))
             {
                 rpt.Subreports[rptName]?.SetDataSource(dataSource);
+                if (rpt.Subreports[rptName] == null)
+                {
+                    _logger.LogWarning("Subreport not found: {SubreportName} ({TraceId})", rptName, _traceId);
+                }
             }
             else
-            {
+            { 
                 rpt.Subreports[rptName]?.Database?.Tables[reportTableName]?.SetDataSource(dataSource);
+
+                if (rpt.Subreports[rptName]?.Database?.Tables[reportTableName] == null)
+                {
+                    _logger.LogWarning("Subreport table not found: {SubreportName} ({TableName}) ({TraceId})", rptName, reportTableName, _traceId);
+                }
             }
         }
-
         private void SetSubReport(string rptName, int idx, DataTable dataSource, ReportDocument rpt)
         {
             rpt.Subreports[rptName]?.Database?.Tables[idx]?.SetDataSource(dataSource);
+
+            if (rpt.Subreports[rptName]?.Database?.Tables[idx] == null)
+            {
+                _logger.LogWarning("Subreport table not found: {SubreportName} ({TableName}) ({TraceId})", rptName, idx, _traceId);
+            }
         }
 
         private void MoveReportObject(CrystalCmd.Common.MoveObjects item, ReportDocument rpt)
