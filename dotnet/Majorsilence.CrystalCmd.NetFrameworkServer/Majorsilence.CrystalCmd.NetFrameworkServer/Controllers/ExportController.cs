@@ -1,10 +1,13 @@
-﻿using Majorsilence.CrystalCmd.Server.Common;
+﻿using Majorsilence.CrystalCmd.Common;
+using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -29,33 +32,17 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
         [HttpPost]
         public async Task<HttpResponseMessage> Post()
         {
-            if (!Request.Content.IsMimeMultipartContent())
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-
             if (ServerSetup.AuthFailed())
             {
                 var authproblem = new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 return authproblem;
             }
 
-            var provider = new MultipartMemoryStreamProvider();
-            await Request.Content.ReadAsMultipartAsync(provider);
-
-            CrystalCmd.Common.Data reportData = null;
-            byte[] reportTemplate = null;
-
-            foreach (var file in provider.Contents)
-            {
-                string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
-                if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
-                }
-                else
-                {
-                    reportTemplate = await file.ReadAsByteArrayAsync();
-                }
-            }
+            Data reportData;
+            byte[] reportTemplate;
+            var input = await ReadInput();
+            reportData = input.ReportData;
+            reportTemplate = input.Template;
 
             string reportPath = null;
             byte[] bytes = null;
@@ -118,7 +105,65 @@ namespace Majorsilence.CrystalCmd.NetFrameworkServer.Controllers
             };
             result.Content.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
             return result;
+        }
 
+        private async Task<(Data ReportData, byte[] Template)> ReadInput()
+        {
+            Data reportData = null;
+            byte[] reportTemplate = null;
+
+            if (Request.Content.Headers.ContentEncoding.Contains("gzip"))
+            {
+                var result = await CheckForCompressedStreamInput();
+                reportData = result.ReportData;
+                reportTemplate = result.Template;
+            }
+            else
+            {
+                if (!Request.Content.IsMimeMultipartContent())
+                    throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+
+                var provider = new MultipartMemoryStreamProvider();
+                await Request.Content.ReadAsMultipartAsync(provider);
+
+                foreach (var file in provider.Contents)
+                {
+                    string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
+                    if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
+                    }
+                    else
+                    {
+                        reportTemplate = await file.ReadAsByteArrayAsync();
+                    }
+                }
+            }
+
+            return (reportData, reportTemplate);
+        }
+
+        private async Task<(Data ReportData, byte[] Template)> CheckForCompressedStreamInput()
+        {
+            // Decompress the content
+            using (var originalStream = await Request.Content.ReadAsStreamAsync())
+            using (var decompressedStream = new GZipStream(originalStream, CompressionMode.Decompress))
+            using (var memoryStream = new MemoryStream())
+            {
+                await decompressedStream.CopyToAsync(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                // Replace the original content with the decompressed content
+                Request.Content = new StreamContent(memoryStream);
+                foreach (var header in Request.Content.Headers)
+                {
+                    Request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+
+                var input = await Request.Content.ReadAsStringAsync();
+                var dto = JsonConvert.DeserializeObject<StreamedRequest>(input);
+                return (dto.ReportData, dto.Template);
+            }
         }
     }
 }
