@@ -283,7 +283,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             catch (Exception ex)
             {
                 var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
-                logger.LogError(ex, "Error exporting report");
+                logger.LogError(ex, "Error exporting report ({TraceId})", reportData?.TraceId ?? "");
 
                 ctx.Response.StatusCode = 500;
                 return;

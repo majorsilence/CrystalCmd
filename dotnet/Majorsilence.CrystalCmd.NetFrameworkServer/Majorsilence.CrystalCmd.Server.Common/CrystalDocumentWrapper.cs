@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -44,7 +45,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 reportClientDocument?.Close();
                 reportClientDocument?.Dispose();
-               _logger.LogError(ex, $"Error while creating report {_traceId}");
+               _logger.LogError(ex, "Error while creating report {TraceId}", _traceId);
                 throw;
             }
         }
@@ -68,7 +69,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting data source");
+                    _logger.LogError(ex, "Error while setting data source {TraceId}", _traceId);
                 }
             }
 
@@ -84,7 +85,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting empty data source");
+                    _logger.LogError(ex, "Error while setting empty data source {TraceId}", _traceId);
                 }
             }
 
@@ -108,7 +109,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error while setting sub report ({table.ReportName}) data source ({table.TableName})");
+                    _logger.LogError(ex, "Error while setting sub report ({ReportName}) data source ({TableName}) {TraceId}", 
+                        table.ReportName, table.TableName, _traceId);
                 }
             }
 
@@ -125,7 +127,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error while setting empty sub report ({emptySubreport.ReportName}) data source ({emptySubreport.TableName})");
+                    _logger.LogError(ex, "Error while setting empty sub report ({ReportName}) data source ({TableName}) ({TraceId})",
+                        emptySubreport.ReportName, emptySubreport.TableName, _traceId);
                 }
             }
 
@@ -166,7 +169,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error while setting sub report ({subreport.ReportName}) parameters");
+                    _logger.LogError(ex, "Error while setting sub report ({ReportName}) parameters ({TraceId})",
+                        subreport.ReportName, _traceId);
                 }
             }
 
@@ -208,7 +212,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (System.IndexOutOfRangeException iore)
                 {
-                    _logger.LogError(iore, $"Error while moving report object ({x.ObjectName})");
+                    _logger.LogError(iore, "Error while moving report object ({ObjectName}) ({TraceId})",
+                        x.ObjectName, _traceId);
                 }
 
             }
@@ -243,7 +248,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
             catch (IndexOutOfRangeException ex)
             {
-                _logger.LogError(ex, $"Error while setting suppress ({item.Key})");
+                _logger.LogError(ex, "Error while setting suppress ({item.Key}) ({TraceId})",
+                    item.Key, _traceId);
             }
         }
 
@@ -262,7 +268,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
             else
             {
-                _logger.LogWarning("Parameter not found: " + name);
+                _logger.LogWarning("Parameter not found: {ParameterName} ({TraceId})", name, _traceId);
             }
         }
 
