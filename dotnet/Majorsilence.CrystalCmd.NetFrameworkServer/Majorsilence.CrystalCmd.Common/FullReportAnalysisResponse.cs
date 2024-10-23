@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Majorsilence.CrystalCmd.Common
 {
@@ -13,6 +14,7 @@ namespace Majorsilence.CrystalCmd.Common
         }
 
         public IEnumerable<string> Parameters { get; set; }
+        public IDictionary<string, string> ParametersExtended { get; set; }
         public IEnumerable<DataTableAnalysisDto> DataTables { get; set; }
         public IEnumerable<FullSubReportAnalysisDto> SubReports { get; set; }
         public IEnumerable<ReportObjectsDto> ReportObjects { get; set; }

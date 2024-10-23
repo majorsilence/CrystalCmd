@@ -21,6 +21,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 return new CrystalCmd.Common.FullReportAnalysisResponse()
                 {
                     Parameters = GetReportParameters(reportDocument),
+                    ParametersExtended = GetReportParametersExtended(reportDocument),
                     SubReports = GetSubreports(reportDocument),
                     DataTables = GetDataTables(reportDocument),
                     ReportObjects = GetReportObjects(reportDocument)
@@ -90,6 +91,17 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 if (string.IsNullOrEmpty(parameter.ReportName))
                     parameters.Add(parameter.ParameterFieldName);
+            }
+            return parameters;
+        }
+
+        private Dictionary<string, string> GetReportParametersExtended(ReportDocument reportDocument)
+        {
+            var parameters = new Dictionary<string, string>();
+            foreach (ParameterField parameter in reportDocument.ParameterFields)
+            {
+                if (string.IsNullOrEmpty(parameter.ReportName))
+                    parameters.Add(parameter.ParameterFieldName, parameter.ParameterValueType.ToString());
             }
             return parameters;
         }
