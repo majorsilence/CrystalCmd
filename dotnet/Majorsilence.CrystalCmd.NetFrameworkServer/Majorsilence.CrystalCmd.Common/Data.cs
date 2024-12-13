@@ -68,6 +68,8 @@ namespace Majorsilence.CrystalCmd.Common
 
         public string TraceId { get; set; }
 
+        public string RecordSelectionFormula { get; set; }
+
         public void AddData(string name, DataTable dt)
         {
             string csv = DataTable2Csv(dt);

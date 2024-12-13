@@ -51,6 +51,11 @@ namespace Majorsilence.CrystalCmd.Server.Common
         }
         private void ProcessReport(ReportDocument reportClientDocument, CrystalCmd.Common.Data datafile) { 
 
+            if (!string.IsNullOrWhiteSpace(datafile.RecordSelectionFormula))
+            {
+                reportClientDocument.RecordSelectionFormula = datafile.RecordSelectionFormula;
+            }
+
             foreach (var table in datafile.DataTables)
             {
                 DataTable dt = CsvReader.CreateTableEtl(table.Value);
