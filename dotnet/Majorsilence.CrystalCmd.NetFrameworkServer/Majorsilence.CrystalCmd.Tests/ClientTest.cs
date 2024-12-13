@@ -8,15 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
 using System.IO;
+using System.Net.Http;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
 
-    [TestFixture, Ignore("Manual")]
+    [TestFixture]
     public class ClientTest
     {
 
-        private readonly string exportUrl = "https://localhost:44355/export";
+        private readonly string exportUrl = "http://localhost:44355/export";
         private readonly string username = "user";
         private readonly string password = "password";
 
@@ -88,6 +89,7 @@ namespace Majorsilence.CrystalCmd.Tests
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
 
+            Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable.pdf"));
         }
 
 
@@ -159,6 +161,7 @@ namespace Majorsilence.CrystalCmd.Tests
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
 
+            Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable.pdf"));
         }
 
         [Test]
