@@ -39,8 +39,8 @@ clean_build
 cd "$CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer"
 
 
-$xml = [xml](Get-Content "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj")
-$Version=$xml.Project.PropertyGroup.Version
+$xml = [xml](Get-Content "Directory.Build.props")
+$Version = $xml.Project.PropertyGroup.Version.Value
 
 Write-Output "Version: $Version"
 
