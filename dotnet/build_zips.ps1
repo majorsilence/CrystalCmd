@@ -16,6 +16,14 @@ else {
 	$MSBUILD="msbuild"
 }
 
+function Trim-Whitespace {
+    param (
+        [string]$InputString
+    )
+
+    return $InputString.Trim()
+}
+
 function clean_bin_obj() {
 	Set-Location "$CURRENTPATH"
 	# DELETE ALL "BIN" and "OBJ" FOLDERS
@@ -40,7 +48,7 @@ cd "$CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer"
 
 
 $xml = [xml](Get-Content "Directory.Build.props")
-$Version = $xml.Project.PropertyGroup.Version.Value
+$Version = Trim-Whitespace -InputString $xml.Project.PropertyGroup.Version
 
 Write-Output "Version: $Version"
 
