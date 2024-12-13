@@ -1,0 +1,22 @@
+<Project>
+
+  <PropertyGroup>
+    <AssemblyVersion>1.0.40</AssemblyVersion>
+    <FileVersion>1.0.40</FileVersion>
+    <Version>1.0.40</Version>
+    <Authors>Majorsilence</Authors>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Product>Majorsilence CrystalCMD</Product>
+    <Copyright>Copyright © Majorsilence 2024</Copyright>
+
+    <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
+</Project>
