@@ -101,4 +101,8 @@ sc.exe qfailure $serviceName
 
 See Dockerfile.wine, Dockerfile.crystalcmd, and build.sh.
 
+# Alternatives
 
+- [CrystalReportsRunner](https://github.com/gerardo-lijs/CrystalReportsRunner)
+- [SAP Crystal Server](https://www.sap.com/canada/products/technology-platform/crystal-server.html)
+- [RptToXml](https://github.com/ajryan/RptToXml)
