@@ -229,3 +229,10 @@ ln -s /usr/share/fonts/truetype/msttcorefonts /usr/lib/jvm/java-1.11.0-openjdk-a
 # fedora
 
 dnf install fontconfig dejavu-sans-fonts dejavu-serif-fonts
+
+
+# Alternatives
+
+- [CrystalReportsRunner](https://github.com/gerardo-lijs/CrystalReportsRunner)
+- [SAP Crystal Server](https://www.sap.com/canada/products/technology-platform/crystal-server.html)
+- [RptToXml](https://github.com/ajryan/RptToXml)
