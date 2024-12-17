@@ -32,6 +32,11 @@
     <ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
+	<Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
+	  <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\CrystalDecisions.CrystalReports.Engine\v4.0_13.0.4000.0__692fbea5521e1304\CrystalDecisions.CrystalReports.Engine.dll</HintPath>
+	</Reference>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="iTextSharp" />
     <PackageReference Include="NUnit" />
 	<PackageReference Include="NUnit3TestAdapter" />

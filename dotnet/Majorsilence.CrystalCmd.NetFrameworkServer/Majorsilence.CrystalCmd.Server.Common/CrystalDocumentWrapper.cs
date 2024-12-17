@@ -1,16 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Web;
-using System.Web.UI.WebControls;
-using System.Windows.Documents;
-using System.Windows.Navigation;
-using System.Xml.Linq;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
@@ -420,17 +410,47 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
         }
 
-        private void MoveReportObject(CrystalCmd.Common.MoveObjects item, ReportDocument rpt)
+        private static void MoveReportObject(CrystalCmd.Common.MoveObjects item, ReportDocument rpt)
         {
+            var reportObject = rpt.ReportDefinition.ReportObjects[item.ObjectName];
+
+            ReportObject foundObject = null;
+            Section targetSection = null;
+
+            foreach (Section section in rpt.ReportDefinition.Sections)
+            {
+                foreach (ReportObject tmpReportObject in section.ReportObjects)
+                {
+                    if (string.Equals(tmpReportObject.Name, item.ObjectName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        foundObject = reportObject;
+                        targetSection = section;
+                        break;
+                    }
+                }
+                if (foundObject != null)
+                {
+                    break;
+                }
+            }
+
+
             if (item.Type == CrystalCmd.Common.MoveType.ABSOLUTE)
             {
                 switch (item.Pos)
                 {
                     case CrystalCmd.Common.MovePosition.LEFT:
-                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Left = item.Move;
+                        reportObject.Left = item.Move;
                         break;
                     case CrystalCmd.Common.MovePosition.TOP:
-                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Top = item.Move;
+                        if (targetSection == null)
+                        {
+                            reportObject.Top = item.Move;
+                        }
+                        else
+                        {
+                            reportObject.Top = Math.Max(0, Math.Min(item.Move, (int)targetSection.Height - reportObject.Height));
+                        }
                         break;
                 }
             }
@@ -439,10 +459,17 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 switch (item.Pos)
                 {
                     case CrystalCmd.Common.MovePosition.LEFT:
-                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Left += item.Move;
+                        reportObject.Left += item.Move;
                         break;
                     case CrystalCmd.Common.MovePosition.TOP:
-                        rpt.ReportDefinition.ReportObjects[item.ObjectName].Top += item.Move;
+                        if (targetSection == null)
+                        {
+                            reportObject.Top += item.Move;
+                        }
+                        else
+                        {
+                            reportObject.Top = Math.Max(0, Math.Min(reportObject.Top + item.Move, (int)targetSection.Height - reportObject.Height));
+                        }
                         break;
                 }
             }
