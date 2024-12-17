@@ -1,0 +1,64 @@
+﻿using CrystalDecisions.CrystalReports.Engine;
+using iTextSharp.text.pdf;
+using iTextSharp.text.pdf.parser;
+using Majorsilence.CrystalCmd.Server.Common;
+using Microsoft.Extensions.Logging;
+using Moq;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing.Imaging;
+using System.Text;
+using static iTextSharp.text.pdf.AcroFields;
+
+namespace Majorsilence.CrystalCmd.Tests
+{
+    [TestFixture]
+    public class CrystalDocumentWrapperTests
+    {
+
+        private readonly Mock<ILogger> _mockLogger;
+
+        public CrystalDocumentWrapperTests()
+        {
+            // Set up the mock logger
+            _mockLogger = new Mock<ILogger>();
+
+            string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
+            if (!System.IO.Directory.Exists(workingfolder))
+            {
+                System.IO.Directory.CreateDirectory(workingfolder);
+            }
+
+        }
+
+
+        [TestCase(CrystalCmd.Common.MoveType.ABSOLUTE, Common.MovePosition.TOP, 10, 10, "Text1")]
+        [TestCase(CrystalCmd.Common.MoveType.ABSOLUTE, Common.MovePosition.TOP, 25, 25, "Text1")]
+        [TestCase(CrystalCmd.Common.MoveType.RELATIVE, Common.MovePosition.TOP, 0, 720, "Text1")]
+        [TestCase(CrystalCmd.Common.MoveType.RELATIVE, Common.MovePosition.TOP, 10, 730, "Text1")]
+        public void MoveTopTest(Common.MoveType mt, Common.MovePosition mp, int moveSize, int finalPosition, string objectName)
+        {
+
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            using (var reportClientDocument = crystalWrapper.Create("thereport.rpt", new CrystalCmd.Common.Data()
+            {
+                ExportAs = Common.ExportTypes.PDF,
+                MoveObjectPosition = new List<CrystalCmd.Common.MoveObjects>() { new Common.MoveObjects() {
+                Move = moveSize,
+                ObjectName = objectName,
+                Pos=  mp,
+                Type = mt
+                } },
+            }))
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(reportClientDocument.ReportDefinition.ReportObjects[objectName].Top, Is.EqualTo(finalPosition));
+                });          
+            }
+
+        }
+    }
+}
