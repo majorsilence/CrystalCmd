@@ -58,29 +58,11 @@ dotnet restore
 & "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer.sln" -maxcpucount /verbosity:minimal /property:Configuration="Release" /target:clean /target:rebuild
 if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer, failed" }
 
-& "$MSBUILD" "Majorsilence.CrystalCmd.NetFrameworkServer" -maxcpucount /verbosity:minimal /property:Configuration="Release" /target:clean /target:rebuild /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp"
-if ($LastExitCode -ne 0) { throw "Publish solution, NetFrameworkServer, failed " }
-
-mkdir  "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version"
-
-copy-item "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp\_PublishedWebsites\Majorsilence.CrystalCmd.NetFrameworkServer\*" "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version" -Recurse -Force
-
-try {
-	Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force
-}
-catch {
-	Start-Sleep -Seconds 3
-	Remove-Item -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_temp" -Recurse -Force -ErrorAction SilentlyContinue
-}
-
 & "$MSBUILD" "Majorsilence.CrystalCmd.NetframeworkConsoleServer" /p:Configuration=Release /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version"
 if ($LastExitCode -ne 0) { throw "Publish solution, NetframeworkConsoleServer, failed" }
 
 
 Write-Output "Creating zip files"
-
-Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkServer_$Version.zip"
-if ($LastExitCode -ne 0) { throw "Compress-Archive, NetFrameworkServer failed" }
 
 Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$Version.zip"
 

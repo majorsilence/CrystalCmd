@@ -71,10 +71,8 @@ See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.co
   - CR for Visual Studio SP35 CR Runtime 64-bit
   - CR for Visual Studio SP35 CR Runtime 32-bit
 
-- Majorsilence.CrystalCmd.NetFrameworkServer
-    - net4.8 webapi project
 - Majorsilence.CrystalCmd.NetframeworkConsoleServer
-    - an embedio based console app/webserver
+    - a net48 embedio based console app/webserver
     - can be run on Linux using wine
 
 

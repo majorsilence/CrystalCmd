@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetFrameworkServer", "Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.csproj", "{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetframeworkConsoleServer", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server.Common", "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj", "{4D494DE8-8D1B-4587-817C-99BB35CA285E}"
@@ -27,10 +25,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{283C9BAD-9A29-4356-9BCF-3D97C564C7B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
