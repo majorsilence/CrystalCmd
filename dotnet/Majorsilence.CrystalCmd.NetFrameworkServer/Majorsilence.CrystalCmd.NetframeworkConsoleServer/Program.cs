@@ -83,14 +83,25 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         // Create and configure our web server.
         private static WebServer CreateWebServer(string url, string urlHttps)
         {
+            WebServerOptions serverOptions;
 
-            var serverOptions = new WebServerOptions()
-                .WithUrlPrefix(url)
-                .WithUrlPrefix(urlHttps)
-                .WithMode(HttpListenerMode.EmbedIO);
+            try
+            {
+                var certificate = GenerateSelfSignedCertificate("CN=localhost");
+                serverOptions = new WebServerOptions()
+                   .WithUrlPrefix(url)
+                   .WithUrlPrefix(urlHttps)
+                   .WithMode(HttpListenerMode.EmbedIO);
 
-            var certificate = GenerateSelfSignedCertificate("CN=localhost");
-            serverOptions = serverOptions.WithCertificate(certificate);
+                serverOptions = serverOptions.WithCertificate(certificate);
+            }
+            catch (Exception)
+            {
+                serverOptions = new WebServerOptions()
+                   .WithUrlPrefix(url)
+                   .WithMode(HttpListenerMode.EmbedIO);
+            }
+
 
             var server = new WebServer(serverOptions)
                 .WithModule(new ActionModule("/status", HttpVerbs.Any, async (ctx) =>

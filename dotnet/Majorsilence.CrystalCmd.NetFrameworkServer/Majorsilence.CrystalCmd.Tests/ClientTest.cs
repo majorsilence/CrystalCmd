@@ -139,7 +139,7 @@ namespace Majorsilence.CrystalCmd.Tests
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
-            await CreatePdfFromReport("thereport_wth_parameters.rpt", ".pdf", parameterReportData);
+            await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
 
             var subreportParameterData = new Client.Data();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
