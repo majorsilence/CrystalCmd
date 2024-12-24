@@ -42,17 +42,17 @@ namespace Majorsilence.CrystalCmd.Tests
             };
             reportDataList.AddData("Employee", list);
 
-            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report.pdf", reportData);
+            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report1.pdf", reportData);
 
-            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report_ienumerable.pdf", reportDataList);
+            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "the_dataset_report_ienumerable1.pdf", reportDataList);
 
-            await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new Data());
+            await CreatePdfFromReport("thereport.rpt", "thereport1.pdf", new Data());
 
             var parameterReportData = new Data();
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
-            await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
+            await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters1.pdf", parameterReportData);
 
             var subreportParameterData = new Data();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
@@ -60,11 +60,11 @@ namespace Majorsilence.CrystalCmd.Tests
                 Parameters = parameterReportData.Parameters,
                 ReportName = "thereport_wth_parameters.rpt"
             });
-            await CreatePdfFromReport("thereport_with_subreport_with_parameters.rpt", "thereport_with_subreport_with_parameters.pdf", subreportParameterData);
+            await CreatePdfFromReport("thereport_with_subreport_with_parameters.rpt", "thereport_with_subreport_with_parameters1.pdf", subreportParameterData);
 
             var subreportDatatableData = new Data();
             subreportDatatableData.AddData("the_dotnet_dataset_report.rpt", "Employee", dt);
-            await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset.pdf", subreportDatatableData);
+            await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset1.pdf", subreportDatatableData);
 
 
             var fullData = new Data();
@@ -76,7 +76,7 @@ namespace Majorsilence.CrystalCmd.Tests
                 Parameters = parameterReportData.Parameters,
                 ReportName = "the_dotnet_dataset_report_with_params"
             });
-            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport.pdf", fullData);
+            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport1.pdf", fullData);
 
             var emptySubreportData = new Data();
             emptySubreportData.SetEmptyTable("EMPLOYEE");
@@ -87,11 +87,26 @@ namespace Majorsilence.CrystalCmd.Tests
                 Parameters = parameterReportData.Parameters,
                 ReportName = "the_dotnet_dataset_report_with_params"
             });
-            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
+            await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable1.pdf", emptySubreportData);
 
-            Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable.pdf"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(System.IO.File.Exists("the_dataset_report1.pdf"));
+                Assert.That(new FileInfo("the_dataset_report1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_ienumerable1.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_ienumerable1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_wth_parameters1.pdf"));
+                Assert.That(new FileInfo("thereport_wth_parameters1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_with_subreport_with_parameters1.pdf"));
+                Assert.That(new FileInfo("thereport_with_subreport_with_parameters1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_with_subreport_with_dotnet_dataset1.pdf"));
+                Assert.That(new FileInfo("thereport_with_subreport_with_dotnet_dataset1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dotnet_dataset_report_with_params_and_subreport1.pdf"));
+                Assert.That(new FileInfo("the_dotnet_dataset_report_with_params_and_subreport1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable1.pdf"));
+                Assert.That(new FileInfo("report_with_empty_subreport_datatable1.pdf").Length > 0);
+            });
         }
-
 
         [Test]
         public async Task Test_ClientBackwardsCompat()
@@ -124,7 +139,7 @@ namespace Majorsilence.CrystalCmd.Tests
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
-            await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
+            await CreatePdfFromReport("thereport_wth_parameters.rpt", ".pdf", parameterReportData);
 
             var subreportParameterData = new Client.Data();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
@@ -161,7 +176,26 @@ namespace Majorsilence.CrystalCmd.Tests
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "report_with_empty_subreport_datatable.pdf", emptySubreportData);
 
-            Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable.pdf"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(System.IO.File.Exists("the_dataset_report.pdf"));
+                Assert.That(new FileInfo("the_dataset_report.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_ienumerable.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_ienumerable.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport.pdf"));
+                Assert.That(new FileInfo("thereport.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_wth_parameters.pdf"));
+                Assert.That(new FileInfo("thereport_wth_parameters.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_with_subreport_with_parameters.pdf"));
+                Assert.That(new FileInfo("thereport_with_subreport_with_parameters.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("thereport_with_subreport_with_dotnet_dataset.pdf"));
+                Assert.That(new FileInfo("thereport_with_subreport_with_dotnet_dataset.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dotnet_dataset_report_with_params_and_subreport.pdf"));
+                Assert.That(new FileInfo("the_dotnet_dataset_report_with_params_and_subreport.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("report_with_empty_subreport_datatable.pdf"));
+                Assert.That(new FileInfo("report_with_empty_subreport_datatable.pdf").Length > 0);
+            });
+
         }
 
         [Test]
@@ -185,10 +219,57 @@ namespace Majorsilence.CrystalCmd.Tests
             };
             reportDataList.AddData("Employee", list);
 
-            await CreatePdfFromReportCompressedStream("the_dotnet_dataset_report.rpt", "the_dataset_report.pdf", reportData);
+            await CreatePdfFromReportCompressedStream("the_dotnet_dataset_report.rpt", "the_dataset_report_compressed.pdf", reportData);
 
-            Assert.That(System.IO.File.Exists("the_dataset_report.pdf"));
+            Assert.That(System.IO.File.Exists("the_dataset_report_compressed.pdf"));
         }
+
+        [Test]
+        public async Task Test_ServerCompressedStreamPolling()
+        {
+            DataTable dt = GetTable();
+            var reportData = new Common.Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<Common.MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportData.AddData("EMPLOYEE", dt);
+
+            var list = GetList();
+            var reportDataList = new Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportDataList.AddData("Employee", list);
+
+            var t = new List<Task>();
+            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling1.pdf", reportData));
+            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling2.pdf", reportData));
+            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling3.pdf", reportData));
+            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling4.pdf", reportData));
+            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling5.pdf", reportData));
+
+            Task.WaitAll(t.ToArray());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling1.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling1.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling2.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling2.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling3.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling3.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling4.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling4.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling5.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling5.pdf").Length > 0);
+            });
+        }
+
+
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
             Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath}");
@@ -213,6 +294,22 @@ namespace Majorsilence.CrystalCmd.Tests
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
                 var rpt = new Client.Report(this.exportUrl, username: this.username, password: this.password);
                 using (var stream = await rpt.GenerateViaCompressedPostAsync(reportData, fstream, httpClient))
+                {
+                    await stream.CopyToAsync(fstreamOut);
+                }
+            }
+        }
+
+        private async Task CreatePdfFromReportCompressedStreamPolling(string reportPath, string pdfOutputPath, Data reportData)
+        {
+            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
+            using (var httpClient = new HttpClient())
+            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
+            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                var rpt = new Client.ReportWithPolling(this.exportUrl, username: this.username, password: this.password);
+                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
                 {
                     await stream.CopyToAsync(fstreamOut);
                 }
