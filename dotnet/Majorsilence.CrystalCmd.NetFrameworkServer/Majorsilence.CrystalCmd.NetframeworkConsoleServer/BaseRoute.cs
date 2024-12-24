@@ -86,7 +86,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             return (200, "");
         }
 
-        protected async Task<(Data ReportData, string ReportPath)> ReadInput(Stream inputStream, string contentType,
+        protected async Task<(Data ReportData, string ReportPath, string Id, DirectoryInfo WorkingFolder)> ReadInput(Stream inputStream, string contentType,
           System.Collections.Specialized.NameValueCollection headers)
         {
             var streamContent = new StreamContent(inputStream);
@@ -119,7 +119,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
             }
 
-            string reportPath = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.rpt");
+            string id = Guid.NewGuid().ToString();
+            var folder = new DirectoryInfo(Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), id));
+            if(!folder.Exists)
+            {
+                folder.Create();
+            }
+            string reportPath = Path.Combine(folder.FullName, $"{id}.rpt");
             using (var fstream = new FileStream(reportPath, FileMode.Create))
             {
                 await fstream.WriteAsync(reportTemplate, 0, reportTemplate.Length);
@@ -127,7 +133,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 fstream.Close();
             }
 
-            return (reportData, reportPath);
+            return (reportData, reportPath, id, folder);
         }
 
         private static async Task<(Data ReportData, byte[] Template)> CompressedStreamInput(StreamContent content)
