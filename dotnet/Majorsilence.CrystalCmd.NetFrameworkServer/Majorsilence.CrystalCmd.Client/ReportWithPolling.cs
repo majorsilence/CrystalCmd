@@ -106,6 +106,9 @@ namespace Majorsilence.CrystalCmd.Client
         public async Task<Stream> GenerateAsync(Common.Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
+
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+
             HttpStatusCode uploadResponse;
             string uploadId;
             using (var ms = new MemoryStream())
@@ -136,8 +139,6 @@ namespace Majorsilence.CrystalCmd.Client
                     {
                         request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                     }
-
-                    request.Headers.Add("User-Agent", userAgent);
 
                     var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
@@ -171,6 +172,7 @@ namespace Majorsilence.CrystalCmd.Client
         private async Task<Stream> PollGet(string id, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken)
         {
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
             int pollTimeoutInSeconds = 600;
             var startTime = DateTime.UtcNow;
             while ((DateTime.UtcNow - startTime).TotalSeconds < pollTimeoutInSeconds)
@@ -189,8 +191,6 @@ namespace Majorsilence.CrystalCmd.Client
                     {
                         request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                     }
-
-                    request.Headers.Add("User-Agent", userAgent);
 
                     var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 

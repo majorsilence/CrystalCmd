@@ -104,6 +104,7 @@ namespace Majorsilence.CrystalCmd.Client
         public async Task<Stream> GenerateAsync(Common.Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(reportData);
 
             using (var form = new MultipartFormDataContent())
@@ -126,8 +127,6 @@ namespace Majorsilence.CrystalCmd.Client
                 {
                     request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                 }
-
-                request.Headers.Add("User-Agent", userAgent);
 
                 HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -162,6 +161,7 @@ namespace Majorsilence.CrystalCmd.Client
         public async System.Threading.Tasks.Task<Stream> GenerateViaCompressedPostAsync(Common.Data reportData, Stream report, HttpClient httpClient,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
             using (var ms = new MemoryStream())
             {
                 await report.CopyToAsync(ms);
@@ -189,8 +189,6 @@ namespace Majorsilence.CrystalCmd.Client
                     {
                         request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
                     }
-
-                    request.Headers.Add("User-Agent", userAgent);
 
                     var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
