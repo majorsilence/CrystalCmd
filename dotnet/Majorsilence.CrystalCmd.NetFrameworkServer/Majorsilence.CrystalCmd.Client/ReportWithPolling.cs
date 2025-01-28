@@ -76,7 +76,12 @@ namespace Majorsilence.CrystalCmd.Client
         public async Task<Stream> GenerateAsync(Common.Data reportData, Stream report,
             System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
-            using (var httpClient = new HttpClient())
+            var cookieContainer = new CookieContainer();
+            var handler = new HttpClientHandler
+            {
+                CookieContainer = cookieContainer
+            };
+            using (var httpClient = new HttpClient(handler))
             {
                 return await GenerateAsync(reportData, report, httpClient, cancellationToken).ConfigureAwait(false);
             }
@@ -88,15 +93,22 @@ namespace Majorsilence.CrystalCmd.Client
         /// </summary>
         /// <param name="reportData"></param>
         /// <param name="report"></param>
-        /// <param name="httpClient">Manage the HttpClient from the calling program.</param>
+        /// <param name="httpClient">Manage the HttpClient from the calling program.  
+        /// It is imperative that if load balancing is in place using session affinity, 
+        /// aka sticky sessions, a CookiContainer and handler should be used</param>
         /// <returns></returns>
         /// <example>
         /// <code lang="cs">
+        /// var cookieContainer = new CookieContainer();
+        /// var handler = new HttpClientHandler
+        /// {
+        ///  CookieContainer = cookieContainer
+        /// };
         /// using (var fstream = new FileStream("thereport.rpt", FileMode.Open))
         /// using (var fstreamOut = new FileStream("thereport.pdf", FileMode.OpenOrCreate | FileMode.Append))
         /// {
         ///     var rpt = new Majorsilence.CrystalCmd.Client.Report();
-        ///     using (var stream = await rpt.GenerateAsync(new Data(), fstream, new HttpClient()))
+        ///     using (var stream = await rpt.GenerateAsync(new Data(), fstream, new HttpClient(handler)))
         ///     {
         ///         stream.CopyTo(fstreamOut);
         ///     }
