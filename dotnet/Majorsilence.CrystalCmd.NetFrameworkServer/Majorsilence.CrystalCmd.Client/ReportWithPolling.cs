@@ -170,7 +170,7 @@ namespace Majorsilence.CrystalCmd.Client
         }
 
         private async Task<Stream> PollGet(string id, HttpClient httpClient,
-            System.Threading.CancellationToken cancellationToken)
+           System.Threading.CancellationToken cancellationToken)
         {
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
             int pollTimeoutInSeconds = 600;
@@ -194,13 +194,13 @@ namespace Majorsilence.CrystalCmd.Client
 
                     var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
-                    var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    var content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                     string errorMessage = "";
                     try
                     {
                         if ((int)response.StatusCode > 299 || (int)response.StatusCode < 200)
                         {
-                            using (var x = new StreamReader(await content))
+                            using (var x = new StreamReader(content))
                             {
                                 errorMessage = await x.ReadToEndAsync();
                             }
@@ -208,12 +208,15 @@ namespace Majorsilence.CrystalCmd.Client
                         }
                         else if (response.StatusCode == HttpStatusCode.Accepted)
                         {
-                            // still processing, do nothing
+                            // still processing, do nothing  
                         }
                         else if (response.StatusCode == HttpStatusCode.OK)
                         {
-                            // processing finished
-                            return await content;
+                            // processing finished, copy stream to memory stream to avoid disposed problem in caller
+                            var resultStream = new MemoryStream();
+                            await content.CopyToAsync(resultStream);
+                            resultStream.Position = 0;
+                            return resultStream;
                         }
                     }
                     catch (HttpRequestException hrex)

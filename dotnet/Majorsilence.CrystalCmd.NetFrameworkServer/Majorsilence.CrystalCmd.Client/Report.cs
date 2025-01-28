@@ -112,43 +112,47 @@ namespace Majorsilence.CrystalCmd.Client
                 form.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "reportdata");
                 form.Add(new StreamContent(report), "reporttemplate", "report.rpt");
 
-                var request = new HttpRequestMessage()
+                using (var request = new HttpRequestMessage())
                 {
-                    Content = form,
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri(serverUrl)
-                };
+                    request.Content = form;
+                    request.Method = HttpMethod.Post;
+                    request.RequestUri = new Uri(serverUrl);
 
-                if (!string.IsNullOrWhiteSpace(bearerToken))
-                {
-                    request.Headers.Add("Authorization", $"Bearer {bearerToken}");
-                }
-                else if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-                {
-                    request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
-                }
-
-                HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-                var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                string errorMessage = "";
-                try
-                {
-                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                    if (!string.IsNullOrWhiteSpace(bearerToken))
                     {
-                        using (var x = new StreamReader(await content))
-                        {
-                            errorMessage = await x.ReadToEndAsync();
-                        }
+                        request.Headers.Add("Authorization", $"Bearer {bearerToken}");
                     }
-                    response.EnsureSuccessStatusCode();
-                }
-                catch (HttpRequestException hrex)
-                {
-                    throw new HttpRequestException(errorMessage, hrex);
-                }
+                    else if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                    {
+                        request.Headers.Add("Authorization", $"Basic {Base64Encode($"{username}:{password}")}");
+                    }
 
-                return await content;
+                    HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+                    var content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    string errorMessage = "";
+                    try
+                    {
+                        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                        {
+                            using (var x = new StreamReader(content))
+                            {
+                                errorMessage = await x.ReadToEndAsync();
+                            }
+                        }
+                        response.EnsureSuccessStatusCode();
+                    }
+                    catch (HttpRequestException hrex)
+                    {
+                        throw new HttpRequestException(errorMessage, hrex);
+                    }
+
+                    // copy stream to memory stream to avoid disposed problem in caller
+                    var resultStream = new MemoryStream();
+                    await content.CopyToAsync(resultStream);
+                    resultStream.Position = 0;
+                    return resultStream;
+                }
             }
         }
 
@@ -192,13 +196,13 @@ namespace Majorsilence.CrystalCmd.Client
 
                     var response = await httpClient.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
-                    var content = response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    var content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                     string errorMessage = "";
                     try
                     {
                         if (response.StatusCode != System.Net.HttpStatusCode.OK)
                         {
-                            using (var x = new StreamReader(await content))
+                            using (var x = new StreamReader(content))
                             {
                                 errorMessage = await x.ReadToEndAsync();
                             }
@@ -210,7 +214,11 @@ namespace Majorsilence.CrystalCmd.Client
                         throw new HttpRequestException(errorMessage, hrex);
                     }
 
-                    return await content;
+                    // copy stream to memory stream to avoid disposed problem in caller
+                    var resultStream = new MemoryStream();
+                    await content.CopyToAsync(resultStream);
+                    resultStream.Position = 0;
+                    return resultStream;
                 }
             }
         }
