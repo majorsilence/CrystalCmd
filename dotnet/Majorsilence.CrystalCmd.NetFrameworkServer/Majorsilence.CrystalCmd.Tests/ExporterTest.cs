@@ -1,6 +1,4 @@
-﻿using iTextSharp.text.pdf;
-using iTextSharp.text.pdf.parser;
-using Majorsilence.CrystalCmd.Server.Common;
+﻿using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -8,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using UglyToad.PdfPig;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
@@ -65,18 +64,20 @@ namespace Majorsilence.CrystalCmd.Tests
             }
 
         }
-     
+
         private static string ExtractTextFromPdf(byte[] reportData)
         {
-            PdfReader reader = new PdfReader(reportData);
-            StringBuilder text = new StringBuilder();
-
-            for (int i = 1; i <= reader.NumberOfPages; i++)
+            using (var document = PdfDocument.Open(reportData))
             {
-                text.Append(PdfTextExtractor.GetTextFromPage(reader, i));
-            }
+                StringBuilder text = new StringBuilder();
 
-            return text.ToString();
+                foreach (var page in document.GetPages())
+                {
+                    text.Append(page.Text);
+                }
+
+                return text.ToString();
+            }
         }
     }
 }

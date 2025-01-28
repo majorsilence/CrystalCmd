@@ -1,6 +1,4 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
-using iTextSharp.text.pdf;
-using iTextSharp.text.pdf.parser;
 using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,7 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing.Imaging;
 using System.Text;
-using static iTextSharp.text.pdf.AcroFields;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
