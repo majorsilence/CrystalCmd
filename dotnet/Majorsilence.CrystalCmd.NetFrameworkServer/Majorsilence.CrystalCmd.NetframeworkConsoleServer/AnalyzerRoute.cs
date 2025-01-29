@@ -27,7 +27,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 return;
             }
 
-            var inputResults = await ReadInput(inputStream, contentType, headers);
+            var inputResults = await ReadInput(inputStream, contentType, headers, templateOnly: true);
             await AnalyzerResults(ctx, inputResults.ReportPath);
 
         }

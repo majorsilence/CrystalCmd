@@ -88,7 +88,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         }
 
         protected async Task<(Data ReportData, string ReportPath, string Id, DirectoryInfo WorkingFolder)> ReadInput(Stream inputStream, string contentType,
-          System.Collections.Specialized.NameValueCollection headers)
+          System.Collections.Specialized.NameValueCollection headers,
+          bool templateOnly = false)
         {
             var streamContent = new StreamContent(inputStream);
             Data reportData = null;
@@ -128,7 +129,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 }
             }
 
-            if (reportData == null)
+            if (!templateOnly && reportData == null)
             {
                 throw new CrystalCmdException("report data is null");
             }
