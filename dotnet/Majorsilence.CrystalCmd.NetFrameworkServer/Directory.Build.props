@@ -1,15 +1,14 @@
 <Project>
 
   <PropertyGroup>
-    <AssemblyVersion>1.0.46</AssemblyVersion>
-    <FileVersion>1.0.46</FileVersion>
-    <Version>1.0.46</Version>
+    <AssemblyVersion>1.0.47</AssemblyVersion>
+    <FileVersion>1.0.47</FileVersion>
+    <Version>1.0.47</Version>
     <Authors>Majorsilence</Authors>
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Product>Majorsilence CrystalCMD</Product>
-    <Copyright>Copyright © Majorsilence 2024</Copyright>
-
+    <Copyright>Copyright © Majorsilence 2025</Copyright>
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
