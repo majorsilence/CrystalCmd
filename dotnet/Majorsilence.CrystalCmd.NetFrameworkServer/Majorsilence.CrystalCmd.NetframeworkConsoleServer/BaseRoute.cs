@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
 using Majorsilence.CrystalCmd.Server.Common;
 using System.Runtime.Remoting.Messaging;
+using System.Net;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -93,6 +94,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             Data reportData = null;
             byte[] reportTemplate = null;
 
+            if(string.IsNullOrWhiteSpace(contentType))
+            {
+                throw new CrystalCmdException("content type is null");
+            }
+
             if (contentType.ToLower().Contains("gzip") || string.Equals(headers["Content-Encoding"] ?? "", "gzip", StringComparison.OrdinalIgnoreCase))
             {
                 var result = await CompressedStreamInput(streamContent);
@@ -102,6 +108,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             else
             {
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+
+                if (!streamContent.IsMimeMultipartContent())
+                    throw new EmbedIO.HttpException(HttpStatusCode.UnsupportedMediaType);
 
                 var provider = await streamContent.ReadAsMultipartAsync();
                 foreach (var file in provider.Contents)
@@ -117,6 +126,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                         reportTemplate = await file.ReadAsByteArrayAsync();
                     }
                 }
+            }
+
+            if (reportData == null)
+            {
+                throw new CrystalCmdException("report data is null");
+            }
+
+            if (reportTemplate == null)
+            {
+                throw new CrystalCmdException("report template is null");
             }
 
             string id = Guid.NewGuid().ToString();
