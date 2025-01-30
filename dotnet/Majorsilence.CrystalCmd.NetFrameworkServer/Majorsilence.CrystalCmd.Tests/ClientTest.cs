@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
+using System.Linq;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
@@ -16,6 +18,7 @@ namespace Majorsilence.CrystalCmd.Tests
     {
 
         private readonly string exportUrl = "http://localhost:44355/export";
+        private readonly string analyzerUrl = "http://localhost:44355/analyzer";
         private readonly string username = "user";
         private readonly string password = "password";
 
@@ -267,6 +270,43 @@ namespace Majorsilence.CrystalCmd.Tests
             });
         }
 
+        [Test]
+        public async Task Test_ReportAnalyzer()
+        {
+            DataTable dt = GetTable();
+            var reportData = new Client.Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<Common.MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportData.AddData("EMPLOYEE", dt);
+
+            var list = GetList();
+            var reportDataList = new Client.Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<MoveObjects>(),
+                Parameters = new Dictionary<string, object>()
+            };
+            reportDataList.AddData("Employee", list);
+
+            using (var httpClient = new HttpClient())
+            using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
+            {
+
+                var rpt = new Majorsilence.CrystalCmd.Client.ReportAnalyzer(instream,
+                    httpClient, username: this.username, password: this.password, serverUrl: this.analyzerUrl);
+
+
+                var response = await rpt.Analyze(CancellationToken.None);
+                Assert.That(response != null);
+                Assert.That(response.DataTables.Any(p => string.Equals(p.DataTableName, "employee",
+                    StringComparison.OrdinalIgnoreCase)));
+                Assert.That(response.Parameters.Count, Is.EqualTo(0));
+                Assert.That(response.ReportObjects.Count, Is.EqualTo(5));
+            }
+        }
 
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
