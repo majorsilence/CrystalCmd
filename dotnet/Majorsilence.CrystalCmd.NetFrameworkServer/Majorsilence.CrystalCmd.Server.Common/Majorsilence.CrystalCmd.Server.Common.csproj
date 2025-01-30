@@ -12,6 +12,8 @@
 
 			Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
 		</Description>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 	<PropertyGroup>
 		<UseOldCrystalReportsReferences>no</UseOldCrystalReportsReferences>
