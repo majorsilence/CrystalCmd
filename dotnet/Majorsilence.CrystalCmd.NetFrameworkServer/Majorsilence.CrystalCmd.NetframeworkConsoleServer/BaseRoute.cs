@@ -158,6 +158,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         private static async Task<(Data ReportData, byte[] Template)> CompressedStreamInput(StreamContent content)
         {
+            if (content == null)
+            {
+                throw new CrystalCmdException("CompressedStreamInput content is null");
+            }
+
             // Decompress the content
             using (var originalStream = await content.ReadAsStreamAsync())
             using (var decompressedStream = new GZipStream(originalStream, CompressionMode.Decompress))
@@ -169,7 +174,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 content = new StreamContent(memoryStream);
 
                 var input = await content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    throw new CrystalCmdException("CompressedStreamInput input is null");
+                }
+
                 var dto = JsonConvert.DeserializeObject<StreamedRequest>(input);
+                if (dto == null)
+                {
+                    throw new CrystalCmdException("CompressedStreamInput dto is null");
+                }
                 return (dto.ReportData, dto.Template);
             }
         }
