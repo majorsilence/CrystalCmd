@@ -68,6 +68,7 @@ Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetFrameworkC
 
 Write-Output "Copying nuget packages"
 Get-ChildItem -Recurse "$CURRENTPATH\*.nupkg" | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
+Get-ChildItem -Recurse "$CURRENTPATH\*.snupkg" | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
 
 Write-Output "Creating sbom files"
 New-Item -ItemType Directory -Force -Path $CURRENTPATH\build\sbom
