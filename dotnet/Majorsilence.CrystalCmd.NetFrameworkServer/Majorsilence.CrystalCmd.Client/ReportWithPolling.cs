@@ -132,13 +132,25 @@ namespace Majorsilence.CrystalCmd.Client
                     Template = ms.ToArray()
                 };
 
-               
+#if NET6_0_OR_GREATER
+                // HACK:  This is a hack to get around the fact that the CompressedContent class does not seem to work in .NET 6.0 and newer
+                var compressed = CompressedContent.Compress(Newtonsoft.Json.JsonConvert.SerializeObject(streamingValue));
+#endif
                 using (var request = new System.Net.Http.HttpRequestMessage())
+#if NET6_0_OR_GREATER
+                using (var inputContent = new System.Net.Http.StreamContent(compressed))
+#else
                 using (var inputContent = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(streamingValue)))
-                using (var compressedContent = new CompressedContent(inputContent, "gzip"))
+                using (var compressedContent = new CompressedContent(inputContent, "gzip"))            
+#endif
                 {
                     inputContent.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    inputContent.Headers.ContentEncoding.Add("gzip");
+#if NET6_0_OR_GREATER
+                    request.Content = inputContent;
+#else
                     request.Content = compressedContent;
+#endif
                     request.Method = new System.Net.Http.HttpMethod("POST");
                     request.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
                     request.RequestUri = new Uri($"{serverUrl.TrimEnd('/')}/poll");

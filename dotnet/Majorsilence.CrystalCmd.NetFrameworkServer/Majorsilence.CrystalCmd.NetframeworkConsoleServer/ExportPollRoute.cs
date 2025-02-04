@@ -34,7 +34,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             if (string.Equals(ctx.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
             {
                 var inputResults = await ReadInput(inputStream, contentType, headers);
-                BackgroundQueue.Instance.QueueThread(async () =>
+                BackgroundQueue.Instance.QueueThread(() =>
                 {
                     try
                     {

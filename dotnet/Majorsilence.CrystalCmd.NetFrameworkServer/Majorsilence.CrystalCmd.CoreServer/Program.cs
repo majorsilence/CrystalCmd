@@ -17,10 +17,6 @@ app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
     }
     var id = Guid.NewGuid().ToString();
     string workingFolder = Path.Combine(config.GetValue<string>("WorkingFolder"), id);
-
-    Data reportData = null;
-    byte[] reportTemplate = null;
-
     
     foreach (var file in files)
     {

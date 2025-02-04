@@ -81,7 +81,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                    .WithUrlPrefix(url)
                    .WithMode(HttpListenerMode.EmbedIO);
             }
-
+            serverOptions.SupportCompressedRequests = true;
 
             var server = new WebServer(serverOptions)
             .WithModule(new ActionModule("/status", HttpVerbs.Any, async (ctx) =>

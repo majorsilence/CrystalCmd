@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net48;net6.0;net8.0;net9.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\thereport.rpt" Link="thereport.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\thereport_with_subreport_with_dotnet_dataset.rpt" Link="thereport_with_subreport_with_dotnet_dataset.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\thereport_with_subreport_with_parameters.rpt" Link="thereport_with_subreport_with_parameters.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\thereport_wth_parameters.rpt" Link="thereport_wth_parameters.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\the_dotnet_dataset_report.rpt" Link="the_dotnet_dataset_report.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Majorsilence.CrystalCmd.Tests\the_dotnet_dataset_report_with_params_and_subreport.rpt" Link="the_dotnet_dataset_report_with_params_and_subreport.rpt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" />
+	  <PackageReference Include="NUnit" />
+	  <PackageReference Include="NUnit.Analyzers">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="NUnit3TestAdapter" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj" />
+	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="System.Net.Http" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="NUnit.Framework" />
+	</ItemGroup>
+
+</Project>

@@ -45,7 +45,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
         }
 
-        protected virtual async Task SendResponse_Internal(
+        protected virtual Task SendResponse_Internal(
              string rawurl,
              System.Collections.Specialized.NameValueCollection headers,
              Stream inputStream,
@@ -53,7 +53,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
              string contentType,
              IHttpContext ctx
         )
-        { }
+        {
+            return Task.CompletedTask;
+        }
 
         protected (int StatusCode, string message) Authenticate(System.Collections.Specialized.NameValueCollection headers)
         {
