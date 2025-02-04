@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Client
@@ -71,5 +72,16 @@ namespace Majorsilence.CrystalCmd.Client
                 }
             });
         }
+        public static Stream Compress(string content)
+        {
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(content);
+            var memoryStream = new MemoryStream();
+            var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress);
+            gzipStream.Write(jsonBytes, 0, jsonBytes.Length);
+            gzipStream.Flush(); // Ensure all data is written to the stream
+            memoryStream.Seek(0, SeekOrigin.Begin); // Seek on the memoryStream instead of gzipStream
+            return memoryStream;
+        }
+
     }
 }

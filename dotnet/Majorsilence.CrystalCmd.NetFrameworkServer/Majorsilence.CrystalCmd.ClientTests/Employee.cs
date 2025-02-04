@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Majorsilence.CrystalCmd.Tests
+namespace Majorsilence.CrystalCmd.ClientTests
 {
     class Employee
     {

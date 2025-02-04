@@ -10,7 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Linq;
 
-namespace Majorsilence.CrystalCmd.Tests
+namespace Majorsilence.CrystalCmd.ClientTests
 {
 
     [TestFixture]
@@ -226,7 +226,7 @@ namespace Majorsilence.CrystalCmd.Tests
         }
 
         [Test]
-        public async Task Test_ServerCompressedStreamPolling()
+        public void Test_ServerCompressedStreamPolling()
         {
             DataTable dt = GetTable();
             var reportData = new Common.Data()
