@@ -78,6 +78,41 @@ See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.co
 
 See the [dotnet/Readme.md](https://github.com/majorsilence/CrystalCmd/tree/main/dotnet) file for more info..
 
+```mermaid
+flowchart TD
+    subgraph "Client Applications"
+        A[".NET Application"] --> C["Majorsilence.CrystalCMD.Client"]
+        B["Mac/Linux Application"] --> C
+    end
+
+    subgraph "Server Options"
+        D["Windows Service Majorsilence.CrystalCmd.NetframeworkConsoleServer"]
+        E["Linux Docker Container with Wine + .NET 4.8 + Crystal Reports 13.0.35"]
+    end
+
+    C --"1 - Send Crystal Report Template, 2. Send Data 3. Request PDF"--> F{CrystalCmd Service}
+    F --> D
+    F --> E
+    
+    subgraph "Processing"
+        D --> G["Crystal Reports Engine"]
+        E --> G
+        G --> H["Generate PDF"]
+    end
+    
+    H --"Return PDF"--> C
+    C --> I["Client receives PDF"]
+    
+    classDef client fill:#d1f0ff,stroke:#333,stroke-width:1px
+    classDef server fill:#ffe6cc,stroke:#333,stroke-width:1px
+    classDef process fill:#e6ffcc,stroke:#333,stroke-width:1px
+    
+    class A,B,C client
+    class D,E,F server
+    class G,H,I process
+```
+
+
 # Crystal report examples
 
 https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
