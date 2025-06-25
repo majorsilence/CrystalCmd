@@ -76,9 +76,6 @@ if (!(Get-Command -Name CycloneDX -ErrorAction SilentlyContinue)) {
 	dotnet tool install --global CycloneDX --ignore-failed-sources
 }
 
-dotnet CycloneDX "Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.csproj" --set-name "Majorsilence.CrystalCmd.NetFrameworkServer" --set-version "$Version" --set-type "Application" --github-username "$env:GITHUB_SBOM_USERNAME" --github-token "$env:GITHUB_SBOM" -o "$CURRENTPATH\build\sbom" --filename "majorsilence-NetFrameworkServer-bom.xml"
-if ($LastExitCode -ne 0) { throw "CycloneDX, NetFrameworkServer failed" }
-
 dotnet CycloneDX "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj" --set-name "Majorsilence.CrystalCmd.NetframeworkConsoleServer" --set-version "$Version" --set-type "Application" --github-username "$env:GITHUB_SBOM_USERNAME" --github-token "$env:GITHUB_SBOM" -o "$CURRENTPATH\build\sbom" --filename "majorsilence-NetFrameworkServer-bom.xml"
 if ($LastExitCode -ne 0) { throw "CycloneDX, NetFrameworkServer failed" }
 
