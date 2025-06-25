@@ -22,6 +22,24 @@ namespace Majorsilence.CrystalCmd.ClientTests
         private readonly string username = "user";
         private readonly string password = "password";
 
+        [SetUp]
+        public void Setup()
+        {
+            // cleanup, delete any existing pdf files via wildcard    
+            var files = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.pdf");
+            foreach (var file in files)
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deleting file {file}: {ex.Message}");
+                }
+            }
+        }
+
         [Test]
         public async Task Test_ConnectToServerWritePdfAsync()
         {
@@ -226,7 +244,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         }
 
         [Test]
-        public void Test_ServerCompressedStreamPolling()
+        public async Task Test_ServerCompressedStreamPolling()
         {
             DataTable dt = GetTable();
             var reportData = new Common.Data()
@@ -252,8 +270,10 @@ namespace Majorsilence.CrystalCmd.ClientTests
             t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling3.pdf", reportData));
             t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling4.pdf", reportData));
             t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling5.pdf", reportData));
+            t.Add(CreatePdfFromReportCompressedStreamPollingAndRetry("the_dotnet_dataset_report.rpt", "the_dataset_report_polling6.pdf", reportData));
+            t.Add(CreatePdfFromReportRetry("the_dotnet_dataset_report.rpt", "the_dataset_report_polling7.pdf", reportData));
 
-            Task.WaitAll(t.ToArray());
+            await Task.WhenAll(t.ToArray());
 
             Assert.Multiple(() =>
             {
@@ -267,6 +287,10 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 Assert.That(new FileInfo("the_dataset_report_polling4.pdf").Length > 0);
                 Assert.That(System.IO.File.Exists("the_dataset_report_polling5.pdf"));
                 Assert.That(new FileInfo("the_dataset_report_polling5.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling6.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling6.pdf").Length > 0);
+                Assert.That(System.IO.File.Exists("the_dataset_report_polling7.pdf"));
+                Assert.That(new FileInfo("the_dataset_report_polling7.pdf").Length > 0);
             });
         }
 
@@ -347,6 +371,38 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
                 var rpt = new Client.ReportWithPolling(this.exportUrl, username: this.username, password: this.password);
+                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
+                {
+                    await stream.CopyToAsync(fstreamOut);
+                }
+            }
+        }
+
+        private async Task CreatePdfFromReportCompressedStreamPollingAndRetry(string reportPath, string pdfOutputPath, Data reportData)
+        {
+            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
+            using (var httpClient = new HttpClient())
+            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
+            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                var rpt = new Client.ReportWithRetryPolling(this.exportUrl, username: this.username, password: this.password);
+                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
+                {
+                    await stream.CopyToAsync(fstreamOut);
+                }
+            }
+        }
+
+        private async Task CreatePdfFromReportRetry(string reportPath, string pdfOutputPath, Data reportData)
+        {
+            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
+            using (var httpClient = new HttpClient())
+            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
+            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                var rpt = new Client.ReportWithRetry(this.exportUrl, username: this.username, password: this.password);
                 using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
                 {
                     await stream.CopyToAsync(fstreamOut);
