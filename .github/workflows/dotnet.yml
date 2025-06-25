@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v2
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -20,14 +20,14 @@ jobs:
     - name: Build
       run: cd dotnet && choco install CrystalReports2010Runtime -y --source . && ./build_zips.ps1
     - name: Test Report
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v2
       if: success() || failure() # run this step even if previous step failed
       with:
         name: unit tests
         path: "**/TestResults/*.xml"
         reporter: dotnet-nunit
     - name: Archive artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-output
         path: |
