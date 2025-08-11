@@ -14,6 +14,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
     internal class Program
     {
         private static ServiceProvider _serviceProvider;
+        private static string WorkingFolder;
         public static async Task Main(string[] args)
         {
             foreach (var t in args)
@@ -23,14 +24,24 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     PrintHelp();
                     Environment.Exit(0);
                 }
+                else if (t.StartsWith("WorkingFolder=", StringComparison.OrdinalIgnoreCase))
+                {
+                    WorkingFolder = t.Substring("WorkingFolder=".Length);
+                    Console.WriteLine($"Using working folder: {WorkingFolder}");
+                }
             }
 
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
             _serviceProvider = serviceCollection.BuildServiceProvider();
             
-
-            string baseFolder = Server.Common.Settings.GetSetting("CrystalCmdWorkingFolder");
+            if (string.IsNullOrWhiteSpace(WorkingFolder))
+            {
+                WorkingFolder = Server.Common.Settings.GetSetting("CrystalCmdWorkingFolder");
+                Console.WriteLine($"Using working folder from settings: {WorkingFolder}");
+            }
+            
+            string baseFolder = WorkingFolder;
             var dataQueue = new ConcurrentQueue<(string, string, string)>();
             while (true)
             {

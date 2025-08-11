@@ -2,14 +2,16 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using Majorsilence.CrystalCmd.Client;
+using Majorsilence.CrystalCmd.CoreServer;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 app.MapGet("/healthz", () => "Healthy");
 app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
-    HttpContext context, CancellationToken cancellationToken) => {
-    
+    HttpContext context, CancellationToken cancellationToken) =>
+{
+
     if (AuthFailed(config, context))
     {
         var authproblem = new HttpResponseMessage(HttpStatusCode.Unauthorized);
@@ -17,7 +19,8 @@ app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
     }
     var id = Guid.NewGuid().ToString();
     string workingFolder = Path.Combine(config.GetValue<string>("WorkingFolder"), id);
-    
+    string crystalCmdNetFrameworkConsoleExeFolder = config.GetValue<string>("CrystalCmdNetFrameworkConsoleExeFolder");
+
     foreach (var file in files)
     {
         string name = file.Name.Replace("\"", "");
@@ -39,6 +42,9 @@ app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
             }
         }
     }
+
+    var consoleHelper = new ConsoleSubProcess(workingFolder, crystalCmdNetFrameworkConsoleExeFolder);
+    await consoleHelper.Run();
 
     // Scan work directory for the generated pdf created by the ConsoleApplication
     byte[] bytes;
