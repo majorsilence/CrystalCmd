@@ -8,6 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 app.MapGet("/healthz", () => "Healthy");
+app.MapGet("/export/poll", async (IConfiguration config,
+    HttpContext context, CancellationToken cancellationToken) =>
+{
+    throw new NotImplementedException("This endpoint is not implemented yet.");
+});
+app.MapPost("/export/poll", async (IFormFileCollection files, IConfiguration config,
+    HttpContext context, CancellationToken cancellationToken) =>
+{
+    throw new NotImplementedException("This endpoint is not implemented yet.");
+});
 app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
     HttpContext context, CancellationToken cancellationToken) =>
 {
