@@ -1,8 +1,10 @@
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
 using Majorsilence.CrystalCmd.Client;
 using Majorsilence.CrystalCmd.CoreServer;
+using Majorsilence.CrystalCmd.Server.Common;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -103,26 +105,43 @@ app.MapPost("/export", async (IFormFileCollection files, IConfiguration config,
 
 static bool AuthFailed(IConfiguration config, HttpContext context)
 {
+
+    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+    string token = string.Empty;
+    if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer"))
+    {
+        token = authHeader.Replace("Bearer ", "");
+    }
+
+    var creds = GetUserNameAndPassword(context);
+    string jwtKey = config.GetValue<string>("Username");
     string user = config.GetValue<string>("Username");
     string password = config.GetValue<string>("Password");
-    if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(password))
+    var expected_creds = (user, password);
+    var authResult = Authenticate_Internal(creds, expected_creds, jwtKey, token);
+
+    return authResult.StatusCode != 200;
+}
+
+static (int StatusCode, string message) Authenticate_Internal((string UserName, string Password)? credentials,
+        (string UserName, string Password) expected_credentials,
+        string jwtKey, string token)
+{
+
+    if (!string.IsNullOrWhiteSpace(jwtKey))
     {
-        // auth required
-        var basicAuth = GetUserNameAndPassword(context);
-        if (!basicAuth.HasValue)
+        if (!string.IsNullOrWhiteSpace(token) && TokenVerifier.VerifyToken(token, jwtKey))
         {
-            //Auth problem
-            return true;
-        }
-        if (!string.Equals(user, basicAuth.Value.UserName, StringComparison.InvariantCultureIgnoreCase) ||
-            !string.Equals(password, basicAuth.Value.Password, StringComparison.InvariantCulture))
-        {
-            // auth problem
-            return true;
+            return (200, "");
         }
     }
 
-    return false;
+    if (!string.Equals(credentials?.UserName, expected_credentials.UserName, StringComparison.InvariantCultureIgnoreCase)
+        || !string.Equals(credentials?.Password, expected_credentials.Password, StringComparison.InvariantCulture))
+    {
+        return (401, "Unauthorized");
+    }
+    return (200, "");
 }
 
 static (string UserName, string Password)? GetUserNameAndPassword(HttpContext context)
