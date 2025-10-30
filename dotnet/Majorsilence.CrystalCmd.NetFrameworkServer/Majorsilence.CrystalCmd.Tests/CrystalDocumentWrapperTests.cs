@@ -53,9 +53,28 @@ namespace Majorsilence.CrystalCmd.Tests
                 Assert.Multiple(() =>
                 {
                     Assert.That(reportClientDocument.ReportDefinition.ReportObjects[objectName].Top, Is.EqualTo(finalPosition));
-                });          
+                });
             }
 
         }
+
+        class ReportDto
+        {
+            public Majorsilence.CrystalCmd.Common.Data ReportData { get; set; }
+        }
+        [Ignore("This is for manual testing only")]
+        [Test]
+        public void TestFromJson()
+        {
+            var dto = Newtonsoft.Json.JsonConvert.DeserializeObject<ReportDto>(System.IO.File.ReadAllText("C:\\Path\\To\\Data\\9d57fd6c-8d62-4066-be3f-387f6ae251db.json"));
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            Assert.DoesNotThrow(() =>
+            {
+                using (var reportClientDocument = crystalWrapper.Create("thereport.rpt", dto.ReportData))
+                {
+                }
+            });
+        }
+
     }
 }
