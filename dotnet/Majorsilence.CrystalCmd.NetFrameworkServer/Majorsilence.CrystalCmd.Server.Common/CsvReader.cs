@@ -36,11 +36,15 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         columntypes = e.Values.Select(p => p.ToString()).ToArray();
                         rowIdx = rowIdx + 1;
 
-                        var altHeaders = e.AlternativeKeys.ToArray();
+                        var altHeaders = e.AlternativeKeys?.ToArray();
                         for (int i = 0; i < headers.Length; i++)
                         {
-                            var currentAltHeader = altHeaders[i];
-                            var headerToUse = currentAltHeader.Value.Contains(".") ? currentAltHeader.Value : headers[i];
+                            var currentAltHeader = headers[i];
+                            if (altHeaders != null)
+                            {
+                                currentAltHeader = altHeaders[i].Value;
+                            }
+                            var headerToUse = currentAltHeader.Contains(".") ? currentAltHeader : headers[i];
 
                             var columnType = Type.GetType($"System.{columntypes[i]}", false, true);
                             if (columnType == null || columnType.Assembly != typeof(string).Assembly)
