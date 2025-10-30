@@ -12,8 +12,6 @@
 			Originally was designed as toy, a proof of concept, to see if mono and now .net core apps can generate basic crystal reports on linux using a java implementation.
 		</Description>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\..\Readme.md" Pack="true" PackagePath="\" />
