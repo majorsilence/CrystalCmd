@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Server.Common;
 using System.ServiceProcess;
 using System.Threading;
+using Majorsilence.CrystalCmd.WorkQueues;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -11,6 +12,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
     {
         static async Task Main(string[] args)
         {
+            var queue = WorkQueue.CreateDefault();
+            await queue.Migrate();
+
             if (Environment.UserInteractive)
             {
                 // Run as console application

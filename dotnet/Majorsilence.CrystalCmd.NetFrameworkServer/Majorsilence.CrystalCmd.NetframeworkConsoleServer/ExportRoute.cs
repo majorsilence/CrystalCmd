@@ -1,5 +1,7 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using EmbedIO;
+using Majorsilence.CrystalCmd.Server.Common;
+using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swan.Parsers;
@@ -29,40 +31,61 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
 
             var inputResults = await ReadInput(inputStream, contentType, headers);
-            await ExportReport(ctx, inputResults.ReportData, inputResults.ReportPath);
+            var queue = WorkQueue.CreateDefault();
+            await queue.Enqueue(new QueueItem()
+            {
+                Data = inputResults.ReportData,
+                ReportTemplate = inputResults.ReportTemplate,
+                Id = inputResults.Id
+            });
+
+
+            await ExportReport(ctx, inputResults.Id, queue, inputResults.ReportData?.TraceId);
         }
 
-        private async Task ExportReport(IHttpContext ctx, CrystalCmd.Common.Data reportData, string reportPath)
+        private async Task ExportReport(IHttpContext ctx, string id, WorkQueue workQueue, string traceId)
         {
             byte[] bytes = null;
             string fileExt = "pdf";
             string mimeType = "application/octet-stream";
             try
             {
-                var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
-                var output = exporter.exportReportToStream(reportPath, reportData);
-                bytes = output.Item1;
-                fileExt = output.Item2;
-                mimeType = output.Item3;
+
+                for (int i = 0; i < 60; i++)
+                {
+                    var result = await workQueue.Get(id);
+                    if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
+                    {
+                        await Task.Delay(500); // Wait before polling again
+                        continue;
+                    }
+                    else if (result.Status == WorkItemStatus.Completed)
+                    {
+                        bytes = result.GeneratedReport;
+                        fileExt = result.FileExt;
+                        mimeType = result.MimeType;
+                        break;
+                    }
+                    else
+                    {
+                        ctx.Response.StatusCode = 500;
+                        return;
+                    }
+                }
+
+                if (bytes == null)
+                {
+                    ctx.Response.StatusCode = 500;
+                    return;
+                }
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting report ({TraceId})", reportData?.TraceId ?? "");
+                _logger.LogError(ex, "Error exporting report ({TraceId})", traceId ?? "");
 
                 ctx.Response.StatusCode = 500;
                 return;
-            }
-            finally
-            {
-                try
-                {
-                    System.IO.File.Delete(reportPath);
-                }
-                catch (Exception)
-                {
-                    // TODO: cleanup will happen later
-                }
             }
 
             // Set the headers for content disposition and content type

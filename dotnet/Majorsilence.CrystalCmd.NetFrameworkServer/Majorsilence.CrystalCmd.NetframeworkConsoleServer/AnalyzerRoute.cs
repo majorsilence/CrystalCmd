@@ -28,14 +28,14 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
 
             var inputResults = await ReadInput(inputStream, contentType, headers, templateOnly: true);
-            await AnalyzerResults(ctx, inputResults.ReportPath);
+            await AnalyzerResults(ctx, inputResults.ReportTemplate);
 
         }
 
-        private static async Task AnalyzerResults(IHttpContext ctx, string reportPath)
+        private static async Task AnalyzerResults(IHttpContext ctx, byte[] report)
         {
             var analyzer = new CrystalReportsAnalyzer();
-            var response = analyzer.GetFullAnalysis(reportPath);
+            var response = analyzer.GetFullAnalysis(report);
             // Convert the response object to JSON
             string jsonResponse = JsonConvert.SerializeObject(response);
 
