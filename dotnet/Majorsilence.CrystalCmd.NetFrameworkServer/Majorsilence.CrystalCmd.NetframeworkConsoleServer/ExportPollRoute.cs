@@ -1,6 +1,7 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using EmbedIO;
 using Majorsilence.CrystalCmd.Server.Common;
+using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swan.Parsers;
@@ -30,37 +31,15 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 return;
             }
 
-
             if (string.Equals(ctx.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
             {
                 var inputResults = await ReadInput(inputStream, contentType, headers);
-                BackgroundQueue.Instance.QueueThread(() =>
+                var queue = WorkQueue.CreateDefault();
+                await queue.Enqueue(new QueueItem()
                 {
-                    try
-                    {
-                        var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
-                        var output = exporter.exportReportToStream(inputResults.ReportPath, inputResults.ReportData);
-
-                        if (output == null)
-                        {
-                            File.WriteAllText(System.IO.Path.Combine(inputResults.WorkingFolder.FullName, $"{inputResults.Id}.error"), "output was null");
-                            _logger.LogError("Error exporting report ({TraceId})", inputResults.ReportData?.TraceId ?? "");
-
-                            return;
-                        }
-
-                        var bytes = output.Item1;
-                        var fileExt = output.Item2;
-                        var mimeType = output.Item3;
-                        string outputFilename = System.IO.Path.Combine(inputResults.WorkingFolder.FullName, $"{inputResults.Id}.{fileExt}");
-                        System.IO.File.WriteAllBytes(outputFilename, bytes);
-                        File.WriteAllText(System.IO.Path.Combine(inputResults.WorkingFolder.FullName, $"{inputResults.Id}.exported"), $"{outputFilename}\n{mimeType}");
-                    }
-                    catch(Exception ex)
-                    {
-                        File.WriteAllText(System.IO.Path.Combine(inputResults.WorkingFolder.FullName, $"{inputResults.Id}.error"), "output was null");
-                        _logger.LogError(ex, "Error exporting report ({TraceId})", inputResults.ReportData?.TraceId ?? "");
-                    }
+                    Id = inputResults.Id,
+                    ReportTemplate = inputResults.ReportTemplate,
+                    Data = inputResults.ReportData
                 });
                 await ctx.SendStringAsync(inputResults.Id, "text/plain", Encoding.UTF8);
             }
@@ -74,38 +53,40 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     return;
                 }
 
-                var folder = new DirectoryInfo(Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), id));
-                if (!folder.Exists)
+                var queue = WorkQueue.CreateDefault();
+                var result = await queue.Get(id);
+
+                if (result.Status == WorkItemStatus.Unknown)
                 {
                     ctx.Response.StatusCode = 404;
                     return;
                 }
-                if (folder.GetFiles().Any(f => f.Name.EndsWith(".exported")))
+                if (result.Status == WorkItemStatus.Completed)
                 {
                     ctx.Response.StatusCode = 200;
-                    var file = folder.GetFiles().First(f => f.Name.EndsWith(".exported"));
-                    var lines = File.ReadAllLines(file.FullName);
-                    var filename = lines[0];
-                    var mimeType = lines[1];
-                    ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename={file.Name}");
-                    ctx.Response.ContentType = mimeType;
-                    ctx.Response.ContentLength64 = new FileInfo(filename).Length;
+
+                    ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename={result.FileName}");
+                    ctx.Response.ContentType = result.MimeType;
+                    ctx.Response.ContentLength64 = result.GeneratedReport.Length;
                     ctx.Response.StatusCode = 200;
-                    await ctx.Response.OutputStream.WriteAsync(File.ReadAllBytes(filename), 0, (int)ctx.Response.ContentLength64);
+                    await ctx.Response.OutputStream.WriteAsync(result.GeneratedReport, 0, (int)ctx.Response.ContentLength64);
                     await ctx.Response.OutputStream.FlushAsync();
                     ctx.Response.Close();
 
-                    folder.Delete(true);
                 }
-                else if (folder.GetFiles().Any(f => f.Name.EndsWith(".error")))
+                else if (result.Status == WorkItemStatus.Failed)
                 {
-                    folder.Delete(true);
                     ctx.Response.StatusCode = 500;
                 }
-                else
+                else if (result.Status == WorkItemStatus.Processing)
                 {
                     ctx.Response.StatusCode = 202;
                     await ctx.SendStringAsync("Processing report", "text/plain", Encoding.UTF8);
+                }
+                else
+                {
+                    ctx.Response.StatusCode = 452;
+                    await ctx.SendStringAsync("Unknown", "text/plain", Encoding.UTF8);
                 }
             }
         }

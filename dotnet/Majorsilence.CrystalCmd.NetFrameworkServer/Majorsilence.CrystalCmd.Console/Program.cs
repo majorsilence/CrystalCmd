@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Majorsilence.CrystalCmd.Server.Common;
+using Majorsilence.CrystalCmd.WorkQueues;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -34,89 +36,81 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
             _serviceProvider = serviceCollection.BuildServiceProvider();
-            
+
             if (string.IsNullOrWhiteSpace(WorkingFolder))
             {
                 WorkingFolder = Server.Common.Settings.GetSetting("CrystalCmdWorkingFolder");
                 Console.WriteLine($"Using working folder from settings: {WorkingFolder}");
             }
-            
+
+            var queue = WorkQueue.CreateDefault();
+            await queue.Migrate();
+
             string baseFolder = WorkingFolder;
-            var dataQueue = new ConcurrentQueue<(string, string, string)>();
             while (true)
             {
-                foreach(var report in FindFileToProcess(baseFolder))
-                {
-                    dataQueue.Enqueue(report);
-                }
-                
-                // permit a maximum of 5 reports processing at any given time
-                int numTasks = dataQueue.Count > 5 ? 5 : dataQueue.Count;
+                bool processed = false;
 
-                if (numTasks > 0)
+                try
                 {
-                    Task[] tasks = new Task[numTasks];
-                    for (int i = 0; i < numTasks; i++)
+                    await queue.Dequeue(async (item) =>
                     {
-                        tasks[i] = Task.Run(() => ProcessData(dataQueue));
-                    }
-                    
-                    Task.WaitAll(tasks);
+                        var report = await ProcessData(item.PayloadAsQueueItem, queue);
+                        processed = true;
+                        return report;
+                    });
                 }
-                
-                await Task.Delay(1000);
-            }
-        }
-        
-        static void ProcessData(ConcurrentQueue<(string RptFile, string DataFile, string WorkingDir)> dataQueue)
-        {
-            while (!dataQueue.IsEmpty)
-            {
-                if (dataQueue.TryDequeue(out (string RptFile, string DataFile, string WorkingDir) dataItem))
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"Processing {dataItem} on thread {Thread.CurrentThread.ManagedThreadId}");
 
-                    var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
-                    var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(logger);
-                    var reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(System.IO.File.ReadAllText(dataItem.DataFile));
-                    var output = exporter.exportReportToStream(dataItem.RptFile, reportData);
-                    var bytes = output.Item1;
-                    var fileExt = output.Item2;
-                    var mimeType = output.Item3;
-                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(dataItem.WorkingDir, $"report.{fileExt}") , bytes);
+                    var logger = _serviceProvider.GetService<ILogger>();
+                    logger.LogError($"Error processing queue item: {ex.Message}");
                 }
-            }
-        }
-        
-        private static IEnumerable<(string RptFile, string DataFile, string WorkingDir)> FindFileToProcess(string baseFolder)
-        {
-            var dInfo = new DirectoryInfo(baseFolder);
-            var foundDirectories = dInfo.GetDirectories().OrderBy(p=>p.CreationTimeUtc);
 
-            foreach (var dir in foundDirectories)
-            {
-                var rptFile = dir.GetFiles("*.rpt").FirstOrDefault();
-                var dataFile = dir.GetFiles("*.json").FirstOrDefault();
-                var completedFile = dir.GetFiles("completed.txt")?.FirstOrDefault();
-                var startedFile = dir.GetFiles("started.txt")?.FirstOrDefault();
-                
-                if (completedFile != null)
+
+                if (!processed)
                 {
-                    // already processed
-                    Console.WriteLine($"Skipping value {dir} that finished processing.");
+                    // No items to process, wait a bit
+                    await Task.Delay(1000);
                     continue;
                 }
-                if (startedFile != null)
-                {
-                    // already processing
-                    Console.WriteLine($"Skipping value {dir} that started processing.");
-                    continue;
-                }
-                
-                yield return (rptFile.FullName, dataFile.FullName, dir.FullName);
             }
         }
-        
+
+        static async Task<GeneratedReportPoco> ProcessData(QueueItem item, WorkQueue queue)
+        {
+            var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
+            var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(logger);
+
+            string workingDir = System.IO.Path.Combine(Server.Common.WorkingFolder.GetMajorsilenceTempFolder(), item.Id);
+            System.IO.Directory.CreateDirectory(workingDir);
+            string rptFile = System.IO.Path.Combine(workingDir, $"{item.Id}.rpt");
+            System.IO.File.WriteAllBytes(rptFile, item.ReportTemplate);
+            var output = exporter.exportReportToStream(rptFile, item.Data);
+            var bytes = output.Item1;
+            var fileExt = output.Item2;
+            var mimeType = output.Item3;
+
+            try
+            {
+                System.IO.Directory.Delete(workingDir, true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error deleting working folder {workingDir}: {ex.Message}");
+            }
+
+            return new GeneratedReportPoco
+            {
+                Id = item.Id,
+                FileContent = bytes,
+                Format = fileExt,
+                Metadata = mimeType,
+                FileName = $"{item.Id}.{fileExt}",
+                GeneratedUtc = DateTime.UtcNow
+            };
+        }
+
         static void PrintHelp()
         {
             Console.WriteLine("Required options");
@@ -134,13 +128,15 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
         static void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(configure => {
+            services.AddLogging(configure =>
+            {
                 configure.ClearProviders();
                 configure.AddConsole();
             })
             .Configure<LoggerFilterOptions>(options => options.MinLevel = Microsoft.Extensions.Logging.LogLevel.Information);
 
-            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s => {
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(s =>
+            {
                 return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
             });
         }

@@ -36,5 +36,6 @@
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common.Security\Majorsilence.CrystalCmd.Server.Common.Security.csproj" />
 	  <ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj" />
+	  <ProjectReference Include="..\Majorsilence.CrystalCmd.WorkQueues\Majorsilence.CrystalCmd.WorkQueues.csproj" />
 	</ItemGroup>
 </Project>

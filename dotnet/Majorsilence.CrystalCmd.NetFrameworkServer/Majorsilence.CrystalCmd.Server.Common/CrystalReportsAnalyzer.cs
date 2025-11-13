@@ -29,6 +29,44 @@ namespace Majorsilence.CrystalCmd.Server.Common
             }
         }
 
+        public CrystalCmd.Common.FullReportAnalysisResponse GetFullAnalysis(byte[] reportTemplate)
+        {
+            string workingId = Guid.NewGuid().ToString();
+
+            string workingDir = System.IO.Path.Combine(Server.Common.WorkingFolder.GetMajorsilenceTempFolder(), workingId);
+            System.IO.Directory.CreateDirectory(workingDir);
+            string rptFile = System.IO.Path.Combine(workingDir, $"{workingId}.rpt");
+            System.IO.File.WriteAllBytes(rptFile, reportTemplate);
+
+            CrystalCmd.Common.FullReportAnalysisResponse result;
+            using (var reportDocument = new ReportDocument())
+            {
+                reportDocument.Load(rptFile);
+
+                result = new CrystalCmd.Common.FullReportAnalysisResponse()
+                {
+                    Parameters = GetReportParameters(reportDocument),
+                    ParametersExtended = GetReportParametersExtended(reportDocument),
+                    SubReports = GetSubreports(reportDocument),
+                    DataTables = GetDataTables(reportDocument),
+                    ReportObjects = GetReportObjects(reportDocument)
+                };
+
+                reportDocument.Close();
+            }
+
+            try
+            {
+                System.IO.Directory.Delete(workingDir, true);
+            }
+            catch
+            {
+                // Do nothing if we can't delete temp files, they will be cleaned up later.
+            }
+
+            return result;
+        }
+
         private IEnumerable<CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto> GetSubreports(ReportDocument reportDocument)
         {
             var subreports = new List<CrystalCmd.Common.FullReportAnalysisResponse.FullSubReportAnalysisDto>();
