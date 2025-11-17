@@ -137,7 +137,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                             var report = await callback(result);
                             await SaveGeneratedReport(report, con, txn);
                             // mark work item as completed
-                            await MarsAsCompleted(con, txn, result.Id, WorkItemStatus.Completed);
+                            await MarkAsCompleted(con, txn, result.Id, WorkItemStatus.Completed);
                             txn.Commit();
                         }
                         catch (Exception ex)
@@ -152,7 +152,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             }
         }
 
-        private async Task MarsAsCompleted(DbConnection con, DbTransaction txn, string id, WorkItemStatus status)
+        private async Task MarkAsCompleted(DbConnection con, DbTransaction txn, string id, WorkItemStatus status)
         {
             using (var command = con.CreateCommand())
             {
