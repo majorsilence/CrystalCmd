@@ -18,7 +18,7 @@ namespace Majorsilence.CrystalCmd.Server
         public async Task<byte[]> AnalyzerResultsBytes(byte[] report)
         {
             string id = Guid.NewGuid().ToString();
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault("crystal-analyzer");
             await queue.Enqueue(new QueueItem()
             {
                 Data = null,

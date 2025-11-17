@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Configuration;
 
 namespace Majorsilence.CrystalCmd.Server
 {

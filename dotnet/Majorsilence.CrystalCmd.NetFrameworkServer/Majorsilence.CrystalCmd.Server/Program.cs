@@ -11,10 +11,7 @@ using NReco.Logging.File;
 using System;
 using System.IO;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Server
@@ -23,7 +20,7 @@ namespace Majorsilence.CrystalCmd.Server
     {
         static async Task Main(string[] args)
         {
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault("crystal-reports");
             await queue.Migrate();
 
             var builder = WebApplication.CreateBuilder(args);

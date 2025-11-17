@@ -1,4 +1,5 @@
-﻿using Majorsilence.CrystalCmd.Server.Common;
+﻿using ChoETL;
+using Majorsilence.CrystalCmd.Server.Common;
 using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsole
@@ -16,9 +18,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         private readonly ILogger _logger;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Task _backgroundTask;
-        public ExportQueue(ILogger logger)
+        private readonly string channel;
+        public ExportQueue(ILogger logger, string channel)
         {
             _logger = logger;
+            this.channel = channel;
         }
 
         public void Start()
@@ -34,7 +38,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
         internal async Task RunQueue()
         {
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault(channel);
             await queue.Migrate();
 
             while (!_cancellationTokenSource.IsCancellationRequested)

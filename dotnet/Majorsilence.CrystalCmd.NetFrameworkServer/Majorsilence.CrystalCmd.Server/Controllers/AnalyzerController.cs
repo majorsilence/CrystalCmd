@@ -1,9 +1,5 @@
-using Majorsilence.CrystalCmd.WorkQueues;
-using Majorsilence.CrystalCmd.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Server.Controllers

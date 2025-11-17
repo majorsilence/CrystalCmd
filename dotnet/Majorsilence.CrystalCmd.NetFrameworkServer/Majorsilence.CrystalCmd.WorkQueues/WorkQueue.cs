@@ -32,9 +32,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         private readonly WorkQueueSqlDefs _sqlDefs;
         private readonly SqlType _sqlType;
         private readonly string _connectionString;
-        private const string DefaultChannel = "crystal-reports";
-
-
+        private readonly string DefaultChannel;
         /// <summary>
         /// 
         /// </summary>
@@ -42,11 +40,13 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         /// <param name="dequeueSql">works with sql parameters @p_channel, @p_payload, and p_offset</param>
         /// <param name="getSql">works with sql parameter @p_id is used to get a report by id</param>
         public WorkQueue(WorkQueueSqlDefs sqlDefs,
-            SqlType sqlType, string connectionString)
+            SqlType sqlType, string connectionString,
+            string channel)
         {
             _sqlDefs = sqlDefs;
             _sqlType = sqlType;
             _connectionString = connectionString;
+            DefaultChannel = channel;
         }
 
         private DbConnection CreateConnection()
@@ -84,7 +84,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 #endif
         }
 
-        public static WorkQueue CreateDefault()
+        public static WorkQueue CreateDefault(string channel)
         {
 #if NET48
             var sqlTypeStr = GetSetting("WorkQueueSqlType");
@@ -96,7 +96,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             var sqlType = WorkQueueSqlDefs.ParseSqlType(sqlTypeStr);
             var sqlDefs = new WorkQueueSqlDefs(sqlType);
 
-            return new WorkQueue(sqlDefs, sqlType, connectionString);
+            return new WorkQueue(sqlDefs, sqlType, connectionString, channel);
         }
 
         private async Task UpdateFailureCount(DbConnection con, string id, string errorMessage)
