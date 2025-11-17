@@ -90,11 +90,6 @@ if ($LastExitCode -ne 0) { throw "CycloneDX, Server failed" }
 
 cd $CURRENTPATH
 
-if (!(Test-Path -Path ".\packages\NUnit.ConsoleRunner.3.17.0"))
-{
-	nuget "Install" "NUnit.Console" "-OutputDirectory" "packages" "-Version" "3.17.0"
-}
-
 New-Item -ItemType Directory -Path ".\build\TestResults" -Force | Out-Null
-dotnet test .\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=.\build\TestResults\test-results.trx"
+dotnet test .\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj --configuration Release --logger "trx;LogFileName=.\build\TestResults\test-results.trx"
 if ($LastExitCode -ne 0) { throw "Unit tests failed" }
