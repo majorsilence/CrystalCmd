@@ -1,18 +1,11 @@
-﻿using CrystalDecisions.CrystalReports.Engine;
-using EmbedIO;
-using Majorsilence.CrystalCmd.Server.Common;
+﻿using EmbedIO;
 using Majorsilence.CrystalCmd.WorkQueues;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Swan.Parsers;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -65,11 +58,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 {
                     ctx.Response.StatusCode = 200;
 
-                    ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename={result.FileName}");
-                    ctx.Response.ContentType = result.MimeType;
-                    ctx.Response.ContentLength64 = result.GeneratedReport.Length;
+                    ctx.Response.Headers.Add("Content-Disposition", $"attachment; filename={result.Report.FileName}");
+                    ctx.Response.ContentType = result.Report.Format == "pdf" ? "application/pdf" : "application/octet-stream";
+                    ctx.Response.ContentLength64 = result.Report.FileContent.Length;
                     ctx.Response.StatusCode = 200;
-                    await ctx.Response.OutputStream.WriteAsync(result.GeneratedReport, 0, (int)ctx.Response.ContentLength64);
+                    await ctx.Response.OutputStream.WriteAsync(result.Report.FileContent, 0, (int)ctx.Response.ContentLength64);
                     await ctx.Response.OutputStream.FlushAsync();
                     ctx.Response.Close();
 

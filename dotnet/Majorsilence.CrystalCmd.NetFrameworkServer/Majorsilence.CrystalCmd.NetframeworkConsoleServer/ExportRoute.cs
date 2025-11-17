@@ -1,15 +1,9 @@
-﻿using CrystalDecisions.CrystalReports.Engine;
-using EmbedIO;
-using Majorsilence.CrystalCmd.Server.Common;
+﻿using EmbedIO;
 using Majorsilence.CrystalCmd.WorkQueues;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Swan.Parsers;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -61,9 +55,10 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                     }
                     else if (result.Status == WorkItemStatus.Completed)
                     {
-                        bytes = result.GeneratedReport;
-                        fileExt = result.FileExt;
-                        mimeType = result.MimeType;
+                        bytes = result.Report.FileContent;
+                        fileExt = result.Report.Format;
+                        mimeType = result.Report.Format == "pdf" ? "application/pdf" : "application/octet-stream";
+
                         break;
                     }
                     else

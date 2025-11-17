@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<Platforms>AnyCPU</Platforms>
+	</PropertyGroup>
+
+	<!-- Define the custom conditional compilation symbol for net8.0-windows -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+		<DefineConstants>$(DefineConstants);NET8_0_OR_GREATOR_WINDOWS</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\..\thereport.rpt" Link="thereport.rpt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="ChoETL" />
+		<PackageReference Include="EmbedIO" />
+		<PackageReference Include="Microsoft.AspNet.WebApi.Client" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" />
+		<PackageReference Include="System.CodeDom" />
+		<PackageReference Include="System.ComponentModel.Annotations" />
+		<PackageReference Include="NReco.Logging.File" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+		<ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common.Security\Majorsilence.CrystalCmd.Server.Common.Security.csproj" />
+		<ProjectReference Include="..\Majorsilence.CrystalCmd.WorkQueues\Majorsilence.CrystalCmd.WorkQueues.csproj" />
+	</ItemGroup>
+</Project>

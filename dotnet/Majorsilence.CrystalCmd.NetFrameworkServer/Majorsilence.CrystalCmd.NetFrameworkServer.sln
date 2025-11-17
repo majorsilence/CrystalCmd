@@ -1,15 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11206.111 d18.3
+VisualStudioVersion = 18.3.11206.111
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetframeworkConsoleServer", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.NetframeworkConsoleServer.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.Server.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server.Common", "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj", "{4D494DE8-8D1B-4587-817C-99BB35CA285E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.NetframeworkConsole", "Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj", "{9746EF85-EB2E-411A-9609-5D485D78A987}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.CoreServer", "Majorsilence.CrystalCmd.CoreServer\Majorsilence.CrystalCmd.CoreServer.csproj", "{46D3AC55-C5F7-4586-A3B6-461959084155}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Client", "Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj", "{FA93CE91-BB0F-498B-90FD-457090498CD3}"
 EndProject
@@ -46,10 +44,6 @@ Global
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9746EF85-EB2E-411A-9609-5D485D78A987}.Release|Any CPU.Build.0 = Release|Any CPU
-		{46D3AC55-C5F7-4586-A3B6-461959084155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{46D3AC55-C5F7-4586-A3B6-461959084155}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{46D3AC55-C5F7-4586-A3B6-461959084155}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{46D3AC55-C5F7-4586-A3B6-461959084155}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA93CE91-BB0F-498B-90FD-457090498CD3}.Release|Any CPU.ActiveCfg = Release|Any CPU

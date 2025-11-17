@@ -17,6 +17,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
     {
         private static ServiceProvider _serviceProvider;
         private static string WorkingFolder;
+        private static HealthCheckTask _backgroundHealthTask;
+
         public static async Task Main(string[] args)
         {
             foreach (var t in args)
@@ -26,11 +28,6 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     PrintHelp();
                     Environment.Exit(0);
                 }
-                else if (t.StartsWith("WorkingFolder=", StringComparison.OrdinalIgnoreCase))
-                {
-                    WorkingFolder = t.Substring("WorkingFolder=".Length);
-                    Console.WriteLine($"Using working folder: {WorkingFolder}");
-                }
             }
 
             var serviceCollection = new ServiceCollection();
@@ -39,9 +36,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
             if (string.IsNullOrWhiteSpace(WorkingFolder))
             {
-                WorkingFolder = Server.Common.Settings.GetSetting("CrystalCmdWorkingFolder");
+
                 Console.WriteLine($"Using working folder from settings: {WorkingFolder}");
             }
+
+            var logger = _serviceProvider.GetService<ILogger>();
+            string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
+
+            _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
+            _backgroundHealthTask.Start();
 
             var queue = WorkQueue.CreateDefault();
             await queue.Migrate();
@@ -63,7 +67,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 catch (Exception ex)
                 {
 
-                    var logger = _serviceProvider.GetService<ILogger>();
+
                     logger.LogError($"Error processing queue item: {ex.Message}");
                 }
 
@@ -86,10 +90,42 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             System.IO.Directory.CreateDirectory(workingDir);
             string rptFile = System.IO.Path.Combine(workingDir, $"{item.Id}.rpt");
             System.IO.File.WriteAllBytes(rptFile, item.ReportTemplate);
-            var output = exporter.exportReportToStream(rptFile, item.Data);
-            var bytes = output.Item1;
-            var fileExt = output.Item2;
-            var mimeType = output.Item3;
+
+            GeneratedReportPoco poco = null;
+
+            if (item.Data != null)
+            {
+                // export pdf
+
+                var output = exporter.exportReportToStream(rptFile, item.Data);
+                var bytes = output.Item1;
+                var fileExt = output.Item2;
+                var mimeType = output.Item3;
+                poco = new GeneratedReportPoco
+                {
+                    Id = item.Id,
+                    FileContent = bytes,
+                    Format = fileExt,
+                    Metadata = mimeType,
+                    FileName = $"{item.Id}.{fileExt}",
+                    GeneratedUtc = DateTime.UtcNow
+                };
+            }
+            else
+            {
+                // report analysis
+                var analyzer = new CrystalReportsAnalyzer();
+                var response = analyzer.GetFullAnalysis(rptFile);
+                return new GeneratedReportPoco
+                {
+                    Id = item.Id,
+                    GeneratedUtc = DateTime.UtcNow,
+                    FileName = $"{item.Id}_analysis.json",
+                    Format = "json",
+                    FileContent = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(response)),
+                    Metadata = "application/json"
+                };
+            }
 
             try
             {
@@ -100,15 +136,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 logger.LogError($"Error deleting working folder {workingDir}: {ex.Message}");
             }
 
-            return new GeneratedReportPoco
-            {
-                Id = item.Id,
-                FileContent = bytes,
-                Format = fileExt,
-                Metadata = mimeType,
-                FileName = $"{item.Id}.{fileExt}",
-                GeneratedUtc = DateTime.UtcNow
-            };
+            return poco;
         }
 
         static void PrintHelp()

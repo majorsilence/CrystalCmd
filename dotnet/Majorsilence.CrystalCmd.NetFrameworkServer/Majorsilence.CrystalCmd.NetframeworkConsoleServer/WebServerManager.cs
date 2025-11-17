@@ -2,7 +2,6 @@
 using EmbedIO;
 using EmbedIO.Actions;
 using System.Threading;
-using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
@@ -12,38 +11,28 @@ using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.IO;
+using Majorsilence.CrystalCmd.Server;
+using Microsoft.Extensions.Hosting;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
-    public class WebServerManager
+    public class WebServerManager : BackgroundService
     {
         private readonly WebServer _server;
-        private static HealthCheckTask _backgroundHealthTask;
+        
         private static ServiceProvider _serviceProvider;
 
         public WebServerManager()
         {
-            string workingfolder = WorkingFolder.GetMajorsilenceTempFolder();
-            if (System.IO.Directory.Exists(workingfolder))
-            {
-                System.IO.Directory.Delete(workingfolder, true);
-            }
-            System.IO.Directory.CreateDirectory(workingfolder);
-
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
             _serviceProvider = serviceCollection.BuildServiceProvider();
-            var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
 
-            string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
-            _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
-            _backgroundHealthTask.Start();
 
             int port = 44355;
             int portHttps = 44356;
-            int.TryParse(Settings.GetSetting("Port"), out port);
-            int.TryParse(Settings.GetSetting("PortHttps"), out portHttps);
+            int.TryParse(Settings.GetSetting("Server:Port"), out port);
+            int.TryParse(Settings.GetSetting("Server:PortHttps"), out portHttps);
             var url = $"http://*:{port}/";
             var urlHttps = $"https://*:{portHttps}/";
 
@@ -51,7 +40,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             _server = CreateWebServer(url, urlHttps);
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await _server.RunAsync(cancellationToken);
         }
@@ -127,12 +116,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         static void ConfigureServices(IServiceCollection services)
         {
-            string externalLogAssemblyPath = Settings.GetSetting("ExternalLogsAssemblyFilePath");
-            string logFile = Settings.GetSetting("LogFile");
+            string externalLogAssemblyPath = Settings.GetSetting("ExternalLogs:AssemblyFilePath");
+            string logFile = Settings.GetSetting("ExternalLogs:LogFile");
             if (!string.IsNullOrWhiteSpace(externalLogAssemblyPath))
             {
-                string className = Settings.GetSetting("ExternalLogsAssemblyClassName");
-                string functionName = Settings.GetSetting("ExternalLogsAssemblyFunctionName");
+                string className = Settings.GetSetting("ExternalLogs:AssemblyClassName");
+                string functionName = Settings.GetSetting("ExternalLogs:AssemblyFunctionName");
 
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 

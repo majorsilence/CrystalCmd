@@ -29,14 +29,8 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             }
             else if (string.Equals(rawurl, "/healthz/ready", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (Server.Common.HealthCheckTask.IsHealthy)
-                {
-                    ctx.Response.StatusCode = 200;
-                    await ctx.SendStringAsync($"Ready {version}", "text/plain", Encoding.UTF8);
-                    return;
-                }
-                ctx.Response.StatusCode = 500;
-                await ctx.SendStringAsync("Internal Server Error", "text/plain", Encoding.UTF8);
+                ctx.Response.StatusCode = 200;
+                await ctx.SendStringAsync($"Ready {version}", "text/plain", Encoding.UTF8);
             }
         }
     }
