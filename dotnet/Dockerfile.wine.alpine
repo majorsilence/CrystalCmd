@@ -9,7 +9,7 @@ ADD VERSION_WINE .
 # Install Wine
 # https://wiki.winehq.org/Ubuntu
 RUN apk update \
-    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind \
+    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind aspnetcore8-runtime \
     # Clean
     && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
     && chmod +x winetricks \
