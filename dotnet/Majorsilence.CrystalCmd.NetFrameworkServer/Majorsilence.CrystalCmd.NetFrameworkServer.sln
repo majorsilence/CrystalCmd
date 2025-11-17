@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11206.111
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server", "Majorsilence.CrystalCmd.NetframeworkConsoleServer\Majorsilence.CrystalCmd.Server.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server", "Majorsilence.CrystalCmd.Server\Majorsilence.CrystalCmd.Server.csproj", "{BFE94C79-CA5A-481D-B7A0-B5BFE55A4CD7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Majorsilence.CrystalCmd.Server.Common", "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj", "{4D494DE8-8D1B-4587-817C-99BB35CA285E}"
 EndProject
