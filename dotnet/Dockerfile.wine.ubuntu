@@ -9,7 +9,7 @@ ADD VERSION_WINE .
 # Install Wine
 # https://wiki.winehq.org/Ubuntu
 RUN apt-get update \
-    && apt install -y wget software-properties-common gnupg2 \
+    && apt install -y wget software-properties-common gnupg2 aspnetcore-runtime-8.0 procps \
     && dpkg --add-architecture i386 \
     && apt-get update \
     && mkdir -pm755 /etc/apt/keyrings \
