@@ -290,11 +290,6 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 if (generatedReportsPoco != null)
                 {
                     return (generatedReportsPoco, WorkItemStatus.Completed);
-                    //return (generatedReportsPoco.FileContent,
-                    //    WorkItemStatus.Completed,
-                    //    generatedReportsPoco.Format,
-                    //    generatedReportsPoco.Format == "pdf" ? "application/pdf" : "application/octet-stream",
-                    //    generatedReportsPoco.FileName);
                 }
                 else if (workQueuePoco != null)
                 {
