@@ -48,6 +48,8 @@ namespace Majorsilence.CrystalCmd.Server
             // Add controllers
             builder.Services.AddControllers();
 
+            builder.Services.AddHostedService<QueueCleanupWorkerService>();
+
             var app = builder.Build();
 
             // Map controllers

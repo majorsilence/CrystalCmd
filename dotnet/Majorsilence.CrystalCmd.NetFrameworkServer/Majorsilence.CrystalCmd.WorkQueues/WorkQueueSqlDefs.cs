@@ -17,6 +17,8 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         private readonly string _migrateWorkeQueueSql;
         private readonly string _migrateGeneratedReportsSql;
         private readonly string _markAsCompletedSql;
+        private readonly string _cleanupWorkQueueSql;
+        private readonly string _cleanupGeneratedReportsSql;
 
         public string EnqueueSql => _enqueueSql;
         public string DequeueSql => _dequeueSql;
@@ -27,6 +29,8 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         public string MigrateWorkeQueueSql => _migrateWorkeQueueSql;
         public string MigrateGeneratedReportsSql => _migrateGeneratedReportsSql;
         public string MarkAsCompletedSql => _markAsCompletedSql;
+        public string CleanupWorkQueueSql => _cleanupWorkQueueSql;
+        public string CleanupGeneratedReportsSql => _cleanupGeneratedReportsSql;
 
         public WorkQueueSqlDefs(SqlType sqlType)
         {
@@ -91,6 +95,12 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SET status = @p_status,
                         timeprocessedutc = @p_timeprocessedutc
                     WHERE id = @p_id;";
+
+                // delete completed or failed items older than a 30 minutes
+                _cleanupWorkQueueSql = @"DELETE FROM dbo.workqueue
+                    WHERE timeprocessedutc < DATEADD(minute, -30, GETUTCDATE()) AND (status != 1 and status != 2);";
+                _cleanupGeneratedReportsSql = @"DELETE FROM dbo.generatedreports
+                    WHERE generatedutc < DATEADD(minute, -30, GETUTCDATE());";
             }
             else if (sqlType == SqlType.PostgreSQL)
             {
@@ -172,6 +182,10 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SET status = @p_status,
                         timeprocessedutc = @p_timeprocessedutc
                     WHERE id = @p_id;";
+                _cleanupWorkQueueSql = @"DELETE FROM public.workqueue
+                    WHERE timeprocessedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes' AND (status != 1 and status != 2);";
+                _cleanupGeneratedReportsSql = @"DELETE FROM public.generatedreports
+                    WHERE generatedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes';";
             }
             else
             {
@@ -224,6 +238,10 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SET Status = @p_status,
                         TimeProcessedUtc = @p_timeprocessedutc
                     WHERE Id = @p_id;";
+                _cleanupWorkQueueSql = @"DELETE FROM WorkQueue
+                    WHERE TimeProcessedUtc < datetime('now', '-30 minutes') AND (status != 1 and status != 2);";
+                _cleanupGeneratedReportsSql = @"DELETE FROM generatedreports
+                    WHERE generatedutc < datetime('now', '-30 minutes');";
             }
 
         }
