@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -82,6 +83,11 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         public async Task<IActionResult> ExportPollPost()
         {
             var headers = Request.Headers;
+            // Authenticate
+            var callResult = new BaseRoute(_logger).Authenticate(CustomServerSecurity.GetNameValueCollection(headers));
+            if (callResult.StatusCode != 200)
+                return StatusCode(callResult.StatusCode);
+
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
             var queue = WorkQueue.CreateDefault();
@@ -97,6 +103,12 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         [HttpGet("/export/poll")]
         public async Task<IActionResult> ExportPollGet([FromHeader(Name = "id")] string id)
         {
+            var headers = Request.Headers;
+            // Authenticate
+            var callResult = new BaseRoute(_logger).Authenticate(CustomServerSecurity.GetNameValueCollection(headers));
+            if (callResult.StatusCode != 200)
+                return StatusCode(callResult.StatusCode);
+
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest();
 
