@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Majorsilence.CrystalCmd.Server.Common
+namespace Majorsilence.CrystalCmd.Server
 {
     public static class CustomServerSecurity
     {
@@ -42,6 +43,16 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             var token = authHeader.Replace("Bearer ", "");
             return token;
+        }
+
+        public static NameValueCollection GetNameValueCollection(IHeaderDictionary headers)
+        {
+            var nvc = new NameValueCollection();
+            foreach (var kv in headers)
+            {
+                nvc.Add(kv.Key, string.Join(",", kv.Value.ToArray()));
+            }
+            return nvc;
         }
     }
 }

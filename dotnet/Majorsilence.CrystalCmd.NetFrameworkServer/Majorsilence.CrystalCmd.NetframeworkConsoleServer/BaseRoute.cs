@@ -1,22 +1,18 @@
-﻿using EmbedIO;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
-using Majorsilence.CrystalCmd.Server.Common;
 using System.Net;
-using Majorsilence.CrystalCmd.Server;
+using System.Collections.Specialized;
+using System.Linq;
 
-namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
+namespace Majorsilence.CrystalCmd.Server
 {
     internal class BaseRoute
     {
@@ -26,38 +22,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             _logger = logger;
         }
 
-        public async Task SendResponse(string rawurl,
-            System.Collections.Specialized.NameValueCollection headers,
-            Stream inputStream,
-            System.Text.Encoding inputContentEncoding,
-            string contentType,
-            IHttpContext ctx
-           )
-        {
-            try
-            {
-                await SendResponse_Internal(rawurl, headers, inputStream, inputContentEncoding, contentType, ctx);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing request");
-                ctx.Response.StatusCode = 500;
-            }
-        }
-
-        protected virtual Task SendResponse_Internal(
-             string rawurl,
-             System.Collections.Specialized.NameValueCollection headers,
-             Stream inputStream,
-             System.Text.Encoding inputContentEncoding,
-             string contentType,
-             IHttpContext ctx
-        )
-        {
-            return Task.CompletedTask;
-        }
-
-        protected (int StatusCode, string message) Authenticate(System.Collections.Specialized.NameValueCollection headers)
+        public (int StatusCode, string message) Authenticate(NameValueCollection headers)
         {
             var creds = CustomServerSecurity.GetUserNameAndPassword(headers);
             var token = CustomServerSecurity.GetBearerToken(headers);
@@ -89,15 +54,25 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
             return (200, "");
         }
 
-        protected async Task<(Data ReportData, byte[] ReportTemplate, string Id)> ReadInput(Stream inputStream, string contentType,
-          System.Collections.Specialized.NameValueCollection headers,
+        public static NameValueCollection HeadersFromAsp(Microsoft.AspNetCore.Http.IHeaderDictionary headers)
+        {
+            var nvc = new NameValueCollection();
+            foreach (var kv in headers)
+            {
+                nvc.Add(kv.Key, string.Join(",", kv.Value.ToArray()));
+            }
+            return nvc;
+        }
+
+        public async Task<(Data ReportData, byte[] ReportTemplate, string Id)> ReadInput(Stream inputStream, string contentType,
+          NameValueCollection headers,
           bool templateOnly = false)
         {
             var streamContent = new StreamContent(inputStream);
             Data reportData = null;
             byte[] reportTemplate = null;
 
-            if(string.IsNullOrWhiteSpace(contentType))
+            if (string.IsNullOrWhiteSpace(contentType))
             {
                 throw new CrystalCmdException("content type is null");
             }
@@ -113,7 +88,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
 
                 if (!streamContent.IsMimeMultipartContent())
-                    throw new EmbedIO.HttpException(HttpStatusCode.UnsupportedMediaType);
+                    throw new InvalidOperationException("Unsupported media type");
 
                 var provider = await streamContent.ReadAsMultipartAsync();
                 foreach (var file in provider.Contents)
@@ -152,14 +127,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
                 throw new CrystalCmdException("CompressedStreamInput content is null");
             }
 
-            // Decompress the content
             using (var originalStream = await content.ReadAsStreamAsync())
             using (var decompressedStream = new GZipStream(originalStream, CompressionMode.Decompress))
             using (var memoryStream = new MemoryStream())
             {
                 await decompressedStream.CopyToAsync(memoryStream);
                 memoryStream.Seek(0, SeekOrigin.Begin);
-                // Replace the original content with the decompressed content
                 content = new StreamContent(memoryStream);
 
                 var input = await content.ReadAsStringAsync();
