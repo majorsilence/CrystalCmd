@@ -3,12 +3,8 @@ using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Threading;
+using System.Runtime.InteropServices;
+using System.ServiceProcess;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsole
@@ -34,110 +30,41 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             ConfigureServices(serviceCollection);
             _serviceProvider = serviceCollection.BuildServiceProvider();
 
-            if (string.IsNullOrWhiteSpace(WorkingFolder))
-            {
-
-                Console.WriteLine($"Using working folder from settings: {WorkingFolder}");
-            }
-
             var logger = _serviceProvider.GetService<ILogger>();
-            string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
 
-            _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
-            _backgroundHealthTask.Start();
+            RunBackHealthChecks(logger);
 
-            var queue = WorkQueue.CreateDefault();
-            await queue.Migrate();
-
-            string baseFolder = WorkingFolder;
-            while (true)
+            if (Environment.UserInteractive)
             {
-                bool processed = false;
-
-                try
+                var export = new ExportQueue(logger);
+                export.Start();
+                while (true)
                 {
-                    await queue.Dequeue(async (item) =>
+                    Console.WriteLine("Type 'exit' to stop the service...");
+                    var input = Console.ReadLine();
+                    if (input != null && input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                     {
-                        var report = await ProcessData(item.PayloadAsQueueItem, queue);
-                        processed = true;
-                        return report;
-                    });
+                        break;
+                    }
                 }
-                catch (Exception ex)
-                {
-
-
-                    logger.LogError($"Error processing queue item: {ex.Message}");
-                }
-
-
-                if (!processed)
-                {
-                    // No items to process, wait a bit
-                    await Task.Delay(1000);
-                    continue;
-                }
-            }
-        }
-
-        static async Task<GeneratedReportPoco> ProcessData(QueueItem item, WorkQueue queue)
-        {
-            var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger>();
-            var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(logger);
-
-            string workingDir = System.IO.Path.Combine(Server.Common.WorkingFolder.GetMajorsilenceTempFolder(), item.Id);
-            System.IO.Directory.CreateDirectory(workingDir);
-            string rptFile = System.IO.Path.Combine(workingDir, $"{item.Id}.rpt");
-            System.IO.File.WriteAllBytes(rptFile, item.ReportTemplate);
-
-            GeneratedReportPoco poco = null;
-
-            if (item.Data != null)
-            {
-                // export pdf
-
-                var output = exporter.exportReportToStream(rptFile, item.Data);
-                var bytes = output.Item1;
-                var fileExt = output.Item2;
-                var mimeType = output.Item3;
-                poco = new GeneratedReportPoco
-                {
-                    Id = item.Id,
-                    FileContent = bytes,
-                    Format = fileExt,
-                    Metadata = mimeType,
-                    FileName = $"{item.Id}.{fileExt}",
-                    GeneratedUtc = DateTime.UtcNow
-                };
             }
             else
             {
-                // report analysis
-                var analyzer = new CrystalReportsAnalyzer();
-                var response = analyzer.GetFullAnalysis(rptFile);
-                return new GeneratedReportPoco
-                {
-                    Id = item.Id,
-                    GeneratedUtc = DateTime.UtcNow,
-                    FileName = $"{item.Id}_analysis.json",
-                    Format = "json",
-                    FileContent = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(response)),
-                    Metadata = "application/json"
-                };
+                const string serviceName = "CrystalCmdService";
+
+                ServiceBase.Run(new WinService(serviceName, logger));
             }
 
-            try
-            {
-                System.IO.Directory.Delete(workingDir, true);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"Error deleting working folder {workingDir}: {ex.Message}");
-            }
-
-            return poco;
         }
+
+        private static void RunBackHealthChecks(ILogger logger)
+        {
+            string runndingDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string rptPath = System.IO.Path.Combine(runndingDir, "thereport.rpt");
+            _backgroundHealthTask = new HealthCheckTask(logger, rptPath, true);
+            _backgroundHealthTask.Start();
+        }
+
 
         static void PrintHelp()
         {
