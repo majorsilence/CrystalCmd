@@ -464,5 +464,22 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 }
             }
         }
+
+        public async Task GarbageCollection()
+        {
+            using (var con = CreateConnection())
+            {
+                await con.OpenAsync();
+                using (var command = con.CreateCommand())
+                {
+                    command.CommandText = _sqlDefs.CleanupGeneratedReportsSql;
+                    command.CommandType = CommandType.Text;
+                    await command.ExecuteNonQueryAsync();
+                    command.CommandText = _sqlDefs.CleanupWorkQueueSql;
+                    command.CommandType = CommandType.Text;
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
     }
 }
