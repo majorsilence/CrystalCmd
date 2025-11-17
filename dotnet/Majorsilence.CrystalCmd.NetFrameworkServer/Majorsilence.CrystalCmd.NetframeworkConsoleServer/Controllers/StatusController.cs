@@ -27,5 +27,10 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         {
             return Ok($"Ready {version}");
         }
+        [HttpGet("/healthz/live")]
+        public IActionResult Live()
+        {
+            return Ok($"Live {version}");
+        }
     }
 }
