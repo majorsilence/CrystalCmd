@@ -37,7 +37,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     VALUES(@p_id, @p_timecreatedutc, @p_retrycount, @p_nextretryutc, @p_maxretries, @p_status, @p_timeprocessedutc, @p_lockid, @p_lockeduntilutc, @p_channel, @p_payload, @p_errormessage);";
                 _dequeueSql = @"
                     SELECT TOP 1 * FROM dbo.workqueue WITH (ROWLOCK, UPDLOCK, READPAST)
-                    WHERE status = @Status AND RetryCount <= MaxRetries
+                    WHERE status = @p_status AND RetryCount <= MaxRetries
                     ORDER BY timecreatedutc ASC;";
                 _dequeueByIdSql = @"
                     SELECT TOP 1 * FROM dbo.workqueue
@@ -231,7 +231,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         public static SqlType ParseSqlType(string sqlType)
         {
             if (string.Equals(sqlType, "mssql", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(sqlType, "mssql", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(sqlType, "sql", StringComparison.OrdinalIgnoreCase))
             {
                 return SqlType.SqlServer;
             }
