@@ -40,9 +40,9 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     WHERE status = @Status AND RetryCount <= MaxRetries
                     ORDER BY timecreatedutc ASC;";
                 _dequeueByIdSql = @"
-                    SELECT TOP 1 * FROM dbo.workqueue WITH (ROWLOCK, UPDLOCK, READPAST)
+                    SELECT TOP 1 * FROM dbo.workqueue
                     WHERE Id = @p_id;";
-                _getSql = @"SELECT * FROM dbo.generatedreports WITH (ROWLOCK, UPDLOCK, READPAST) WHERE id = @p_id";
+                _getSql = @"SELECT * FROM dbo.generatedreports WHERE id = @p_id";
                 _updateFailureCountSql = @"UPDATE dbo.workqueue 
                     SET RetryCount = RetryCount + 1, 
                         ErrorMessage = @p_errorMessage
@@ -98,15 +98,14 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     VALUES(@p_id, @p_timecreatedutc, @p_retrycount, @p_nextretryutc, @p_maxretries, @p_status, @p_timeprocessedutc, @p_lockid, @p_lockeduntilutc, @p_channel, @p_payload, @p_errormessage);";
                 _dequeueSql = @"
                     SELECT * FROM public.workqueue
-                    WHERE status = @Status AND retrycount <= maxretries
+                    WHERE status = @p_status AND retrycount <= maxretries
                     ORDER BY timecreatedutc ASC
                     LIMIT 1
                     FOR UPDATE SKIP LOCKED;";
                 _dequeueByIdSql = @"
                     SELECT * FROM public.workqueue
-                    WHERE id=@p_id
-                    FOR UPDATE SKIP LOCKED;";
-                _getSql = @"SELECT * FROM public.generatedreports WHERE id = @p_id FOR UPDATE SKIP LOCKED;";
+                    WHERE id=@p_id;";
+                _getSql = @"SELECT * FROM public.generatedreports WHERE id = @p_id;";
                 _updateFailureCountSql = @"UPDATE public.workqueue 
                     SET retrycount = retrycount + 1, 
                         errormessage = @p_errorMessage
