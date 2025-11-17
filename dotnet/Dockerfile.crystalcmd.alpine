@@ -21,8 +21,10 @@ RUN apk update && apk add --no-cache libarchive-tools curl bash unixodbc \
     && ln -s /usr/lib/libodbc.so.2 /usr/lib/libodbc.so \
     && mkdir -p /CrystalCMD \
     && cd /CrystalCMD \
-    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsoleServer_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
-    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsoleServer/ \
+    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.Server_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.Server_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.Server/ \
+    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsole_$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole_$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/ \
     && apk del curl libarchive-tools \
     && rm -rf /tmp/*
 
