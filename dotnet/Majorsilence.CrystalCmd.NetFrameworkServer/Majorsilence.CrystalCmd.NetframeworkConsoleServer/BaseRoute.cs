@@ -13,8 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
 using Majorsilence.CrystalCmd.Server.Common;
-using System.Runtime.Remoting.Messaging;
 using System.Net;
+using Majorsilence.CrystalCmd.Server;
 
 namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 {
@@ -61,9 +61,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
         {
             var creds = CustomServerSecurity.GetUserNameAndPassword(headers);
             var token = CustomServerSecurity.GetBearerToken(headers);
-            string user = Settings.GetSetting("Username");
-            string password = Settings.GetSetting("Password");
-            string jwtKey = Settings.GetSetting("JwtKey");
+            string user = Settings.GetSetting("Credentials:Username");
+            string password = Settings.GetSetting("Credentials:Password");
+            string jwtKey = Settings.GetSetting("Jwt:Key");
             var expected_creds = (user, password);
             return Authenticate_Internal(creds, expected_creds, jwtKey, token);
         }

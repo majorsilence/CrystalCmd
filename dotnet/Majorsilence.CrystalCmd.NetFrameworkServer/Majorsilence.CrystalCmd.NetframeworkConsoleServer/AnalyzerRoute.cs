@@ -1,10 +1,13 @@
 ﻿using EmbedIO;
+using Majorsilence.CrystalCmd.Common;
 using Majorsilence.CrystalCmd.Server.Common;
+using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,8 +37,38 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsoleServer
 
         private static async Task AnalyzerResults(IHttpContext ctx, byte[] report)
         {
-            var analyzer = new CrystalReportsAnalyzer();
-            var response = analyzer.GetFullAnalysis(report);
+            string id = Guid.NewGuid().ToString();
+            var queue = WorkQueue.CreateDefault();
+            await queue.Enqueue(new QueueItem()
+            {
+                Data = null,
+                ReportTemplate = report,
+                Id = id
+            });
+
+
+            CrystalCmd.Common.FullReportAnalysisResponse response = null;
+            for (int i = 0; i < 60; i++)
+            {
+                var result = await queue.Get(id);
+                if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
+                {
+                    await Task.Delay(500); // Wait before polling again
+                    continue;
+                }
+                else if (result.Status == WorkItemStatus.Completed)
+                {
+                    response = JsonConvert.DeserializeObject<CrystalCmd.Common.FullReportAnalysisResponse>(Encoding.UTF8.GetString(result.Report.FileContent));
+                    break;
+                }
+                else
+                {
+                    ctx.Response.StatusCode = 500;
+                    return;
+                }
+            }
+
+
             // Convert the response object to JSON
             string jsonResponse = JsonConvert.SerializeObject(response);
 

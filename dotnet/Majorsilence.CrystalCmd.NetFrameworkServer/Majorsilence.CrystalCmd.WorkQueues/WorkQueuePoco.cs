@@ -59,7 +59,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
                 var settings = new JsonSerializerSettings
                 {
-                    TypeNameHandling = TypeNameHandling.Auto
+                    TypeNameHandling = TypeNameHandling.None
                 };
 
                 return JsonConvert.DeserializeObject<QueueItem>(Payload, settings);

@@ -80,14 +80,19 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
-            return Environment.GetEnvironmentVariable($"appsettings__{key}");
+             return config.GetValue<string>(key);
 #endif
         }
 
         public static WorkQueue CreateDefault()
         {
+#if NET48
             var sqlTypeStr = GetSetting("WorkQueueSqlType");
             var connectionString = GetSetting("WorkQueueSqlConnection");
+#else
+            var sqlTypeStr = GetSetting("WorkQueue:SqlType");
+            var connectionString = GetSetting("WorkQueue:SqlConnection");
+#endif
             var sqlType = WorkQueueSqlDefs.ParseSqlType(sqlTypeStr);
             var sqlDefs = new WorkQueueSqlDefs(sqlType);
 
@@ -267,7 +272,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         }
 
 
-        public async Task<(byte[] GeneratedReport, WorkItemStatus Status, string FileExt, string MimeType, string FileName)>
+        public async Task<(GeneratedReportPoco Report, WorkItemStatus Status)>
             Get(string id)
         {
             using (var con = CreateConnection())
@@ -284,23 +289,21 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
                 if (generatedReportsPoco != null)
                 {
-                    var payload = JsonConvert.DeserializeObject<QueueItem>(workQueuePoco.Payload, settings);
-                    return (generatedReportsPoco.FileContent,
-                        WorkItemStatus.Completed,
-                        generatedReportsPoco.Format,
-                        generatedReportsPoco.Format == "pdf" ? "application/pdf" : "application/octet-stream",
-                        generatedReportsPoco.FileName);
+                    return (generatedReportsPoco, WorkItemStatus.Completed);
+                    //return (generatedReportsPoco.FileContent,
+                    //    WorkItemStatus.Completed,
+                    //    generatedReportsPoco.Format,
+                    //    generatedReportsPoco.Format == "pdf" ? "application/pdf" : "application/octet-stream",
+                    //    generatedReportsPoco.FileName);
                 }
                 else if (workQueuePoco != null)
                 {
-                    return (null,
-                        workQueuePoco.Status,
-                        null,
-                        null,
-                        null);
+                    return (null, workQueuePoco.Status);
+
+
                 }
 
-                return (null, WorkItemStatus.Unknown, null, null, null);
+                return (null, WorkItemStatus.Unknown);
             }
         }
 
