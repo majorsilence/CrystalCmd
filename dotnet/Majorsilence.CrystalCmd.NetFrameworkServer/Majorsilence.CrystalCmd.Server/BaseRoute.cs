@@ -5,12 +5,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Majorsilence.CrystalCmd.Common;
-using System.Net;
 using System.Collections.Specialized;
-using System.Linq;
 
 namespace Majorsilence.CrystalCmd.Server
 {

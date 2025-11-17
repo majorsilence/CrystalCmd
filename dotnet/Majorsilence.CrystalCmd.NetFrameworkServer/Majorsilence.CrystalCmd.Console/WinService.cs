@@ -9,6 +9,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         private readonly string _serviceName;
         private readonly ILogger _logger;
         ExportQueue export;
+        ExportQueue analyzerExport;
         public WinService(string serviceName, ILogger logger)
         {
             _serviceName = serviceName;
@@ -18,8 +19,10 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         protected override void OnStart(string[] args)
         {
             // Start your service logic here
-            export = new ExportQueue(_logger);
+            export = new ExportQueue(_logger, "crystal-reports");
             export.Start();
+            analyzerExport = new ExportQueue(_logger, "analyzer-reports");
+            analyzerExport.Start();
             Console.WriteLine($"{_serviceName} started.");
         }
         protected override void OnStop()

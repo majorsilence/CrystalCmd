@@ -36,8 +36,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
             if (Environment.UserInteractive)
             {
-                var export = new ExportQueue(logger);
+                var export = new ExportQueue(logger, "crystal-reports");
                 export.Start();
+                // crystal-analyzer
+                var analyzerExport = new ExportQueue(logger, "crystal-analyzer");
+                analyzerExport.Start();
+
                 while (true)
                 {
                     Console.WriteLine("Type 'exit' to stop the service...");

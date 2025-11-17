@@ -1,12 +1,7 @@
-using Majorsilence.CrystalCmd.Common;
 using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Specialized;
-using System.IO;
-using System.Reflection.PortableExecutable;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Server.Controllers
@@ -32,7 +27,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault("crystal-reports");
             await queue.Enqueue(new QueueItem()
             {
                 Data = inputResults.ReportData,
@@ -90,7 +85,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault("crystal-reports");
             await queue.Enqueue(new QueueItem()
             {
                 Id = inputResults.Id,
@@ -112,7 +107,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest();
 
-            var queue = WorkQueue.CreateDefault();
+            var queue = WorkQueue.CreateDefault("crystal-reports");
             var result = await queue.Get(id);
 
             if (result.Status == WorkItemStatus.Unknown)

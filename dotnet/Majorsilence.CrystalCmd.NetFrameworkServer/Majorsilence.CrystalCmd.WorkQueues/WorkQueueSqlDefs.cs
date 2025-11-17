@@ -37,7 +37,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     VALUES(@p_id, @p_timecreatedutc, @p_retrycount, @p_nextretryutc, @p_maxretries, @p_status, @p_timeprocessedutc, @p_lockid, @p_lockeduntilutc, @p_channel, @p_payload, @p_errormessage);";
                 _dequeueSql = @"
                     SELECT TOP 1 * FROM dbo.workqueue WITH (ROWLOCK, UPDLOCK, READPAST)
-                    WHERE status = @p_status AND RetryCount <= MaxRetries
+                    WHERE status = @p_status AND RetryCount <= MaxRetries and channel = @p_channel
                     ORDER BY timecreatedutc ASC;";
                 _dequeueByIdSql = @"
                     SELECT TOP 1 * FROM dbo.workqueue
@@ -98,7 +98,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     VALUES(@p_id, @p_timecreatedutc, @p_retrycount, @p_nextretryutc, @p_maxretries, @p_status, @p_timeprocessedutc, @p_lockid, @p_lockeduntilutc, @p_channel, @p_payload, @p_errormessage);";
                 _dequeueSql = @"
                     SELECT * FROM public.workqueue
-                    WHERE status = @p_status AND retrycount <= maxretries
+                    WHERE status = @p_status AND retrycount <= maxretries and channel = @p_channel
                     ORDER BY timecreatedutc ASC
                     LIMIT 1
                     FOR UPDATE SKIP LOCKED;";
@@ -182,7 +182,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 _enqueueSql = @"INSERT INTO WorkQueue (Id, TimeCreatedUtc, RetryCount, NextRetryUtc, MaxRetries, Status, TimeProcessedUtc, LockId, LockedUntilUtc, Channel, Payload, ErrorMessage) 
                     VALUES(@p_id, @p_timecreatedutc, @p_retrycount, @p_nextretryutc, @p_maxretries, @p_status, @p_timeprocessedutc, @p_lockid, @p_lockeduntilutc, @p_channel, @p_payload, @p_errormessage);";
                 _dequeueSql = @"SELECT * FROM WorkQueue
-                    WHERE Status=@p_status AND (LockedUntilUtc IS NULL OR LockedUntilUtc < @p_now) AND RetryCount <= MaxRetries
+                    WHERE Status=@p_status AND (LockedUntilUtc IS NULL OR LockedUntilUtc < @p_now) AND RetryCount <= MaxRetries AND Channel=@p_channel
                     ORDER BY TimeCreatedUtc ASC 
                     LIMIT 1";
                 _dequeueByIdSql = @"SELECT * FROM WorkQueue
