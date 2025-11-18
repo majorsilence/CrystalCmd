@@ -91,5 +91,5 @@ if ($LastExitCode -ne 0) { throw "CycloneDX, Server failed" }
 cd $CURRENTPATH
 
 New-Item -ItemType Directory -Path ".\build\TestResults" -Force | Out-Null
-dotnet test .\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.Tests\Majorsilence.CrystalCmd.Tests.csproj --configuration Release --logger "trx;LogFileName=.\build\TestResults\test-results.trx"
+dotnet test .\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.sln --configuration Release --logger "nunit"
 if ($LastExitCode -ne 0) { throw "Unit tests failed" }

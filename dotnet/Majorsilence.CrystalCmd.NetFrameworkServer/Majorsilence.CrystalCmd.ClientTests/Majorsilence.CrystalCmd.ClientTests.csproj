@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net48;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net48;net8.0;net9.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -37,6 +37,7 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	  <PackageReference Include="NUnit3TestAdapter" />
+	  <PackageReference Include="NunitXml.TestLogger" />
 	</ItemGroup>
 
 	<ItemGroup>

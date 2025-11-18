@@ -41,6 +41,7 @@
 	<PackageReference Include="NUnit3TestAdapter" />
 	<PackageReference Include="Newtonsoft.Json" />
 	<PackageReference Include="Moq" />
+	<PackageReference Include="NunitXml.TestLogger" />
 	<PackageReference Include="PdfPig" />
 	<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
   </ItemGroup>
