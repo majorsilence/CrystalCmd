@@ -134,6 +134,11 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             foreach (ParameterField x in reportClientDocument.ParameterFields)
             {
+                if(datafile.Parameters.ContainsKey(x.Name, true))
+                {
+                    continue;
+                }
+
                 if (x.HasCurrentValue == false && x.ReportParameterType == ParameterType.ReportParameter)
                 {
                     // to get things up and running, add defaults for missing parameters
