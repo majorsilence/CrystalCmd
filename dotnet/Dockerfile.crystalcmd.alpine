@@ -16,7 +16,7 @@ ENV CRYSTALCMD_VERSION=$A_CRYSTALCMD_VERSION
 ENV WINEPREFIX=$A_WINEPREFIX
 ENV WINEARCH=$A_WINEARCH
 
-RUN apk update && apk add --no-cache libarchive-tools curl bash unixodbc \
+RUN apk update && apk add --no-cache libarchive-tools curl bash curl procps-ng unixodbc \
     && ln -s /bin/bash /usr/bin/bash \
     && ln -s /usr/lib/libodbc.so.2 /usr/lib/libodbc.so \
     && mkdir -p /CrystalCMD/Majorsilence.CrystalCmd.Server$CRYSTALCMD_VERSION \
