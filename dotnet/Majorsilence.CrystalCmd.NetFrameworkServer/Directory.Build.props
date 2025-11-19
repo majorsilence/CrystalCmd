@@ -1,9 +1,9 @@
 <Project>
 
   <PropertyGroup>
-    <AssemblyVersion>1.0.55</AssemblyVersion>
-    <FileVersion>1.0.55</FileVersion>
-    <Version>1.0.55</Version>
+    <AssemblyVersion>1.0.56</AssemblyVersion>
+    <FileVersion>1.0.56</FileVersion>
+    <Version>1.0.56</Version>
     <Authors>Majorsilence</Authors>
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
