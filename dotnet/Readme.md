@@ -70,7 +70,7 @@ See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.co
 
 ## Docker run
 ```bash
-docker run -p 44355:44355 -e OVERRIDE_WINEARCH_AS_X64='yes' majorsilence/dotnet_framework_wine_crystalcmd:1.0.25-alpine
+docker run -p 44355:5000 -e WorkQueue__SqlType="sqlite" -e WorkQueue__SqlConnection="Data Source=/CrystalCMD/crystalcmd-workqueue.db;" majorsilence/dotnet_framework_wine_crystalcmd:1.0.55-alpine
 ```
 
 ## Windows Service Run

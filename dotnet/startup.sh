@@ -26,15 +26,15 @@ while true; do
 
     # check if the web service is healthy
 
-    responsecode=$(wget --tries=1 --timeout=5 --server-response -O /dev/null http://127.0.0.1:44355/healthz/ready 2>&1 | awk '/^  HTTP/{print $2}')
+    responsecode=$(wget --tries=1 --timeout=5 --server-response -O /dev/null http://127.0.0.1:5000/healthz/ready 2>&1 | awk '/^  HTTP/{print $2}')
     if [ "$responsecode" != "200" ] ; then
         echo "CrystalCMD http service Health check failed with response code $responsecode"
-        wget --tries=1 --timeout=5 --server-response http://127.0.0.1:44355/healthz/ready
+        wget --tries=1 --timeout=5 --server-response http://127.0.0.1:5000/healthz/ready
         exit 1
     fi
 
     # chck if the wine process is still running
-    pcount=$(pgrep -c Majorsilence.CrystalCmd.NetframeworkConsole.exe)
+    pcount=$(pgrep -fc Majorsilence.CrystalCmd.NetframeworkConsole.exe)
     if [ "$pcount" -lt 1 ] ; then
         echo "CrystalCMD NetframeworkConsole process not running"
         exit 1
