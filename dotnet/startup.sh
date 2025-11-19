@@ -5,6 +5,7 @@ run_x64_service () {
     WINEARCH=win64
     sleep 2s
 
+    mkdir -p /majorsilence-wine/drive_c/users/root/AppData/Local/Temp/majorsilence/crystalcmd
     # start the CrystalCMD console service within wine and xvfb
     if [ -f "/CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe" ]; then
         xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe &
