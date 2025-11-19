@@ -42,20 +42,16 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 var analyzerExport = new ExportQueue(logger, "crystal-analyzer");
                 analyzerExport.Start();
 
+                Console.WriteLine("Press ctrl+c to stop the CrystalCmd report processing service...");
+
                 while (true)
                 {
-                    Console.WriteLine("Type 'exit' to stop the service...");
-                    var input = Console.ReadLine();
-                    if (input != null && input.Equals("exit", StringComparison.OrdinalIgnoreCase))
-                    {
-                        break;
-                    }
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
             }
             else
             {
                 const string serviceName = "CrystalCmdService";
-
                 ServiceBase.Run(new WinService(serviceName, logger));
             }
 
