@@ -73,9 +73,14 @@ See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.co
 Note the different environment variables for the wine process vs the asp.net core process
 
 ```bash
-docker run -p 44355:5000 -e WorkQueue__SqlType="sqlite" -e WorkQueue__SqlConnection="Data Source=/CrystalCMD/crystalcmd-workqueue.db;" -e appSettings__WorkQueueSqlType="sqlite" -e appSettings__WorkQueueSqlConnection="Data Source=z:\\CrystalCMD\\crystalcmd-workqueue.db;" -e ASPNETCORE_URLS="http://*:5000" -e Credentials__Password="password" -e 	
-Credentials__Username="user" majorsilence/dotnet_framework_wine_crystalcmd:1.0.56-alpine
+docker run -p 44355:5000 -e WorkQueue__SqlType="sqlite" -e WorkQueue__SqlConnection="Data Source=/CrystalCMD/crystalcmd-workqueue.db;" -e appSettings__WorkQueueSqlType="sqlite" -e appSettings__WorkQueueSqlConnection="Data Source=z:\\CrystalCMD\\crystalcmd-workqueue.db;" -e ASPNETCORE_URLS="http://*:5000" -e Credentials__Password="password" -e Credentials__Username="user" majorsilence/dotnet_framework_wine_crystalcmd:1.0.56-alpine
 ```
+
+if using jwt set these environment variables
+
+- Jwt__Key: "PLACEHOLDER"
+- Jwt__Issuer: "https://localhost/"
+
 
 ## Windows Service Run
 
