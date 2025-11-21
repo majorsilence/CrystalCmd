@@ -1,0 +1,33 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+
+EXPOSE 5000
+EXPOSE 5001
+
+ARG DEBIAN_FRONTEND=noninteractive
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+ADD VERSION .
+
+ARG A_CRYSTALCMD_VERSION="1.0.56"
+
+# Turn off Fixme warnings
+ENV CRYSTALCMD_VERSION=$A_CRYSTALCMD_VERSION
+
+RUN apt update && apt install libarchive-tools curl -y \
+    && mkdir -p /CrystalCMD/Majorsilence.CrystalCmd.Server$CRYSTALCMD_VERSION \
+    && cd /CrystalCMD/Majorsilence.CrystalCmd.Server$CRYSTALCMD_VERSION \
+    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.Server$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
+    && cd /CrystalCMD \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.Server$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.Server/ \
+    && apt remove curl libarchive-tools -y \
+    && rm -rf /tmp/* \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY ExternalLogAssemblies-net8.0 /CrystalCMD
+
+WORKDIR /CrystalCMD/Majorsilence.CrystalCmd.Server
+# USER app is the default starting with aspnet:8.0 images
+# See https://devblogs.microsoft.com/dotnet/running-nonroot-kubernetes-with-dotnet/ and 
+# https://devblogs.microsoft.com/dotnet/securing-containers-with-rootless/
+USER $APP_UID
+ENTRYPOINT ["dotnet", "/CrystalCMD/Majorsilence.CrystalCmd.Server/Majorsilence.CrystalCmd.Server.dll"]
