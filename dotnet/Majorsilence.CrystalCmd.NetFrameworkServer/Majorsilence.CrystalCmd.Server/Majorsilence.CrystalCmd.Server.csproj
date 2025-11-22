@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+		<TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<Platforms>AnyCPU</Platforms>
 	</PropertyGroup>
 
 	<!-- Define the custom conditional compilation symbol for net8.0-windows -->
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
 		<DefineConstants>$(DefineConstants);NET8_0_OR_GREATOR_WINDOWS</DefineConstants>
 	</PropertyGroup>
 
