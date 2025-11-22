@@ -1,0 +1,19 @@
+FROM alpine:3.17
+
+LABEL maintainer "Peter Gill"
+
+
+
+RUN mkdir -p /app \
+        && apk add --no-cache openjdk11-jre msttcorefonts-installer fontconfig \
+        && update-ms-fonts \
+        && fc-cache -f \
+        && ln -s /usr/share/fonts/truetype/msttcorefonts /usr/lib/jvm/default-jvm/jre/lib/fonts \
+        && adduser -D majorsilence
+WORKDIR /app
+COPY CrystalCmd_jar/ /app/
+
+EXPOSE 4321
+USER majorsilence
+CMD ["java", "-jar", "/app/CrystalCmd.jar"]
+

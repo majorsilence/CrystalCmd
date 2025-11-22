@@ -59,8 +59,8 @@ using (var outstream = new MemoryStream())
 See [Crystal Reports, Developer for Visual Studio Downloads](https://help.sap.com/docs/SUPPORT_CONTENT/crystalreports/3354091173.html)
 
 - Download the Crystal Reports .net runtime from: [https://origin.softwaredownloads.sap.com/public/site/index.html](https://origin.softwaredownloads.sap.com/public/site/index.html)
-  - CR for Visual Studio SP35 CR Runtime 64-bit
-  - CR for Visual Studio SP35 CR Runtime 32-bit
+  - CR for Visual Studio SP37 CR Runtime 64-bit
+  - CR for Visual Studio SP37 CR Runtime 32-bit
 
 - Majorsilence.CrystalCmd.NetframeworkConsoleServer
   - an embedio based console app/webserver
@@ -84,13 +84,13 @@ if using jwt set these environment variables
 
 ## Windows Service Run
 
-Use nssm or powershell to register the Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe.
+Use nssm or powershell to register the Majorsilence.CrystalCmd.NetframeworkConsole.exe.
 
 ```powershell
 $serviceName = "CrystalCmdService"
-$exePath = "C:\Path\To\Majorsilence.CrystalCmd.NetframeworkConsoleServer.exe"
-$displayName = "Crystal Command Service"
-$description = "A service for Majorsilence Crystal Command"
+$exePath = "C:\Path\To\Majorsilence.CrystalCmd.NetframeworkConsole.exe"
+$displayName = "CrystalCmd Service"
+$description = "A service for Majorsilence CrystalCmd report processing"
 
 New-Service -Name $serviceName -BinaryPathName $exePath -DisplayName $displayName -Description $description -StartupType Automatic
 
@@ -106,7 +106,7 @@ sc.exe qfailure $serviceName
 
 ## Build docker images
 
-See Dockerfile.wine, Dockerfile.crystalcmd, and build.sh.
+See docker/Dockerfile.wine, docker/Dockerfile.crystalcmd, and docker/build.sh.
 
 # Alternatives
 
