@@ -1,0 +1,29 @@
+FROM majorsilence/dotnet_framework_wine:9.0.8-alpine
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+
+ADD VERSION .
+
+ARG A_CRYSTALCMD_VERSION="1.0.56"
+ARG A_WINEPREFIX="/majorsilence-wine"
+ARG A_WINEARCH="win64"
+
+# Turn off Fixme warnings
+ENV WINEDEBUG=fixme-all
+ENV CRYSTALCMD_VERSION=$A_CRYSTALCMD_VERSION
+ENV WINEPREFIX=$A_WINEPREFIX
+ENV WINEARCH=$A_WINEARCH
+
+RUN apk update && apk add --no-cache libarchive-tools curl bash procps-ng \
+    && mkdir -p /CrystalCMD \
+    && cd /CrystalCMD \
+    && curl -SL https://github.com/majorsilence/CrystalCmd/releases/download/v$CRYSTALCMD_VERSION/Majorsilence.CrystalCmd.NetframeworkConsole$CRYSTALCMD_VERSION.zip | bsdtar -xvf- \
+    && mv /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole$CRYSTALCMD_VERSION/ /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/ \
+    && apk del curl libarchive-tools \
+    && rm -rf /tmp/*
+
+COPY startup.sh /CrystalCMD/startup.sh
+RUN chmod gou+x /CrystalCMD/startup.sh
+CMD ["/CrystalCMD/startup.sh", "workeronly"]
