@@ -33,15 +33,18 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         private readonly SqlType _sqlType;
         private readonly string _connectionString;
         private readonly string DefaultChannel;
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="enqueueSql">works with sql parameters @p_channel and @p_payload</param>
         /// <param name="dequeueSql">works with sql parameters @p_channel, @p_payload, and p_offset</param>
         /// <param name="getSql">works with sql parameter @p_id is used to get a report by id</param>
+
         public WorkQueue(WorkQueueSqlDefs sqlDefs,
             SqlType sqlType, string connectionString,
-            string channel)
+            string channel
+            )
         {
             _sqlDefs = sqlDefs;
             _sqlType = sqlType;
@@ -64,7 +67,11 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         }
 
 
-        public static string GetSetting(string key)
+        public static string GetSetting(string key
+#if NET5_0_OR_GREATER
+            , IConfiguration configuration
+#endif
+            )
         {
 #if NET48
             var value = Environment.GetEnvironmentVariable($"appsettings__{key}");
@@ -77,21 +84,23 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             return value;
 
 #else
-            IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
-                .Build();
-             return config.GetValue<string>(key);
+             return configuration.GetValue<string>(key);
 #endif
         }
 
-        public static WorkQueue CreateDefault(string channel)
+        public static WorkQueue CreateDefault(string channel
+#if NET5_0_OR_GREATER
+            , IConfiguration configuration
+#endif
+            )
         {
 #if NET48
             var sqlTypeStr = GetSetting("WorkQueueSqlType");
             var connectionString = GetSetting("WorkQueueSqlConnection");
 #else
-            var sqlTypeStr = GetSetting("WorkQueue:SqlType");
-            var connectionString = GetSetting("WorkQueue:SqlConnection");
+
+            var sqlTypeStr = GetSetting("WorkQueue:SqlType", configuration);
+            var connectionString = GetSetting("WorkQueue:SqlConnection", configuration);
 #endif
             var sqlType = WorkQueueSqlDefs.ParseSqlType(sqlTypeStr);
             var sqlDefs = new WorkQueueSqlDefs(sqlType);
