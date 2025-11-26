@@ -20,11 +20,14 @@ namespace Majorsilence.CrystalCmd.Server
     {
         static async Task Main(string[] args)
         {
-            var queue = WorkQueue.CreateDefault("crystal-reports");
-            await queue.Migrate();
-
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddSingleton<StartupArgs>(new StartupArgs(args));
+
+            builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+            var queue = WorkQueue.CreateDefault("crystal-reports", builder.Configuration);
+            await queue.Migrate();
 
 #if NET8_0_OR_GREATOR_WINDOWS
             builder.Services.AddWindowsService(options =>
@@ -34,11 +37,7 @@ namespace Majorsilence.CrystalCmd.Server
 #endif
 
             // Configuration and logging
-            builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables();
-
             ConfigureServices(builder.Services);
-
 
 #if NET8_0_OR_GREATOR_WINDOWS
             LoggerProviderOptions.RegisterProviderOptions<

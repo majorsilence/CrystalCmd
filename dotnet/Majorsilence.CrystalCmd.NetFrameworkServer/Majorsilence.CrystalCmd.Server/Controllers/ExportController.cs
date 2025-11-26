@@ -1,5 +1,6 @@
 using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -10,10 +11,12 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
     public class ExportController : ControllerBase
     {
         private readonly ILogger<ExportController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public ExportController(ILogger<ExportController> logger)
+        public ExportController(ILogger<ExportController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         [HttpPost("/export")]
@@ -27,7 +30,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
-            var queue = WorkQueue.CreateDefault("crystal-reports");
+            var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Data = inputResults.ReportData,
@@ -85,7 +88,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
-            var queue = WorkQueue.CreateDefault("crystal-reports");
+            var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Id = inputResults.Id,
@@ -107,7 +110,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest();
 
-            var queue = WorkQueue.CreateDefault("crystal-reports");
+            var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
             var result = await queue.Get(id);
 
             if (result.Status == WorkItemStatus.Unknown)
