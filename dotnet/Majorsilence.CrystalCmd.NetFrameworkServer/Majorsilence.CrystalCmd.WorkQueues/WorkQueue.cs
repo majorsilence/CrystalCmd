@@ -64,7 +64,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         }
 
 
-        private static string GetSetting(string key)
+        public static string GetSetting(string key)
         {
 #if NET48
             var value = Environment.GetEnvironmentVariable($"appsettings__{key}");
