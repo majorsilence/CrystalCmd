@@ -58,7 +58,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                     }
                     else
                     {
-                        return StatusCode(500);
+                        return StatusCode(500, "Timed out waiting.  You should use the export/poll POST then GET flow. See https://github.com/majorsilence/CrystalCmd/wiki/Polled-report-generation-(export-poll).");
                     }
                 }
 
