@@ -6,6 +6,9 @@ $MSBUILD = "C:\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
 If (Test-Path "C:\BuildTools\MSBuild\Current\Bin\MSBuild.exe") {
 	$MSBUILD = "C:\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
 }
+ElseIf (Test-Path "C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\MSBuild.exe") {
+	$MSBUILD = "C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\MSBuild.exe"
+}
 ElseIf (Test-Path "C:\BuildTools\MSBuild\17.0\Bin\MSBuild.exe") {
 	$MSBUILD = "C:\BuildTools\MSBuild\17.0\Bin\MSBuild.exe"
 }
@@ -61,9 +64,9 @@ if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer, failed"
 & "$MSBUILD" "Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj" /p:Configuration=Release /t:Publish /p:PublishProfile=FolderProfile /p:OutputPath="$CURRENTPATH\build\Majorsilence.CrystalCmd.NetframeworkConsole$Version"
 if ($LastExitCode -ne 0) { throw "Publish solution, NetframeworkConsole, failed" }
 
-dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server-win-x64-$Version" --runtime win-x64 --framework net8.0-windows
+dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server-win-x64-$Version" --runtime win-x64 --framework net10.0-windows
 
-dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server$Version" --framework net8.0
+dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server$Version" --framework net10.0
 
 Write-Output "Creating zip files"
 
