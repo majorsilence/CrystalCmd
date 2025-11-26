@@ -41,7 +41,7 @@ var crystalReport = System.IO.File.ReadAllBytes("The rpt template file path goes
 using (var instream = new MemoryStream(crystalReport))
 using (var outstream = new MemoryStream())
 {
-    var rpt = new Majorsilence.CrystalCmd.Client.Report(serverUrl, username: "The server username goes here", password: "The server password goes here");
+    var rpt = new Majorsilence.CrystalCmd.Client.ReportWithPolling(serverUrl, username: "The server username goes here", password: "The server password goes here");
     using (var stream = await rpt.GenerateAsync(reportData, instream, _httpClient))
     {
         stream.CopyTo(outstream);
