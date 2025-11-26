@@ -36,6 +36,18 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             _backgroundTask?.Wait();
         }
 
+        public static List<ExportQueue> Create(ILogger logger, string channel, int threadCount=1)
+        {
+            var queues = new List<ExportQueue>();
+            for (int i = 0; i < threadCount; i++)
+            {
+                var exportQueue = new ExportQueue(logger, channel);
+                queues.Add(exportQueue);
+            }
+
+            return queues;
+        }
+
         internal async Task RunQueue()
         {
             var queue = WorkQueue.CreateDefault(channel);

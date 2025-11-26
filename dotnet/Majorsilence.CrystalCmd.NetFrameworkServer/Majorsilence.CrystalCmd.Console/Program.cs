@@ -34,10 +34,17 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
             RunBackHealthChecks(logger);
 
+            bool isSqlite = string.Equals(WorkQueue.GetSetting("WorkQueueSqlType"), "sqlite", StringComparison.InvariantCultureIgnoreCase);
+            int threadCount = isSqlite ? 1 : Environment.ProcessorCount;
+
             if (Environment.UserInteractive)
             {
-                var export = new ExportQueue(logger, "crystal-reports");
-                export.Start();
+                var exporters =  ExportQueue.Create(logger, "crystal-reports", threadCount);
+                foreach(var exporter in exporters)
+                {
+                    exporter.Start();
+                }
+
                 // crystal-analyzer
                 var analyzerExport = new ExportQueue(logger, "crystal-analyzer");
                 analyzerExport.Start();
