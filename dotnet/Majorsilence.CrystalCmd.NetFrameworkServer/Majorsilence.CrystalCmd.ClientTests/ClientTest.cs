@@ -40,6 +40,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             }
         }
 
+
         [Test]
         public async Task Test_ConnectToServerWritePdfAsync()
         {
