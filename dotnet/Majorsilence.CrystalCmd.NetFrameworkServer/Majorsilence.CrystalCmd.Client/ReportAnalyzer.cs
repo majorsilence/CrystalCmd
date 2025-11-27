@@ -43,8 +43,8 @@ namespace Majorsilence.CrystalCmd.Client
 
         public async Task<FullReportAnalysis> FullAnalysis(CancellationToken cancellationToken = default)
         {
-            Func<FullReportAnalysisResponse.DataTableAnalysisDto, DataTableAnalysis> createDataTable = t => new DataTableAnalysis(t.DataTableName, t.ColumnNames);
-            var dto = await ServerRequest<object, FullReportAnalysisResponse>(null, "/analyzer", _report, cancellationToken);
+            Func<Common.FullReportAnalysisResponse.DataTableAnalysisDto, DataTableAnalysis> createDataTable = t => new DataTableAnalysis(t.DataTableName, t.ColumnNames);
+            var dto = await ServerRequest<object, Common.FullReportAnalysisResponse>(null, "/analyzer", _report, cancellationToken);
             return new FullReportAnalysis(
                 dto.Parameters,
                 dto.DataTables.Select(createDataTable),
@@ -52,9 +52,9 @@ namespace Majorsilence.CrystalCmd.Client
                 dto.ReportObjects);
         }
 
-        public async Task<FullReportAnalysisResponse> Analyze(CancellationToken cancellationToken = default)
+        public async Task<Common.FullReportAnalysisResponse> Analyze(CancellationToken cancellationToken = default)
         {
-            var dto = await ServerRequest<object, FullReportAnalysisResponse>(null, "/analyzer", _report, cancellationToken);
+            var dto = await ServerRequest<object, Common.FullReportAnalysisResponse>(null, "/analyzer", _report, cancellationToken);
             return dto;
         }
 
