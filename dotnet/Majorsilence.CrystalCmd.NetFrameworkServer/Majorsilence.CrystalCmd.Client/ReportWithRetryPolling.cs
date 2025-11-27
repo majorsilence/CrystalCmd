@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Client
 {
-    /// <summary>
-    /// Will gracefully retry on http errors when polling for a report.
-    /// </summary>
-    public class ReportWithRetryPolling : ReportWithPolling
+    [Obsolete("Use ReportWithRetry instead.")]
+    public class ReportWithRetryPolling : ReportWithRetry
     {
         [Obsolete("Use the constructor that takes a bearer token.")]
         public ReportWithRetryPolling(string serverUrl = "https://c.majorsilence.com/export",
@@ -24,70 +22,5 @@ namespace Majorsilence.CrystalCmd.Client
            string bearerToken = "") : base(serverUrl, userAgent, bearerToken)
         {
         }
-
-        public new Stream Generate(Common.Data reportData, Stream report)
-        {
-            try
-            {
-                return base.Generate(reportData, report);
-            }
-            catch (HttpRequestException ex)
-            {
-                return base.Generate(reportData, report);
-            }
-        }
-
-        public new Stream Generate(Common.Data reportData, Stream report, HttpClient httpClient)
-        {
-            try
-            {
-                return base.Generate(reportData, report, httpClient);
-            }
-            catch (HttpRequestException ex)
-            {
-                return base.Generate(reportData, report, httpClient);
-            }
-        }
-
-        public new async Task<Stream> GenerateAsync(Common.Data reportData, Stream report,
-            System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-
-            return await TryAsync(async () =>
-            {
-                return await base.GenerateAsync(reportData, report, cancellationToken);
-            }, 3);
-        }
-
-        public new async Task<Stream> GenerateAsync(Common.Data reportData, Stream report, HttpClient httpClient,
-            System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-
-            return await TryAsync(async () =>
-             {
-                 return await base.GenerateAsync(reportData, report, httpClient, cancellationToken);
-             }, 3);
-        }
-
-        public async Task<T> TryAsync<T>(Func<Task<T>> actionToTry, int timesToRetry)
-        {
-            var errors = new List<HttpRequestException>();
-
-            for (var time = 0; time < timesToRetry; time++)
-            {
-                try
-                {
-                    return await actionToTry();
-                }
-                catch (HttpRequestException ex)
-                {
-                    await Task.Delay(1000 * (time + 1));
-                    errors.Add(ex);
-                }
-            }
-
-            throw new AggregateException(errors);
-        }
-
     }
 }

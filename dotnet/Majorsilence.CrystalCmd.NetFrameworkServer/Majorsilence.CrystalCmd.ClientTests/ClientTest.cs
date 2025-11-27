@@ -131,7 +131,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         public async Task Test_ClientBackwardsCompat()
         {
             DataTable dt = GetTable();
-            var reportData = new Client.Data()
+            var reportData = new Common.Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<Common.MoveObjects>(),
@@ -140,7 +140,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             reportData.AddData("EMPLOYEE", dt);
 
             var list = GetList();
-            var reportDataList = new Client.Data()
+            var reportDataList = new Common.Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -154,13 +154,13 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
             await CreatePdfFromReport("thereport.rpt", "thereport.pdf", new Data());
 
-            var parameterReportData = new Client.Data();
+            var parameterReportData = new Common.Data();
             parameterReportData.Parameters.Add("MyParameter", "My First Parameter");
             parameterReportData.Parameters.Add("MyParameter2", true);
 
             await CreatePdfFromReport("thereport_wth_parameters.rpt", "thereport_wth_parameters.pdf", parameterReportData);
 
-            var subreportParameterData = new Client.Data();
+            var subreportParameterData = new Common.Data();
             subreportParameterData.SubReportParameters.Add(new SubReportParameters()
             {
                 Parameters = parameterReportData.Parameters,
@@ -168,12 +168,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
             });
             await CreatePdfFromReport("thereport_with_subreport_with_parameters.rpt", "thereport_with_subreport_with_parameters.pdf", subreportParameterData);
 
-            var subreportDatatableData = new Client.Data();
+            var subreportDatatableData = new Common.Data();
             subreportDatatableData.AddData("the_dotnet_dataset_report.rpt", "Employee", dt);
             await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "thereport_with_subreport_with_dotnet_dataset.pdf", subreportDatatableData);
 
 
-            var fullData = new Client.Data();
+            var fullData = new Common.Data();
             fullData.AddData("EMPLOYEE", dt);
             fullData.AddData("the_dotnet_dataset_report_with_params", "Employee", dt);
             fullData.Parameters = parameterReportData.Parameters;
@@ -184,7 +184,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             });
             await CreatePdfFromReport("the_dotnet_dataset_report_with_params_and_subreport.rpt", "the_dotnet_dataset_report_with_params_and_subreport.pdf", fullData);
 
-            var emptySubreportData = new Client.Data();
+            var emptySubreportData = new Common.Data();
             emptySubreportData.SetEmptyTable("EMPLOYEE");
             emptySubreportData.SetEmptyTable("the_dotnet_dataset_report_with_params", "Employee");
             emptySubreportData.Parameters = parameterReportData.Parameters;
@@ -217,88 +217,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
         }
 
-        [Test]
-        public async Task Test_ServerCompressedStream()
-        {
-            DataTable dt = GetTable();
-            var reportData = new Common.Data()
-            {
-                DataTables = new Dictionary<string, string>(),
-                MoveObjectPosition = new List<Common.MoveObjects>(),
-                Parameters = new Dictionary<string, object>()
-            };
-            reportData.AddData("EMPLOYEE", dt);
-
-            var list = GetList();
-            var reportDataList = new Data()
-            {
-                DataTables = new Dictionary<string, string>(),
-                MoveObjectPosition = new List<MoveObjects>(),
-                Parameters = new Dictionary<string, object>()
-            };
-            reportDataList.AddData("Employee", list);
-
-            await CreatePdfFromReportCompressedStream("the_dotnet_dataset_report.rpt", "the_dataset_report_compressed.pdf", reportData);
-
-            Assert.That(System.IO.File.Exists("the_dataset_report_compressed.pdf"));
-        }
-
-        [Test]
-        public async Task Test_ServerCompressedStreamPolling()
-        {
-            DataTable dt = GetTable();
-            var reportData = new Common.Data()
-            {
-                DataTables = new Dictionary<string, string>(),
-                MoveObjectPosition = new List<Common.MoveObjects>(),
-                Parameters = new Dictionary<string, object>()
-            };
-            reportData.AddData("EMPLOYEE", dt);
-
-            var list = GetList();
-            var reportDataList = new Data()
-            {
-                DataTables = new Dictionary<string, string>(),
-                MoveObjectPosition = new List<MoveObjects>(),
-                Parameters = new Dictionary<string, object>()
-            };
-            reportDataList.AddData("Employee", list);
-
-            var t = new List<Task>();
-            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling1.pdf", reportData));
-            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling2.pdf", reportData));
-            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling3.pdf", reportData));
-            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling4.pdf", reportData));
-            t.Add(CreatePdfFromReportCompressedStreamPolling("the_dotnet_dataset_report.rpt", "the_dataset_report_polling5.pdf", reportData));
-            t.Add(CreatePdfFromReportCompressedStreamPollingAndRetry("the_dotnet_dataset_report.rpt", "the_dataset_report_polling6.pdf", reportData));
-            t.Add(CreatePdfFromReportRetry("the_dotnet_dataset_report.rpt", "the_dataset_report_polling7.pdf", reportData));
-
-            await Task.WhenAll(t.ToArray());
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling1.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling1.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling2.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling2.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling3.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling3.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling4.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling4.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling5.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling5.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling6.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling6.pdf").Length > 0);
-                Assert.That(System.IO.File.Exists("the_dataset_report_polling7.pdf"));
-                Assert.That(new FileInfo("the_dataset_report_polling7.pdf").Length > 0);
-            });
-        }
 
         [Test]
         public async Task Test_ReportAnalyzer()
         {
             DataTable dt = GetTable();
-            var reportData = new Client.Data()
+            var reportData = new Common.Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<Common.MoveObjects>(),
@@ -307,7 +231,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             reportData.AddData("EMPLOYEE", dt);
 
             var list = GetList();
-            var reportDataList = new Client.Data()
+            var reportDataList = new Common.Data()
             {
                 DataTables = new Dictionary<string, string>(),
                 MoveObjectPosition = new List<MoveObjects>(),
@@ -341,69 +265,6 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 var rpt = new Client.Report(this.exportUrl, username: this.username, password: this.password);
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
-                {
-                    await stream.CopyToAsync(fstreamOut);
-                }
-            }
-        }
-        private async Task CreatePdfFromReportCompressedStream(string reportPath, string pdfOutputPath, Data reportData)
-        {
-            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
-            using (var httpClient = new HttpClient())
-            using (var fstream = new FileStream(reportPath, FileMode.Open))
-            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
-            {
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                var rpt = new Client.Report(this.exportUrl, username: this.username, password: this.password);
-                using (var stream = await rpt.GenerateViaCompressedPostAsync(reportData, fstream, httpClient))
-                {
-                    await stream.CopyToAsync(fstreamOut);
-                }
-            }
-        }
-
-        private async Task CreatePdfFromReportCompressedStreamPolling(string reportPath, string pdfOutputPath, Data reportData)
-        {
-            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
-            using (var httpClient = new HttpClient())
-            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
-            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
-            {
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                var rpt = new Client.ReportWithPolling(this.exportUrl, username: this.username, password: this.password);
-                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
-                {
-                    await stream.CopyToAsync(fstreamOut);
-                }
-            }
-        }
-
-        private async Task CreatePdfFromReportCompressedStreamPollingAndRetry(string reportPath, string pdfOutputPath, Data reportData)
-        {
-            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
-            using (var httpClient = new HttpClient())
-            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
-            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
-            {
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                var rpt = new Client.ReportWithRetryPolling(this.exportUrl, username: this.username, password: this.password);
-                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
-                {
-                    await stream.CopyToAsync(fstreamOut);
-                }
-            }
-        }
-
-        private async Task CreatePdfFromReportRetry(string reportPath, string pdfOutputPath, Data reportData)
-        {
-            Console.WriteLine($"Creating pdf {pdfOutputPath} from report {reportPath} with a gzipped compressed stream");
-            using (var httpClient = new HttpClient())
-            using (var fstream = new FileStream(reportPath, FileMode.Open, FileAccess.Read))
-            using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
-            {
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                var rpt = new Client.ReportWithRetry(this.exportUrl, username: this.username, password: this.password);
-                using (var stream = await rpt.GenerateAsync(reportData, fstream, httpClient))
                 {
                     await stream.CopyToAsync(fstreamOut);
                 }
