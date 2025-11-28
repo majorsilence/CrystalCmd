@@ -133,14 +133,11 @@ namespace Majorsilence.CrystalCmd.Server
                 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
                 authBuilder = authBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
-                    options.RequireHttpsMetadata = false;
-                    options.SaveToken = true;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-                        ValidateIssuer = false,
-                        ValidateAudience = false
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidAudience = configuration["Jwt:Audience"]
                     };
                 });
             }
