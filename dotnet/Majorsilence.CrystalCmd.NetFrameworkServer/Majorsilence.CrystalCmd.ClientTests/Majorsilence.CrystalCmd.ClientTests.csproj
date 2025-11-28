@@ -38,6 +38,7 @@
 	  </PackageReference>
 	  <PackageReference Include="NUnit3TestAdapter" />
 	  <PackageReference Include="NunitXml.TestLogger" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
 	</ItemGroup>
 
 	<ItemGroup>
