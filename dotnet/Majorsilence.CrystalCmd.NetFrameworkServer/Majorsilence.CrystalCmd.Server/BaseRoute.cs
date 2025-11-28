@@ -19,38 +19,6 @@ namespace Majorsilence.CrystalCmd.Server
             _logger = logger;
         }
 
-        public (int StatusCode, string message) Authenticate(NameValueCollection headers)
-        {
-            var creds = CustomServerSecurity.GetUserNameAndPassword(headers);
-            var token = CustomServerSecurity.GetBearerToken(headers);
-            string user = Settings.GetSetting("Credentials:Username");
-            string password = Settings.GetSetting("Credentials:Password");
-            string jwtKey = Settings.GetSetting("Jwt:Key");
-            var expected_creds = (user, password);
-            return Authenticate_Internal(creds, expected_creds, jwtKey, token);
-        }
-
-        private static (int StatusCode, string message) Authenticate_Internal((string UserName, string Password)? credentials,
-         (string UserName, string Password) expected_credentials,
-         string jwtKey, string token)
-        {
-
-            if (!string.IsNullOrWhiteSpace(jwtKey))
-            {
-                if (!string.IsNullOrWhiteSpace(token) && TokenVerifier.VerifyToken(token, jwtKey))
-                {
-                    return (200, "");
-                }
-            }
-
-            if (!string.Equals(credentials?.UserName, expected_credentials.UserName, StringComparison.InvariantCultureIgnoreCase)
-                || !string.Equals(credentials?.Password, expected_credentials.Password, StringComparison.InvariantCulture))
-            {
-                return (401, "Unauthorized");
-            }
-            return (200, "");
-        }
-
         public static NameValueCollection HeadersFromAsp(Microsoft.AspNetCore.Http.IHeaderDictionary headers)
         {
             var nvc = new NameValueCollection();
