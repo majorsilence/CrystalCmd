@@ -1,4 +1,6 @@
 ﻿using Majorsilence.CrystalCmd.WorkQueues;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,16 +9,15 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.EventLog;
+using Microsoft.IdentityModel.Tokens;
 using NReco.Logging.File;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Server
 {
@@ -133,11 +134,18 @@ namespace Majorsilence.CrystalCmd.Server
                 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
                 authBuilder = authBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
+                    // inside the AddJwtBearer options
+                    var audienceConfig = configuration["Jwt:Audience"] ?? "";
+                    var audiences = audienceConfig
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(a => a.Trim())
+                        .Where(a => !string.IsNullOrEmpty(a))
+                        .ToArray();
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                         ValidIssuer = configuration["Jwt:Issuer"],
-                        ValidAudience = configuration["Jwt:Audience"]
+                        ValidAudiences = audiences.Length > 0 ? audiences : null
                     };
                 });
             }
