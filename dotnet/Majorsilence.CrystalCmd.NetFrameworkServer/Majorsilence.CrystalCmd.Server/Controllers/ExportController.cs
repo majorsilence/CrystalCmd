@@ -124,7 +124,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             }
             else if (result.Status == WorkItemStatus.Failed)
                 return StatusCode(500);
-            else if (result.Status == WorkItemStatus.Processing)
+            else if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
                 return Accepted("Processing report");
             else
                 return StatusCode(452, "Unknown");

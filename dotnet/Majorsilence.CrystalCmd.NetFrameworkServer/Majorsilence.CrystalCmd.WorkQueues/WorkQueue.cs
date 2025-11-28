@@ -303,8 +303,6 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 else if (workQueuePoco != null)
                 {
                     return (null, workQueuePoco.Status);
-
-
                 }
 
                 return (null, WorkItemStatus.Unknown);

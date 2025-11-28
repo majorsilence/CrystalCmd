@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.ClientTests
 {
-    [TestFixture]
+    [SetUpFixture]
     internal class UnitTestSetup
     {
+#pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
         private System.Diagnostics.Process _workerProcess;
         private System.Diagnostics.Process _serverProcess;
+#pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
+
         [OneTimeSetUp]
         public async Task Init()
         {
@@ -46,6 +49,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess = new System.Diagnostics.Process();
             _serverProcess.StartInfo.FileName = "dotnet";
             _serverProcess.StartInfo.Arguments = "Majorsilence.CrystalCmd.Server.dll";
+            _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = "http://*:44355;https://*:44356";
             _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir, 
                 "Majorsilence.CrystalCmd.Server",
                 "bin",
@@ -56,29 +60,126 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess.Start();
 
             await Task.Delay(5000); // Wait for server to start
-        }
 
-        [Test]
-        public async Task IsOnlineTest()
-        {
             // ping the server to see if it's online
             using (var client = new System.Net.Http.HttpClient())
             {
                 var response = await client.GetAsync("http://localhost:44355/healthz/ready");
                 Assert.That(response.IsSuccessStatusCode, "Server is not online.");
             }
-
         }
 
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            _workerProcess.Close();
-            _workerProcess?.Dispose();
-            _serverProcess.Close();
-            _serverProcess?.Dispose();
+            await TerminateProcessAsync(_workerProcess, 5000).ConfigureAwait(false);
+            await TerminateProcessAsync(_serverProcess, 5000).ConfigureAwait(false);
+        }
 
-            await Task.Delay(2000); // Wait for processes to exit
+        private static async Task TerminateProcessAsync(System.Diagnostics.Process process, int gracefulTimeoutMs)
+        {
+            if (process == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (process.HasExited)
+                {
+                    process.Dispose();
+                    return;
+                }
+
+                try
+                {
+                    // Try graceful close (works for GUI apps)
+                    bool sent = process.CloseMainWindow();
+                    if (sent)
+                    {
+                        if (process.WaitForExit(gracefulTimeoutMs))
+                        {
+                            process.Dispose();
+                            return;
+                        }
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // process exited between checks, ignore
+                }
+
+                // If still running, try Kill()
+                try
+                {
+                    process.Kill();
+                    if (process.WaitForExit(gracefulTimeoutMs))
+                    {
+                        process.Dispose();
+                        return;
+                    }
+                }
+                catch (System.PlatformNotSupportedException)
+                {
+                    // Kill overloads might not be supported on all targets; fall back to taskkill
+                }
+                catch (InvalidOperationException)
+                {
+                    // process already exited
+                    process.Dispose();
+                    return;
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    // insufficient permissions or already exiting; fallback below
+                }
+
+                // Final fallback: use taskkill to kill the process tree on Windows
+                try
+                {
+                    int pid = process.Id;
+                    using (var killer = new System.Diagnostics.Process())
+                    {
+                        killer.StartInfo.FileName = "taskkill";
+                        killer.StartInfo.Arguments = "/PID " + pid + " /T /F";
+                        killer.StartInfo.CreateNoWindow = true;
+                        killer.StartInfo.UseShellExecute = false;
+                        killer.Start();
+                        // do not block indefinitely
+                        killer.WaitForExit(2000);
+                    }
+                }
+                catch
+                {
+                    // best-effort only
+                }
+            }
+            finally
+            {
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        // last attempt
+                        process.Kill();
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
+
+                try
+                {
+                    process.Dispose();
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+
+            await Task.Delay(200).ConfigureAwait(false);
         }
     }
 }
