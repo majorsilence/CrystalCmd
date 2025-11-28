@@ -9,30 +9,36 @@ namespace Majorsilence.CrystalCmd.Client
 {
     public class Report : IReport
     {
-        readonly string serverUrl;
+        readonly string baseUrl;
         readonly string userAgent;
         readonly string username;
         readonly string password;
         readonly string bearerToken;
 
         [Obsolete("Use the constructor that takes a bearer token.")]
-        public Report(string serverUrl = "https://c.majorsilence.com/export",
+        public Report(string serverUrl = "https://c.majorsilence.com",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
             string username = "", string password = "")
         {
-            this.serverUrl = serverUrl;
+            this.baseUrl = GetBaseUrl(serverUrl);
             this.userAgent = userAgent;
             this.username = username;
             this.password = password;
         }
 
-        public Report(string serverUrl = "https://c.majorsilence.com/export",
+        public Report(string serverUrl = "https://c.majorsilence.com",
            string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0",
            string bearerToken = "")
         {
-            this.serverUrl = serverUrl;
+            this.baseUrl = GetBaseUrl(serverUrl);
             this.userAgent = userAgent;
             this.bearerToken = bearerToken;
+        }
+
+        private string GetBaseUrl(string serverUrl)
+        {
+            var uri = new Uri(serverUrl);
+            return $"{uri.Scheme}://{uri.Host}:{uri.Port}";
         }
 
 
@@ -149,7 +155,7 @@ namespace Majorsilence.CrystalCmd.Client
 #endif
                     request.Method = new System.Net.Http.HttpMethod("POST");
                     request.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain; charset=utf-8"));
-                    request.RequestUri = new Uri($"{serverUrl.TrimEnd('/')}/poll");
+                    request.RequestUri = new Uri($"{baseUrl}/export/poll");
 
                     if (!string.IsNullOrWhiteSpace(bearerToken))
                     {
@@ -201,7 +207,7 @@ namespace Majorsilence.CrystalCmd.Client
                 {
                     request.Method = new System.Net.Http.HttpMethod("GET");
                     request.Headers.Add("id", id);
-                    request.RequestUri = new Uri($"{serverUrl.TrimEnd('/')}/poll");
+                    request.RequestUri = new Uri($"{baseUrl}/export/poll");
 
                     if (!string.IsNullOrWhiteSpace(bearerToken))
                     {

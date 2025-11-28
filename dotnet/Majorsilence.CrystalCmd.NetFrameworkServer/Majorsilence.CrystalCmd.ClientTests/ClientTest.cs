@@ -18,7 +18,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
     {
 
         private readonly string exportUrl = "http://localhost:44355/export";
-        private readonly string analyzerUrl = "http://localhost:44355/analyzer";
+        private readonly string analyzerUrl = "http://localhost:44355/";
         private readonly string username = "user";
         private readonly string password = "password";
 
