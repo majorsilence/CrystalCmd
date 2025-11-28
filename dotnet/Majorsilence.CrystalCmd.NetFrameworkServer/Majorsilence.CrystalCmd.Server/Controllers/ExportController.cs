@@ -1,15 +1,16 @@
 using Majorsilence.CrystalCmd.WorkQueues;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Majorsilence.CrystalCmd.Server.Controllers
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",Basic")]
     public class ExportController : ControllerBase
     {
         private readonly ILogger<ExportController> _logger;
