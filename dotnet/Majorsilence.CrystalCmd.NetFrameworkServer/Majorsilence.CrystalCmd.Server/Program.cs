@@ -13,6 +13,10 @@ using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Majorsilence.CrystalCmd.Server
 {
@@ -37,7 +41,7 @@ namespace Majorsilence.CrystalCmd.Server
 #endif
 
             // Configuration and logging
-            ConfigureServices(builder.Services);
+            ConfigureServices(builder.Services, builder.Configuration);
 
 #if NET8_0_OR_GREATOR_WINDOWS
             LoggerProviderOptions.RegisterProviderOptions<
@@ -51,6 +55,10 @@ namespace Majorsilence.CrystalCmd.Server
 
             var app = builder.Build();
 
+            // Enable authentication/authorization
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             // Map controllers
             app.MapControllers();
 
@@ -58,7 +66,7 @@ namespace Majorsilence.CrystalCmd.Server
             await app.RunAsync();
         }
 
-        static void ConfigureServices(IServiceCollection services)
+        static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             string externalLogAssemblyPath = Settings.GetSetting("ExternalLogs:AssemblyFilePath");
             string logFile = Settings.GetSetting("ExternalLogs:LogFile");
@@ -116,6 +124,30 @@ namespace Majorsilence.CrystalCmd.Server
             {
                 return s.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("CrystalCmd");
             });
+
+            // Authentication: conditionally add JWT (if configured) and always add Basic (in-repo handler)
+            var jwtKey = configuration["Jwt:Key"];
+            var authBuilder = services.AddAuthentication();
+            if (!string.IsNullOrWhiteSpace(jwtKey))
+            {
+                var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+                authBuilder = authBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.SaveToken = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+            }
+
+            authBuilder.AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", options => { });
+
+            services.AddAuthorization();
         }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)

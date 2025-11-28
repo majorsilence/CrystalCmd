@@ -4,10 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Majorsilence.CrystalCmd.Server.Controllers
 {
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Basic")]
     public class ExportController : ControllerBase
     {
         private readonly ILogger<ExportController> _logger;
@@ -23,13 +25,9 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         public async Task<IActionResult> Export()
         {
             var headers = Request.Headers;
-            // Authenticate
-            var callResult = new BaseRoute(_logger).Authenticate(CustomServerSecurity.GetNameValueCollection(headers));
-            if (callResult.StatusCode != 200)
-                return StatusCode(callResult.StatusCode);
 
             var baseRoute = new BaseRoute(_logger);
-            var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
+            var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers));
             var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
             await queue.Enqueue(new QueueItem()
             {
@@ -81,13 +79,9 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         public async Task<IActionResult> ExportPollPost()
         {
             var headers = Request.Headers;
-            // Authenticate
-            var callResult = new BaseRoute(_logger).Authenticate(CustomServerSecurity.GetNameValueCollection(headers));
-            if (callResult.StatusCode != 200)
-                return StatusCode(callResult.StatusCode);
 
             var baseRoute = new BaseRoute(_logger);
-            var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, CustomServerSecurity.GetNameValueCollection(headers));
+            var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers));
             var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
             await queue.Enqueue(new QueueItem()
             {
@@ -102,10 +96,6 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
         public async Task<IActionResult> ExportPollGet([FromHeader(Name = "id")] string id)
         {
             var headers = Request.Headers;
-            // Authenticate
-            var callResult = new BaseRoute(_logger).Authenticate(CustomServerSecurity.GetNameValueCollection(headers));
-            if (callResult.StatusCode != 200)
-                return StatusCode(callResult.StatusCode);
 
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest();
