@@ -1,14 +1,18 @@
-﻿using NUnit.Framework;
+﻿using Majorsilence.CrystalCmd.Common;
+using Microsoft.IdentityModel.Tokens;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
-using System.Threading.Tasks;
-using Majorsilence.CrystalCmd.Common;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
-using System.Net.Http;
-using System.Threading;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Claims;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.ClientTests
 {
@@ -237,7 +241,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         [Test]
         public async Task Test_GeneratePdf_WithJwt()
         {
-            var token = CreateJwt();
+            var token = CreateBearerToken();
 
             await CreatePdfFromReport("thereport.rpt", "thereport_jwt.pdf", new Data());
             Assert.That(File.Exists("thereport_jwt.pdf"));
@@ -247,7 +251,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         [Test]
         public async Task Test_Analyzer_WithJwt()
         {
-            var token = CreateJwt();
+            var token = CreateBearerToken();
 
             using (var httpClient = new HttpClient())
             using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
@@ -262,35 +266,18 @@ namespace Majorsilence.CrystalCmd.ClientTests
             }
         }
 
-        private string CreateJwt()
+        private string CreateBearerToken()
         {
-            // Manual HS256 JWT generator to avoid external package dependencies.
-            var header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-            var payloadObj = new Dictionary<string, object>
-            {
-                ["name"] = "user",
-                ["iss"] = "https://localhost/",
-                ["exp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 1800
-            };
-            var payload = System.Text.Json.JsonSerializer.Serialize(payloadObj);
+            var token = new JwtSecurityToken(
+             issuer: "https://localhost/",
+             audience: "https://localhost/",
+             expires: DateTime.UtcNow.AddHours(1),
+             notBefore: DateTime.UtcNow.AddHours(-1),
+             claims: null,
+             signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(bearerTokenKey)), SecurityAlgorithms.HmacSha256)
+         );
 
-            static string Base64UrlEncode(byte[] input)
-            {
-                return Convert.ToBase64String(input).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-            }
-
-            var headerBytes = Encoding.UTF8.GetBytes(header);
-            var payloadBytes = Encoding.UTF8.GetBytes(payload);
-            var headerEncoded = Base64UrlEncode(headerBytes);
-            var payloadEncoded = Base64UrlEncode(payloadBytes);
-            var unsignedToken = headerEncoded + "." + payloadEncoded;
-
-            using (var sha = new System.Security.Cryptography.HMACSHA256(Encoding.UTF8.GetBytes(bearerTokenKey)))
-            {
-                var sig = sha.ComputeHash(Encoding.UTF8.GetBytes(unsignedToken));
-                var sigEncoded = Base64UrlEncode(sig);
-                return unsignedToken + "." + sigEncoded;
-            }
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
