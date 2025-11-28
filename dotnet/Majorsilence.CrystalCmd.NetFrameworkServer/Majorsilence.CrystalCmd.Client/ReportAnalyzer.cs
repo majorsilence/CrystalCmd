@@ -13,32 +13,38 @@ namespace Majorsilence.CrystalCmd.Client
     {
         readonly HttpClient _client;
         Stream _report;
-        readonly string _serverUrl;
+        readonly string _baseUrl;
         readonly string _username;
         readonly string _password;
         readonly string _userAgent;
         readonly string _bearerToken;
         public ReportAnalyzer(Stream report, HttpClient client,
-            string username, string password, string serverUrl = "https://c.majorsilence.com/analyzer",
+            string username, string password, string serverUrl = "https://c.majorsilence.com",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0")
         {
             _report = report;
             _client = client;
-            _serverUrl = serverUrl;
+            _baseUrl = GetBaseUrl(serverUrl);
             _username = username;
             _password = password;
             _userAgent = userAgent;
         }
 
         public ReportAnalyzer(Stream report, HttpClient client,
-            string bearerToken, string serverUrl = "https://c.majorsilence.com/analyzer",
+            string bearerToken, string serverUrl = "https://c.majorsilence.com",
             string userAgent = "Majorsilence.CrystalCmd.Client/1.0.0 Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0")
         {
             _report = report;
             _client = client;
-            _serverUrl = serverUrl;
+            _baseUrl = GetBaseUrl(serverUrl);
             _bearerToken = bearerToken;
             _userAgent = userAgent;
+        }
+
+        private string GetBaseUrl(string serverUrl)
+        {
+            var uri = new Uri(serverUrl);
+            return $"{uri.Scheme}://{uri.Host}:{uri.Port}";
         }
 
         public async Task<FullReportAnalysis> FullAnalysis(CancellationToken cancellationToken = default)
@@ -60,7 +66,7 @@ namespace Majorsilence.CrystalCmd.Client
 
         private async Task<U> ServerRequest<T, U>(T reportRequest, string analyzerEndPoint, Stream report, CancellationToken cancellationToken)
         {
-            var serverCaller = new ServerCaller(_client, _serverUrl);
+            var serverCaller = new ServerCaller(_client, _baseUrl);
             using (var response = await serverCaller.GenerateAsync(reportRequest, report, analyzerEndPoint,
                 _username, _password, _userAgent, _bearerToken, cancellationToken))
             {
