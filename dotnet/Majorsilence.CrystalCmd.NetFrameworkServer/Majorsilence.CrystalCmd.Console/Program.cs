@@ -12,7 +12,6 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
     internal class Program
     {
         private static ServiceProvider _serviceProvider;
-        private static string WorkingFolder;
         private static HealthCheckTask _backgroundHealthTask;
 
         public static async Task Main(string[] args)
@@ -24,6 +23,12 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                     PrintHelp();
                     Environment.Exit(0);
                 }
+            }
+
+            var workingDir = WorkingFolder.GetMajorsilenceTempFolder();
+            if (!System.IO.Directory.Exists(workingDir))
+            {
+                System.IO.Directory.CreateDirectory(workingDir);
             }
 
             var serviceCollection = new ServiceCollection();
