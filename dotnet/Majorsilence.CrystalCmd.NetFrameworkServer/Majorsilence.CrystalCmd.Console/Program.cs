@@ -81,16 +81,9 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         static void PrintHelp()
         {
             Console.WriteLine("Required options");
-            Console.WriteLine("Set the appsettings_CrystalCmdWorkingFolder environment variable");
-            Console.WriteLine("Each report that is generated will have its own subfolder inside the base working folder.");
-            Console.WriteLine("Input files");
-            Console.WriteLine("  BaseFolder/reporta/report.rpt");
-            Console.WriteLine("  BaseFolder/reporta/report.json");
-            Console.WriteLine("Output files");
-            Console.WriteLine("  BaseFolder/reporta/report.pdf");
-            Console.WriteLine("");
+            Console.WriteLine("Set the appsettings_WorkQueueSqlType and the appsettings_WorkQueueSqlConnection environment variable");
             Console.WriteLine(
-                ".\\Majorsilence.CrystalCmd.Console.exe");
+                ".\\Majorsilence.CrystalCmd.NetframeworkConsole.exe");
         }
 
         static void ConfigureServices(IServiceCollection services)
