@@ -22,9 +22,11 @@ namespace Majorsilence.CrystalCmd.Server
         public static NameValueCollection HeadersFromAsp(Microsoft.AspNetCore.Http.IHeaderDictionary headers)
         {
             var nvc = new NameValueCollection();
+            if (headers == null) return nvc;
             foreach (var kv in headers)
             {
-                nvc.Add(kv.Key, string.Join(",", kv.Value.ToArray()));
+                // StringValues.ToString() returns a comma-separated string without allocating an array
+                nvc.Add(kv.Key, kv.Value.ToString());
             }
             return nvc;
         }
@@ -33,7 +35,8 @@ namespace Majorsilence.CrystalCmd.Server
           NameValueCollection headers,
           bool templateOnly = false)
         {
-            var streamContent = new StreamContent(inputStream);
+            if (inputStream == null) throw new CrystalCmdException("input stream is null");
+
             Data reportData = null;
             byte[] reportTemplate = null;
 
@@ -42,31 +45,38 @@ namespace Majorsilence.CrystalCmd.Server
                 throw new CrystalCmdException("content type is null");
             }
 
-            if (contentType.ToLower().Contains("gzip") || string.Equals(headers["Content-Encoding"] ?? "", "gzip", StringComparison.OrdinalIgnoreCase))
+            // avoid allocation from ToLower()
+            bool contentIndicatesGzip = contentType.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0
+                                        || string.Equals(headers?["Content-Encoding"] ?? "", "gzip", StringComparison.OrdinalIgnoreCase);
+
+            if (contentIndicatesGzip)
             {
-                var result = await CompressedStreamInput(streamContent);
+                var result = await CompressedStreamInput(inputStream).ConfigureAwait(false);
                 reportData = result.ReportData;
                 reportTemplate = result.Template;
             }
             else
             {
-                streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
-
-                if (!streamContent.IsMimeMultipartContent())
-                    throw new InvalidOperationException("Unsupported media type");
-
-                var provider = await streamContent.ReadAsMultipartAsync();
-                foreach (var file in provider.Contents)
+                using (var streamContent = new StreamContent(inputStream))
                 {
-                    // https://stackoverflow.com/questions/7460088/reading-file-input-from-a-multipart-form-data-post
-                    string name = file.Headers.ContentDisposition.Name.Replace("\"", "");
-                    if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
+                    streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+
+                    if (!streamContent.IsMimeMultipartContent())
+                        throw new InvalidOperationException("Unsupported media type");
+
+                    var provider = await streamContent.ReadAsMultipartAsync().ConfigureAwait(false);
+                    foreach (var file in provider.Contents)
                     {
-                        reportData = Newtonsoft.Json.JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(await file.ReadAsStringAsync());
-                    }
-                    else
-                    {
-                        reportTemplate = await file.ReadAsByteArrayAsync();
+                        string name = file.Headers.ContentDisposition?.Name?.Replace("\"", "") ?? "";
+                        if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            var json = await file.ReadAsStringAsync().ConfigureAwait(false);
+                            reportData = JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(json);
+                        }
+                        else
+                        {
+                            reportTemplate = await file.ReadAsByteArrayAsync().ConfigureAwait(false);
+                        }
                     }
                 }
             }
@@ -85,28 +95,20 @@ namespace Majorsilence.CrystalCmd.Server
             return (reportData, reportTemplate, id);
         }
 
-        private static async Task<(Data ReportData, byte[] Template)> CompressedStreamInput(StreamContent content)
+        private static async Task<(Data ReportData, byte[] Template)> CompressedStreamInput(Stream inputStream)
         {
-            if (content == null)
+            if (inputStream == null)
             {
-                throw new CrystalCmdException("CompressedStreamInput content is null");
+                throw new CrystalCmdException("CompressedStreamInput inputStream is null");
             }
 
-            using (var originalStream = await content.ReadAsStreamAsync())
-            using (var decompressedStream = new GZipStream(originalStream, CompressionMode.Decompress))
-            using (var memoryStream = new MemoryStream())
+            // Decompress and deserialize directly from stream to avoid intermediate MemoryStream and extra allocations.
+            using (var decompressed = new GZipStream(inputStream, CompressionMode.Decompress))
+            using (var sr = new StreamReader(decompressed))
+            using (var jsonReader = new JsonTextReader(sr))
             {
-                await decompressedStream.CopyToAsync(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                content = new StreamContent(memoryStream);
-
-                var input = await content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    throw new CrystalCmdException("CompressedStreamInput input is null");
-                }
-
-                var dto = JsonConvert.DeserializeObject<StreamedRequest>(input);
+                var serializer = new JsonSerializer();
+                var dto = serializer.Deserialize<StreamedRequest>(jsonReader);
                 if (dto == null)
                 {
                     throw new CrystalCmdException("CompressedStreamInput dto is null");
