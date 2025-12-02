@@ -57,26 +57,24 @@ namespace Majorsilence.CrystalCmd.Server
             }
             else
             {
-                using (var streamContent = new StreamContent(inputStream))
+                using var streamContent = new StreamContent(inputStream);
+                streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+
+                if (!streamContent.IsMimeMultipartContent())
+                    throw new InvalidOperationException("Unsupported media type");
+
+                var provider = await streamContent.ReadAsMultipartAsync().ConfigureAwait(false);
+                foreach (var file in provider.Contents)
                 {
-                    streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
-
-                    if (!streamContent.IsMimeMultipartContent())
-                        throw new InvalidOperationException("Unsupported media type");
-
-                    var provider = await streamContent.ReadAsMultipartAsync().ConfigureAwait(false);
-                    foreach (var file in provider.Contents)
+                    string name = file.Headers.ContentDisposition?.Name?.Replace("\"", "") ?? "";
+                    if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        string name = file.Headers.ContentDisposition?.Name?.Replace("\"", "") ?? "";
-                        if (string.Equals(name, "reportdata", StringComparison.CurrentCultureIgnoreCase))
-                        {
-                            var json = await file.ReadAsStringAsync().ConfigureAwait(false);
-                            reportData = JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(json);
-                        }
-                        else
-                        {
-                            reportTemplate = await file.ReadAsByteArrayAsync().ConfigureAwait(false);
-                        }
+                        var json = await file.ReadAsStringAsync().ConfigureAwait(false);
+                        reportData = JsonConvert.DeserializeObject<CrystalCmd.Common.Data>(json);
+                    }
+                    else
+                    {
+                        reportTemplate = await file.ReadAsByteArrayAsync().ConfigureAwait(false);
                     }
                 }
             }
@@ -103,18 +101,16 @@ namespace Majorsilence.CrystalCmd.Server
             }
 
             // Decompress and deserialize directly from stream to avoid intermediate MemoryStream and extra allocations.
-            using (var decompressed = new GZipStream(inputStream, CompressionMode.Decompress))
-            using (var sr = new StreamReader(decompressed))
-            using (var jsonReader = new JsonTextReader(sr))
+            await using var decompressed = new GZipStream(inputStream, CompressionMode.Decompress);
+            using var sr = new StreamReader(decompressed);
+            await using var jsonReader = new JsonTextReader(sr);
+            var serializer = new JsonSerializer();
+            var dto = serializer.Deserialize<StreamedRequest>(jsonReader);
+            if (dto == null)
             {
-                var serializer = new JsonSerializer();
-                var dto = serializer.Deserialize<StreamedRequest>(jsonReader);
-                if (dto == null)
-                {
-                    throw new CrystalCmdException("CompressedStreamInput dto is null");
-                }
-                return (dto.ReportData, dto.Template);
+                throw new CrystalCmdException("CompressedStreamInput dto is null");
             }
+            return (dto.ReportData, dto.Template);
         }
     }
 }
