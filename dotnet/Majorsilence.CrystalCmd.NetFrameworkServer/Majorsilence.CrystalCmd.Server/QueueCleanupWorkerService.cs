@@ -21,7 +21,7 @@ namespace Majorsilence.CrystalCmd.Server
             while (!stoppingToken.IsCancellationRequested)
             {
                 await queue.GarbageCollection();
-                await Task.Delay(TimeSpan.FromMinutes(30));
+                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
             }
         }
     }

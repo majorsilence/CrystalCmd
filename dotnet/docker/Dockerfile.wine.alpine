@@ -21,15 +21,14 @@ RUN apk update \
 
 # TODO: download from the crystal reports site. 
 # These files must be manually downloaded before running docker build
-COPY CR13SP35MSI64_0-80007712.MSI /root/CR13SP35MSI64_0-80007712.MSI
-
+COPY CR13SP38MSI64_0-80007712.msi /root/CR13SP38.msi
 # Setup a Wine prefix
 ENV WINEPREFIX=/majorsilence-wine
 ENV WINEARCH=win64
 RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
     && winetricks -q corefonts gdiplus winhttp dotnet48 \
-    && wine64 msiexec /i /root/CR13SP35MSI64_0-80007712.MSI /qn \
+    && wine64 msiexec /i /root/CR13SP38.msi /qn \
     && wineserver -k
 
 # Crystal reports
