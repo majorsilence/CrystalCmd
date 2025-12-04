@@ -57,7 +57,11 @@ namespace Majorsilence.CrystalCmd.Server
 #endif
 
             // Add controllers
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+             {
+                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+             });
 
             builder.Services.AddHostedService<QueueCleanupWorkerService>();
 
