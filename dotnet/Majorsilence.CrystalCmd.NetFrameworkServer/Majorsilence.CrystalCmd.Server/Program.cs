@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +28,12 @@ namespace Majorsilence.CrystalCmd.Server
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddSingleton<StartupArgs>(new StartupArgs(args));
+            builder.Services.Configure<KestrelServerOptions>(options =>
+            {
+                // Enable synchronous IO for Kestrel until the compressed stream code,
+                // BaseRoute.CompressedStreamInput, supports async
+                options.AllowSynchronousIO = true;
+            });
 
             builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
