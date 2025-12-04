@@ -163,7 +163,8 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         }
                         catch (Exception ex)
                         {
-                            Console.Error.WriteLine(ex);
+                            _logger.LogError(ex, "Error while setting sub report parameter {parameter.key} {TraceId}",
+                                parameter.Key, _traceId);
                         }
                     }
                 }
