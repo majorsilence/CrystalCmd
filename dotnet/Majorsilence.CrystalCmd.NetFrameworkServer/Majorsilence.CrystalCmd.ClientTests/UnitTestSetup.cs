@@ -43,7 +43,28 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 "net48");
             _workerProcess.StartInfo.UseShellExecute = false;
             _workerProcess.StartInfo.CreateNoWindow = true;
+            // read output for debugging
+            _workerProcess.StartInfo.RedirectStandardOutput = true;
+            _workerProcess.StartInfo.RedirectStandardError = true;
+            _workerProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            _workerProcess.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+            _workerProcess.OutputDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    TestContext.Progress.WriteLine("[Worker STDOUT] " + args.Data);
+                }
+            };
+            _workerProcess.ErrorDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    TestContext.Progress.WriteLine("[Worker STDERR] " + args.Data);
+                }
+            };      
             _workerProcess.Start();
+            _workerProcess.BeginErrorReadLine();
+            _workerProcess.BeginOutputReadLine();
 
             // start the net10.0 web server process
             _serverProcess = new System.Diagnostics.Process();
@@ -57,7 +78,29 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 "net10.0");
             _serverProcess.StartInfo.UseShellExecute = false;
             _serverProcess.StartInfo.CreateNoWindow = true;
+            // read output for debugging
+            _serverProcess.StartInfo.RedirectStandardOutput = true;
+            _serverProcess.StartInfo.RedirectStandardError = true;
+            _serverProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            _serverProcess.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+            
+            _serverProcess.OutputDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    TestContext.Progress.WriteLine("[Server STDOUT] " + args.Data);
+                }
+            };
+            _serverProcess.ErrorDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    TestContext.Progress.WriteLine("[Server STDERR] " + args.Data);
+                }
+            };
             _serverProcess.Start();
+            _serverProcess.BeginErrorReadLine();
+            _serverProcess.BeginOutputReadLine();
 
             await Task.Delay(5000); // Wait for server to start
 
