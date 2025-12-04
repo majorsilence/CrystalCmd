@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.Cli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Majorsilence.CrystalCmd.WorkQueues", "Majorsilence.CrystalCmd.WorkQueues\Majorsilence.CrystalCmd.WorkQueues.csproj", "{6CD83D99-860F-4596-9D8C-33A817BDB705}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{2067102F-6E31-471B-A49D-2A114B441BEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EA149A4B-DF7B-4A6D-B3DC-BC4D9BDB3403} = {2067102F-6E31-471B-A49D-2A114B441BEB}
+		{50EB28C2-5FA4-44DC-9962-44FE7395396E} = {2067102F-6E31-471B-A49D-2A114B441BEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0CB9731F-713F-4FE2-82D1-99FA6F43C28D}
