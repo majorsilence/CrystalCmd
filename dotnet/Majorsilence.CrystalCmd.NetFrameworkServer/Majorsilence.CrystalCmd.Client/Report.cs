@@ -250,7 +250,7 @@ namespace Majorsilence.CrystalCmd.Client
                         throw new HttpRequestException(errorMessage, hrex);
                     }
                 }
-                await Task.Delay(1000);
+                await Task.Delay(1000, cancellationToken);
             }
 
             throw new CrystalCmdException("Polling timed out");
