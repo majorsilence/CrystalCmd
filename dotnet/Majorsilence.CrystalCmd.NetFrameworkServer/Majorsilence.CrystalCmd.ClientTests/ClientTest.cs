@@ -266,6 +266,24 @@ namespace Majorsilence.CrystalCmd.ClientTests
             }
         }
 
+        [Test]
+        public async Task Test_Analyzer_Polling()
+        {
+            var token = CreateBearerToken();
+
+            using (var httpClient = new HttpClient())
+            using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
+            {
+                var rpt = new Majorsilence.CrystalCmd.Client.ReportAnalyzer(instream,
+                    httpClient, bearerToken: token, serverUrl: ClientTest.baseUrl);
+
+                var response = await rpt.Analyze(CancellationToken.None, enablePolling: true);
+                Assert.That(response != null);
+                Assert.That(response.DataTables.Any(p => string.Equals(p.DataTableName, "employee",
+                    StringComparison.OrdinalIgnoreCase)));
+            }
+        }
+
         private string CreateBearerToken()
         {
             var token = new JwtSecurityToken(
