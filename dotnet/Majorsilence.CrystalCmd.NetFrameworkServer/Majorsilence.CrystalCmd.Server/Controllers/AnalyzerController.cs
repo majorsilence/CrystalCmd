@@ -36,7 +36,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             byte[] jsonBytes;
             try
             {
-                jsonBytes = await AnalyzerResultsBytes(inputResults.ReportTemplate);
+                jsonBytes = await AnalyzerResultsBytes(inputResults.ReportTemplate, inputResults.Id);
             }
             catch
             {
@@ -46,9 +46,49 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             return File(jsonBytes, "application/json");
         }
 
-        private async Task<byte[]> AnalyzerResultsBytes(byte[] report)
+        [HttpPost("/analyzer/poll")]
+        public async Task<IActionResult> AnalyzePollPost()
         {
-            string id = Guid.NewGuid().ToString();
+            var headers = Request.Headers;
+
+            var baseRoute = new BaseRoute(_logger);
+            var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers), templateOnly: true);
+
+            var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
+            await queue.Enqueue(new QueueItem()
+            {
+                Data = null,
+                ReportTemplate = inputResults.ReportTemplate,
+                Id = inputResults.Id
+            });
+
+            return Ok(inputResults.Id);
+        }
+
+        [HttpGet("/analyzer/poll")]
+        public async Task<IActionResult> AnalyzePollGet([FromHeader(Name = "id")] string id)
+        {
+            var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
+            var result = await queue.Get(id);
+
+            if (result.Status == WorkItemStatus.Unknown)
+                return NotFound();
+            if (result.Status == WorkItemStatus.Completed)
+            {
+                var response = JsonConvert.DeserializeObject<FullReportAnalysisResponse>(Encoding.UTF8.GetString(result.Report.FileContent));
+                var jsonResponse = JsonConvert.SerializeObject(response);
+                return File(Encoding.UTF8.GetBytes(jsonResponse), "application/json");
+            }
+            else if (result.Status == WorkItemStatus.Failed)
+                return StatusCode(500);
+            else if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
+                return Accepted("Processing report");
+            else
+                return StatusCode(452, "Unknown");
+        }
+
+        private async Task<byte[]> AnalyzerResultsBytes(byte[] report, string id)
+        {
             var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
             await queue.Enqueue(new QueueItem()
             {
