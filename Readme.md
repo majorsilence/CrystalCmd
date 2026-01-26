@@ -82,33 +82,39 @@ See the [dotnet/Readme.md](https://github.com/majorsilence/CrystalCmd/tree/main/
 flowchart TD
     subgraph "Client Applications"
         A[".NET Application"] --> C["Majorsilence.CrystalCMD.Client"]
-        B["Mac/Linux Application"] --> C
+        B["Mac/Linux/Windows/iOS/Android Applications"] --> C
     end
 
-    subgraph "Server Options"
-        D["Windows Service Majorsilence.CrystalCmd.NetframeworkConsoleServer"]
-        E["Linux Docker Container with Wine + .NET 4.8 + Crystal Reports 13.0.35"]
+    subgraph "Server"
+        D["ASP.NET Core 10 Web Services Majorsilence.CrystalCmd.Server"]
     end
 
-    C --"1 - Send Crystal Report Template, 2. Send Data 3. Request PDF"--> F{CrystalCmd Service}
-    F --> D
-    F --> E
-    
+    subgraph "Worker"
+        E[".NET 4.8 Worker Process Majorsilence.CrystalCmd.Console"]
+    end
+
+    J["WorkQueue Database"]
+
+    C --> D
+    D -- "Save report / enqueue job" --> J
+    E -- "Poll / read job" --> J
+    J -- "Job data" --> E
+
     subgraph "Processing"
-        D --> G["Crystal Reports Engine"]
-        E --> G
+        E --> G["Crystal Reports Engine"]
         G --> H["Generate PDF"]
+        H -- "Save PDF to workqueue" --> J
     end
-    
-    H --"Return PDF"--> C
+
+    D -- "Make PDF available to client" --> C
     C --> I["Client receives PDF"]
-    
+
     classDef client fill:#d1f0ff,stroke:#333,stroke-width:1px
     classDef server fill:#ffe6cc,stroke:#333,stroke-width:1px
     classDef process fill:#e6ffcc,stroke:#333,stroke-width:1px
-    
+
     class A,B,C client
-    class D,E,F server
+    class D,E,J server
     class G,H,I process
 ```
 
@@ -269,3 +275,4 @@ dnf install fontconfig dejavu-sans-fonts dejavu-serif-fonts
 - [CrystalReportsRunner](https://github.com/gerardo-lijs/CrystalReportsRunner)
 - [SAP Crystal Server](https://www.sap.com/canada/products/technology-platform/crystal-server.html)
 - [RptToXml](https://github.com/ajryan/RptToXml)
+
