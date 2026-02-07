@@ -8,7 +8,7 @@
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Product>Majorsilence CrystalCMD</Product>
-    <Copyright>Copyright © Majorsilence 2025</Copyright>
+    <Copyright>Copyright © Majorsilence 2026</Copyright>
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeSymbols>true</IncludeSymbols>
