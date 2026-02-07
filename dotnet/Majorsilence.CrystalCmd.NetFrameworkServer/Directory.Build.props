@@ -11,6 +11,8 @@
     <Copyright>Copyright © Majorsilence 2025</Copyright>
     <RepositoryUrl>https://github.com/majorsilence/CrystalCmd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 </Project>
