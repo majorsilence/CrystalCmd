@@ -182,10 +182,23 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SET status = @p_status,
                         timeprocessedutc = @p_timeprocessedutc
                     WHERE id = @p_id;";
-                _cleanupWorkQueueSql = @"DELETE FROM public.workqueue
-                    WHERE timeprocessedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes' AND (status != 1 and status != 2);";
-                _cleanupGeneratedReportsSql = @"DELETE FROM public.generatedreports
-                    WHERE generatedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes';";
+                _cleanupWorkQueueSql = @"WITH locked_rows AS (
+                        SELECT id 
+                        FROM public.workqueue
+                        WHERE timeprocessedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes'
+                          AND status NOT IN (1, 2)
+                        FOR UPDATE SKIP LOCKED
+                    )
+                    DELETE FROM public.workqueue
+                    WHERE id IN (SELECT id FROM locked_rows);";
+                _cleanupGeneratedReportsSql = @"WITH expired_reports AS (
+                        SELECT id 
+                        FROM public.generatedreports
+                        WHERE generatedutc < (NOW() AT TIME ZONE 'UTC') - INTERVAL '30 minutes'
+                        FOR UPDATE SKIP LOCKED -- Locks available rows, ignores those currently in use
+                    )
+                    DELETE FROM public.generatedreports
+                    WHERE id IN (SELECT id FROM expired_reports);";
             }
             else
             {
