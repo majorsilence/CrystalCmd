@@ -97,9 +97,9 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     WHERE id = @p_id;";
 
                 // delete completed or failed items older than a 30 minutes
-                _cleanupWorkQueueSql = @"DELETE FROM dbo.workqueue
+                _cleanupWorkQueueSql = @"DELETE FROM dbo.workqueue WITH (READPAST)
                     WHERE timeprocessedutc < DATEADD(minute, -30, GETUTCDATE()) AND (status != 1 and status != 2);";
-                _cleanupGeneratedReportsSql = @"DELETE FROM dbo.generatedreports
+                _cleanupGeneratedReportsSql = @"DELETE FROM dbo.generatedreports WITH (READPAST)
                     WHERE generatedutc < DATEADD(minute, -30, GETUTCDATE());";
             }
             else if (sqlType == SqlType.PostgreSQL)
