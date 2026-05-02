@@ -53,14 +53,14 @@ build_and_tag_image() {
 #setup_prerequisites
 setup_buildx
 
-#rm -rf $cwd/build/oci
+rm -rf $cwd/build/oci
 mkdir -p $cwd/build/oci
 
 version_alpline=`cat VERSION_WINE_ALPINE`
 version=`cat VERSION_WINE`
-build_and_tag_image "Dockerfile.wine.alpine" "majorsilence/dotnet_framework_wine" "alpine" "$version_alpline" "A_WINE_VERSION=$version_alpline"
-build_and_tag_image "Dockerfile.wine.ubuntu" "majorsilence/dotnet_framework_wine" "ubuntu" "$version" "A_WINE_VERSION=$version"
+#build_and_tag_image "Dockerfile.wine.alpine" "majorsilence/dotnet_framework_wine" "alpine" "$version_alpline" "A_WINE_VERSION=$version_alpline"
+#build_and_tag_image "Dockerfile.wine.ubuntu" "majorsilence/dotnet_framework_wine" "ubuntu" "$version" "A_WINE_VERSION=$version"
 
 crystal_cmd_version=`cat VERSION_CRYSTALCMD`
-#build_and_tag_image "Dockerfile.crystalcmd.alpine" "majorsilence/dotnet_framework_wine_crystalcmd" "alpine" "$crystal_cmd_version" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
-#build_and_tag_image "Dockerfile.crystalcmd.ubuntu" "majorsilence/dotnet_framework_wine_crystalcmd" "ubuntu" "$crystal_cmd_version" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
+build_and_tag_image "Dockerfile.crystalcmd.alpine" "majorsilence/dotnet_framework_wine_crystalcmd" "alpine" "$crystal_cmd_version" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
+build_and_tag_image "Dockerfile.crystalcmd.ubuntu" "majorsilence/dotnet_framework_wine_crystalcmd" "ubuntu" "$crystal_cmd_version" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"

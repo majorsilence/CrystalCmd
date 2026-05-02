@@ -1,4 +1,4 @@
-FROM majorsilence/dotnet_framework_wine:9.0.8-ubuntu
+FROM majorsilence/dotnet_framework_wine:11.0.0-ubuntu
 
 ARG DEBIAN_FRONTEND=noninteractive
 
