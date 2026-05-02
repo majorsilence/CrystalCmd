@@ -23,8 +23,6 @@ RUN apt update && apt install libarchive-tools curl -y \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY ExternalLogAssemblies-net8.0 /CrystalCMD
-
 WORKDIR /CrystalCMD/Majorsilence.CrystalCmd.Server
 # USER app is the default starting with aspnet:8.0 images
 # See https://devblogs.microsoft.com/dotnet/running-nonroot-kubernetes-with-dotnet/ and 
