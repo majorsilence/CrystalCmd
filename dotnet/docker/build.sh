@@ -35,26 +35,31 @@ build_and_tag_image() {
     local build_args=$5
 
     echo "build $image_name:$image_version-$base_image"  
-    mkdir -p $cwd/build/oci
     
-    # get last bit of $image_name:$base_image split after / for folder name
-    folder_name=$(echo "$image_name:$base_image" | awk -F/ '{print $NF}')
+    # Use a tag-free OCI layout directory; pass the tag separately in skopeo.
+    local folder_name
+    folder_name=$(echo "$image_name" | awk -F/ '{print $NF}')
 
-    docker buildx build -f $dockerfile_name --progress plain --provenance=true --sbom=true --output "type=oci,name=$image_name:$base_image,oci-mediatypes=true,compression=zstd,force-compression=true,tar=false,dest=$cwd/build/oci/$folder_name" .
+    docker buildx build -f "$dockerfile_name" --progress plain --provenance=true --sbom=true --output "type=oci,name=$image_name:$base_image,oci-mediatypes=true,compression=zstd,force-compression=true,tar=false,dest=$cwd/build/oci/$folder_name" .
 
     echo "push $image_name image"
     #docker push $image_name:$base_image
     #docker push $image_name:$image_version-$base_image
 
-    skopeo copy --all oci:$cwd/build/oci/$folder_name docker://docker.io/$image_name:$base_image
+    skopeo copy --all "oci:$cwd/build/oci/$folder_name:$base_image" "docker://docker.io/$image_name:$base_image"
+    skopeo copy --all "oci:$cwd/build/oci/$folder_name:$base_image" "docker://docker.io/$image_name:$image_version-$base_image"
 }
 
 #setup_prerequisites
 setup_buildx
 
+#rm -rf $cwd/build/oci
+mkdir -p $cwd/build/oci
+
+version_alpline=`cat VERSION_WINE_ALPINE`
 version=`cat VERSION_WINE`
-build_and_tag_image "Dockerfile.wine.alpine" "majorsilence/dotnet_framework_wine" "alpine" "$version" "A_WINE_VERSION=$version"
-#build_and_tag_image "Dockerfile.wine.ubuntu" "majorsilence/dotnet_framework_wine" "ubuntu" "$version" "A_WINE_VERSION=$version"
+build_and_tag_image "Dockerfile.wine.alpine" "majorsilence/dotnet_framework_wine" "alpine" "$version_alpline" "A_WINE_VERSION=$version_alpline"
+build_and_tag_image "Dockerfile.wine.ubuntu" "majorsilence/dotnet_framework_wine" "ubuntu" "$version" "A_WINE_VERSION=$version"
 
 crystal_cmd_version=`cat VERSION_CRYSTALCMD`
 #build_and_tag_image "Dockerfile.crystalcmd.alpine" "majorsilence/dotnet_framework_wine_crystalcmd" "alpine" "$crystal_cmd_version" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
