@@ -4,12 +4,13 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL maintainer="Peter Gill <peter@majorsilence.com>"
 
-ADD VERSION_WINE .
+ADD VERSION_WINE_ALPINE .
 
 # Install Wine
 # https://wiki.winehq.org/Ubuntu
 RUN apk update \
-    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind aspnetcore10-runtime \
+    && apk add --no-cache wine wget xvfb xvfb-run cabextract samba-winbind bash \
+    && ln -s /bin/bash /usr/bin/bash \
     # Clean
     && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
     && chmod +x winetricks \
@@ -21,14 +22,38 @@ RUN apk update \
 
 # TODO: download from the crystal reports site. 
 # These files must be manually downloaded before running docker build
-COPY CR13SP39MSI64_0-80007712.MSI /root/CR13SP39.msi
+#COPY CR13SP39MSI64_0-80007712.MSI /root/CR13SP39.msi
 # Setup a Wine prefix
 ENV WINEPREFIX=/majorsilence-wine
 ENV WINEARCH=win64
 RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
-    && winetricks -q corefonts gdiplus winhttp dotnet48 \
-    && wine64 msiexec /i /root/CR13SP39.msi /qn \
+    && winetricks -q allfonts dotnet48 \
+    && rm -rf /tmp/* \
+    && wineserver -k
+
+#    && winecfg && wineboot -u \
+#    && winetricks -q corefonts gdiplus winhttp dotnet48 \
+#    && wine64 msiexec /i /root/CR13SP39.msi /qn \
+
+RUN wget -O /root/mono-wine.msi https://dl.winehq.org/wine/wine-mono/11.1.0/wine-mono-11.1.0-x86.msi \
+    && expectedhash="deb0341431f8260b209fff6bc79ddcc5414b97f8e9236ab9fbdca4ce59e0a9b9" \
+    && actualhash=$(sha256sum /root/mono-wine.msi | awk '{print $1}') \
+    && if [ "$expectedhash" != "$actualhash" ]; then echo "Hash verification failed! Expected: $expectedhash, Actual: $actualhash" && exit 1; fi \
+    && wineboot -u \
+    && wine64 msiexec /i /root/mono-wine.msi /qn \
+    && rm -rf /root/mono-wine.msi \
+    && rm -rf /tmp/* \
+    && wineserver -k
+
+RUN wget -O /root/crystal_13sp39.msi https://origin-az.softwaredownloads.sap.com/public/file/0025000000164892025 \
+    && expectedhash="0716944644faf8e7c2613bd46655c79454808a2a3dd71e58642939fd7839320c" \
+    && actualhash=$(sha256sum /root/crystal_13sp39.msi | awk '{print $1}') \
+    && if [ "$expectedhash" != "$actualhash" ]; then echo "Hash verification failed! Expected: $expectedhash, Actual: $actualhash" && exit 1; fi \
+    && wineboot -u \
+    && wine64 msiexec /i /root/crystal_13sp39.msi /qn \
+    && rm -rf /root/crystal_13sp39.msi \
+    && rm -rf /tmp/* \
     && wineserver -k
 
 # Crystal reports
