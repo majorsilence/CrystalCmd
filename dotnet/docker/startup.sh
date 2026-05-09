@@ -88,10 +88,10 @@ run_x64_wine_worker_service () {
     # prepare wine log and watchdog
    
     # start the CrystalCMD console service within wine and xvfb, redirect output to a logfile
-    if [ -f "/CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe" ]; then
-        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
+    if [ -f "/CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe" ]; then
+        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
     else
-        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetFrameworkConsole/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
+        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
     fi  
 
     # if not running, wait a bit and try again, wait up to 25 seconds
