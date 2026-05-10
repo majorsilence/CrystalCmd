@@ -27,4 +27,4 @@ RUN apk update && apk add --no-cache libarchive-tools curl bash procps-ng \
 
 COPY startup.sh /CrystalCMD/startup.sh
 RUN chmod gou+x /CrystalCMD/startup.sh
-CMD ["/CrystalCMD/startup.sh", "workeronly"]
+CMD ["/CrystalCMD/startup.sh"]
