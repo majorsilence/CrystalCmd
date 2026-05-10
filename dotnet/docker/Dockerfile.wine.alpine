@@ -28,7 +28,7 @@ ENV WINEPREFIX=/majorsilence-wine
 ENV WINEARCH=win64
 RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
-    && winetricks -q allfonts dotnet48 \
+    && winetricks -q allfonts gdiplus dotnet48 \
     && rm -rf /tmp/* \
     && wineserver -k
 
@@ -36,15 +36,15 @@ RUN mkdir -p /majorsilence-wine \
 #    && winetricks -q corefonts gdiplus winhttp dotnet48 \
 #    && wine64 msiexec /i /root/CR13SP39.msi /qn \
 
-RUN wget -O /root/mono-wine.msi https://dl.winehq.org/wine/wine-mono/11.1.0/wine-mono-11.1.0-x86.msi \
-    && expectedhash="deb0341431f8260b209fff6bc79ddcc5414b97f8e9236ab9fbdca4ce59e0a9b9" \
-    && actualhash=$(sha256sum /root/mono-wine.msi | awk '{print $1}') \
-    && if [ "$expectedhash" != "$actualhash" ]; then echo "Hash verification failed! Expected: $expectedhash, Actual: $actualhash" && exit 1; fi \
-    && wineboot -u \
-    && wine64 msiexec /i /root/mono-wine.msi /qn \
-    && rm -rf /root/mono-wine.msi \
-    && rm -rf /tmp/* \
-    && wineserver -k
+#RUN wget -O /root/mono-wine.msi https://dl.winehq.org/wine/wine-mono/11.1.0/wine-mono-11.1.0-x86.msi \
+#    && expectedhash="deb0341431f8260b209fff6bc79ddcc5414b97f8e9236ab9fbdca4ce59e0a9b9" \
+#    && actualhash=$(sha256sum /root/mono-wine.msi | awk '{print $1}') \
+#    && if [ "$expectedhash" != "$actualhash" ]; then echo "Hash verification failed! Expected: $expectedhash, Actual: $actualhash" && exit 1; fi \
+#    && wineboot -u \
+#    && wine64 msiexec /i /root/mono-wine.msi /qn \
+#    && rm -rf /root/mono-wine.msi \
+#    && rm -rf /tmp/* \
+#    && wineserver -k
 
 RUN wget -O /root/crystal_13sp39.msi https://origin-az.softwaredownloads.sap.com/public/file/0025000000164892025 \
     && expectedhash="0716944644faf8e7c2613bd46655c79454808a2a3dd71e58642939fd7839320c" \

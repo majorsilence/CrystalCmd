@@ -44,7 +44,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile.crystalcmd.workeronly
+      dockerfile: Dockerfile.crystalcmd.workeronly.alpine
       args:
         BASE_IMAGE: wine-alpine-base
       additional_contexts:
