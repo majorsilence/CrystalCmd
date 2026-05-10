@@ -87,11 +87,11 @@ run_x64_wine_worker_service () {
     mkdir -p /majorsilence-wine/drive_c/users/root/AppData/Local/Temp/majorsilence/crystalcmd
     # prepare wine log and watchdog
    
-    # start the CrystalCMD console service within wine and xvfb, redirect output to a logfile
+    # start the CrystalCMD console service within wine and xvfb, redirect output to a logfile and console
     if [ -f "/CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe" ]; then
-        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
+        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/x64/Majorsilence.CrystalCmd.NetframeworkConsole.exe 2>&1 | tee "$WINE_LOG" &
     else
-        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/Majorsilence.CrystalCmd.NetframeworkConsole.exe >"$WINE_LOG" 2>&1 &
+        xvfb-run wine /CrystalCMD/Majorsilence.CrystalCmd.NetframeworkConsole/Majorsilence.CrystalCmd.NetframeworkConsole.exe 2>&1 | tee "$WINE_LOG" &
     fi  
 
     # if not running, wait a bit and try again, wait up to 25 seconds
@@ -113,32 +113,12 @@ run_x64_wine_worker_service () {
 }
 
 
-MODE="$1"
-echo "Starting CrystalCMD in mode: ${MODE}"
+echo "Starting CrystalCMD worker"
 run_x64_wine_worker_service
-
-# monitor wine log for repeated error patterns and take action if they occur frequently
-
-if [ "$MODE" != "workeronly" ] ; then
-    # start the CrystalCMD asp.net core server
-    dotnet /CrystalCMD/Majorsilence.CrystalCmd.Server/Majorsilence.CrystalCmd.Server.dll &
-fi
 
 echo "Entering main monitoring loop"
 
 while true; do
-    # check if the web service is healthy
-
-    if [ "$MODE" != "workeronly" ] ; then
-        responsecode=$(wget --tries=3 --timeout=10 --server-response -O /dev/null http://127.0.0.1:5000/healthz/ready 2>&1 | awk '/^  HTTP/{print $2}')
-        if [ "$responsecode" != "200" ] ; then
-            echo "CrystalCMD http service Health check failed with response code $responsecode"
-            wget --tries=1 --timeout=5 --server-response http://127.0.0.1:5000/healthz/ready
-            exit 1
-        fi
-    fi
-
-    # check if the wine process is still running (skip in workeronly mode)
     # is_worker_running returns 0 when the worker is running.
     is_worker_running
     is_running=$?
