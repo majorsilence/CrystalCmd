@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pg_crystalcmd_queue
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - crystalcmd_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pg_crystalcmd_queue"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  wine-ubuntu-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.wine.ubuntu
+    image: majorsilence/dotnet_framework_wine:10.19.0-2-ubuntu
+    scale: 0
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.crystalcmd.apionly
+    image: crystalcmd-api-only:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      WorkQueue__SqlType: psql
+      WorkQueue__SqlConnection: Server=postgres;Port=5432;Database=pg_crystalcmd_queue;Userid=postgres;Password=password;Pooling=true;MinPoolSize=2;
+      Credentials__Username: user
+      Credentials__Password: password
+    ports:
+      - "5000:5000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.crystalcmd.workeronly.ubuntu
+      args:
+        BASE_IMAGE: wine-ubuntu-base
+      additional_contexts:
+        wine-ubuntu-base: service:wine-ubuntu-base
+    image: crystalcmd-worker-only:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      appsettings__WorkQueueSqlType: psql
+      appsettings__WorkQueueSqlConnection: Server=postgres;Port=5432;Database=pg_crystalcmd_queue;Userid=postgres;Password=password;Pooling=true;MinPoolSize=2;
+
+volumes:
+  crystalcmd_postgres_data:
