@@ -38,8 +38,9 @@ RUN mkdir -p /majorsilence-wine \
 
 # crystal 13SP37
 RUN wineboot -u \
-    && wget -O /root/crystal_13.msi https://origin-az.softwaredownloads.sap.com/public/file/0020000001375542024 \
-    && expectedhash="74ed30006679aa82300468e3e58cfe014fb663e257bb35d9d3046a6e7791f4fa" \
+    && xvfb-run winetricks -q vcrun2019 \
+    && wget -O /root/crystal_13.msi https://origin-az.softwaredownloads.sap.com/public/file/0025000000164892025 \
+    && expectedhash="0716944644faf8e7c2613bd46655c79454808a2a3dd71e58642939fd7839320c" \
     && actualhash=$(sha256sum /root/crystal_13.msi | awk '{print $1}') \
     && if [ "$expectedhash" != "$actualhash" ]; then echo "Hash verification failed! Expected: $expectedhash, Actual: $actualhash" && exit 1; fi \
     && echo "Installing Crystal Reports 13 SP..." \
