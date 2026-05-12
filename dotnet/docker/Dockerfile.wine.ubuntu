@@ -8,8 +8,7 @@ ADD VERSION_WINE .
 
 # Install Wine
 # https://wiki.winehq.org/Ubuntu
-RUN dpkg --add-architecture i386 \
-    && apt update \
+RUN apt update \
     && apt install -y wget software-properties-common gnupg2 procps unzip \
     && mkdir -pm755 /etc/apt/keyrings \
     && wget -O - https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key - \
@@ -32,13 +31,12 @@ ENV WINEPREFIX=/majorsilence-wine
 ENV WINEARCH=win64
 RUN mkdir -p /majorsilence-wine \
     && winecfg && wineboot -u \
-    && winetricks -q allfonts gdiplus dotnet48 \
+    && xvfb-run winetricks -q allfonts gdiplus dotnet48 vcrun2019 \
     && rm -rf /tmp/* \
     && wineserver -k
 
-# crystal 13SP37
+# crystal 13SP39
 RUN wineboot -u \
-    && xvfb-run winetricks -q vcrun2019 \
     && wget -O /root/crystal_13.msi https://origin-az.softwaredownloads.sap.com/public/file/0025000000164892025 \
     && expectedhash="0716944644faf8e7c2613bd46655c79454808a2a3dd71e58642939fd7839320c" \
     && actualhash=$(sha256sum /root/crystal_13.msi | awk '{print $1}') \
