@@ -11,6 +11,7 @@
 - crystal 13SP37
     - https://origin-az.softwaredownloads.sap.com/public/file/0020000001375542024
     - sha256:74ed30006679aa82300468e3e58cfe014fb663e257bb35d9d3046a6e7791f4fa
+    - works without needing to install `vcrun2019`
 
 build and run
 ```bash
