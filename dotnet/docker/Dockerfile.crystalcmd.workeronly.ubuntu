@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=majorsilence/dotnet_framework_wine:10.19.0-2-ubuntu
+ARG BASE_IMAGE=majorsilence/dotnet_framework_wine:11.0.0-3-ubuntu
 FROM ${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
