@@ -57,8 +57,8 @@ monitor_wine_log() {
                 in_kill_state=1
                 kill_all_wine_processes
                 killcount=$((killcount+1))
-                killall -9 tail
-                killall -9 Xvfb
+                pkill -9 tail
+                pkill -9 Xvfb
                 # also attempt to kill any wine processes running the exe
                 pgrep -f Majorsilence.CrystalCmd.NetframeworkConsole.exe | xargs -r kill 2>/dev/null || true
                 echo "Wine process has been killed $killcount times; exiting monitor" | tee -a "$WINE_LOG"
