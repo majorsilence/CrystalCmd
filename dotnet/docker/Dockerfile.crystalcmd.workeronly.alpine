@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=majorsilence/dotnet_framework_wine:10.19.0-2-alpine
+ARG BASE_IMAGE=majorsilence/dotnet_framework_wine:10.19.0-3-alpine
 FROM ${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
