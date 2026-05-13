@@ -46,8 +46,8 @@ build_and_tag_image() {
     #docker push $image_name:$base_image
     #docker push $image_name:$image_version-$base_image
 
-    skopeo copy --all "oci:$cwd/build/oci/$folder_name:$base_image" "docker://docker.io/$image_name:$base_image"
     skopeo copy --all "oci:$cwd/build/oci/$folder_name:$base_image" "docker://docker.io/$image_name:$image_version-$base_image"
+    skopeo copy --all "oci:$cwd/build/oci/$folder_name:$base_image" "docker://docker.io/$image_name:$base_image"   
 }
 
 #setup_prerequisites
@@ -65,4 +65,4 @@ crystal_cmd_version=`cat VERSION_CRYSTALCMD`
 build_and_tag_image "Dockerfile.crystalcmd.workeronly.alpine" "majorsilence/dotnet_framework_wine_crystalcmd_workeronly" "alpine" "$crystal_cmd_version-3" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
 build_and_tag_image "Dockerfile.crystalcmd.workeronly.ubuntu" "majorsilence/dotnet_framework_wine_crystalcmd_workeronly" "ubuntu" "$crystal_cmd_version-3" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
 
-build_and_tag_image "Dockerfile.crystalcmd.apionly.ubuntu" "majorsilence/dotnet_framework_wine_crystalcmd_apionly" "ubuntu" "$crystal_cmd_version-3" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
+build_and_tag_image "Dockerfile.crystalcmd.apionly" "majorsilence/dotnet_framework_wine_crystalcmd_apionly" "ubuntu" "$crystal_cmd_version-3" "A_CRYSTALCMD_VERSION=$crystal_cmd_version"
