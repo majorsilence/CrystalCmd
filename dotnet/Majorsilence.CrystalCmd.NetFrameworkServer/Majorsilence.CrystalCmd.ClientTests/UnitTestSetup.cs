@@ -11,6 +11,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
     internal class UnitTestSetup
     {
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
+        private const string TestServerBaseUrl = "http://localhost:44355/";
+        private readonly StringBuilder _workerOutput = new StringBuilder();
+        private readonly StringBuilder _serverOutput = new StringBuilder();
         private System.Diagnostics.Process _workerProcess;
         private System.Diagnostics.Process _serverProcess;
 #pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
@@ -27,7 +30,6 @@ namespace Majorsilence.CrystalCmd.ClientTests
             string currentWorkingDir = System.IO.Directory.GetCurrentDirectory();
             string baseDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(currentWorkingDir, @"..\..\..\.."));
 
-            // start the net48 worker process
             string workerExePath = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Console",
                 "bin",
@@ -43,7 +45,6 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 "net48");
             _workerProcess.StartInfo.UseShellExecute = false;
             _workerProcess.StartInfo.CreateNoWindow = true;
-            // read output for debugging
             _workerProcess.StartInfo.RedirectStandardOutput = true;
             _workerProcess.StartInfo.RedirectStandardError = true;
             _workerProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
@@ -52,6 +53,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
+                    _workerOutput.AppendLine(args.Data);
                     TestContext.Progress.WriteLine("[Worker STDOUT] " + args.Data);
                 }
             };
@@ -59,35 +61,35 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
+                    _workerOutput.AppendLine(args.Data);
                     TestContext.Progress.WriteLine("[Worker STDERR] " + args.Data);
                 }
-            };      
+            };
             _workerProcess.Start();
             _workerProcess.BeginErrorReadLine();
             _workerProcess.BeginOutputReadLine();
 
-            // start the net10.0 web server process
             _serverProcess = new System.Diagnostics.Process();
             _serverProcess.StartInfo.FileName = "dotnet";
             _serverProcess.StartInfo.Arguments = "Majorsilence.CrystalCmd.Server.dll";
             _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = "http://*:44355;https://*:44356";
-            _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir, 
+            _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Server",
                 "bin",
                 configuration,
                 "net10.0");
             _serverProcess.StartInfo.UseShellExecute = false;
             _serverProcess.StartInfo.CreateNoWindow = true;
-            // read output for debugging
             _serverProcess.StartInfo.RedirectStandardOutput = true;
             _serverProcess.StartInfo.RedirectStandardError = true;
             _serverProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             _serverProcess.StartInfo.StandardErrorEncoding = Encoding.UTF8;
-            
+
             _serverProcess.OutputDataReceived += (sender, args) =>
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
+                    _serverOutput.AppendLine(args.Data);
                     TestContext.Progress.WriteLine("[Server STDOUT] " + args.Data);
                 }
             };
@@ -95,6 +97,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
+                    _serverOutput.AppendLine(args.Data);
                     TestContext.Progress.WriteLine("[Server STDERR] " + args.Data);
                 }
             };
@@ -102,14 +105,54 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess.BeginErrorReadLine();
             _serverProcess.BeginOutputReadLine();
 
-            await Task.Delay(5000); // Wait for server to start
+            await WaitForServerReadinessAsync().ConfigureAwait(false);
+        }
 
-            // ping the server to see if it's online
+        private async Task WaitForServerReadinessAsync()
+        {
+            Exception lastException = null;
+            var startupDeadline = DateTime.UtcNow.AddSeconds(30);
+
             using (var client = new System.Net.Http.HttpClient())
             {
-                var response = await client.GetAsync("https://localhost:44356/healthz/ready");
-                Assert.That(response.IsSuccessStatusCode, "Server is not online.");
+                client.Timeout = TimeSpan.FromSeconds(2);
+
+                while (DateTime.UtcNow < startupDeadline)
+                {
+                    if (_serverProcess.HasExited)
+                    {
+                        throw new InvalidOperationException($"Server exited before it became ready. Exit code: {_serverProcess.ExitCode}.{Environment.NewLine}{GetProcessDiagnostics()}");
+                    }
+
+                    try
+                    {
+                        using (var response = await client.GetAsync(TestServerBaseUrl + "healthz/ready").ConfigureAwait(false))
+                        {
+                            if (response.IsSuccessStatusCode)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                    catch (System.Net.Http.HttpRequestException ex)
+                    {
+                        lastException = ex;
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                        lastException = ex;
+                    }
+
+                    await Task.Delay(1000).ConfigureAwait(false);
+                }
             }
+
+            throw new TimeoutException($"Server did not become ready within 30 seconds. {GetProcessDiagnostics()}", lastException);
+        }
+
+        private string GetProcessDiagnostics()
+        {
+            return $"Server output:{Environment.NewLine}{_serverOutput}{Environment.NewLine}Worker output:{Environment.NewLine}{_workerOutput}";
         }
 
         [OneTimeTearDown]
