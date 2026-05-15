@@ -19,6 +19,11 @@ namespace Majorsilence.CrystalCmd.Server.Common
             using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration()
             {
                 MaxLineSize = int.MaxValue / 5,
+
+                // Tolerate case-insensitively duplicate header names rather
+                // than throwing ChoRecordConfigurationException. In-process Crystal
+                // silently accepted such DataTables and bound to the first match; 
+                AutoIncrementDuplicateColumnNames = true,
             }).WithFirstLineHeader()
                 .QuoteAllFields()
                 .Configure(c => c.Encoding = Encoding.UTF8)
