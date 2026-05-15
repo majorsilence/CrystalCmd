@@ -14,6 +14,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         private const string TestServerBaseUrl = "http://localhost:44355/";
         private readonly StringBuilder _workerOutput = new StringBuilder();
         private readonly StringBuilder _serverOutput = new StringBuilder();
+        private string _testQueueDbPath = string.Empty;
         private System.Diagnostics.Process _workerProcess;
         private System.Diagnostics.Process _serverProcess;
 #pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
@@ -29,6 +30,10 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
             string currentWorkingDir = System.IO.Directory.GetCurrentDirectory();
             string baseDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(currentWorkingDir, @"..\..\..\.."));
+            var testDataDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "CrystalCmd", Guid.NewGuid().ToString("N"));
+            System.IO.Directory.CreateDirectory(testDataDirectory);
+            _testQueueDbPath = System.IO.Path.Combine(testDataDirectory, "crystalcmd-workqueue.db");
+            var testQueueConnectionString = $"Data Source={_testQueueDbPath};";
 
             string workerExePath = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Console",
@@ -45,6 +50,8 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 "net48");
             _workerProcess.StartInfo.UseShellExecute = false;
             _workerProcess.StartInfo.CreateNoWindow = true;
+            _workerProcess.StartInfo.EnvironmentVariables["appsettings__WorkQueueSqlType"] = "sqlite";
+            _workerProcess.StartInfo.EnvironmentVariables["appsettings__WorkQueueSqlConnection"] = testQueueConnectionString;
             _workerProcess.StartInfo.RedirectStandardOutput = true;
             _workerProcess.StartInfo.RedirectStandardError = true;
             _workerProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
@@ -73,6 +80,8 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess.StartInfo.FileName = "dotnet";
             _serverProcess.StartInfo.Arguments = "Majorsilence.CrystalCmd.Server.dll";
             _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = "http://*:44355;https://*:44356";
+            _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlType"] = "sqlite";
+            _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlConnection"] = testQueueConnectionString;
             _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Server",
                 "bin",
@@ -160,6 +169,15 @@ namespace Majorsilence.CrystalCmd.ClientTests
         {
             await TerminateProcessAsync(_workerProcess, 5000).ConfigureAwait(false);
             await TerminateProcessAsync(_serverProcess, 5000).ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(_testQueueDbPath))
+            {
+                var testQueueDirectory = System.IO.Path.GetDirectoryName(_testQueueDbPath);
+                if (!string.IsNullOrWhiteSpace(testQueueDirectory) && System.IO.Directory.Exists(testQueueDirectory))
+                {
+                    System.IO.Directory.Delete(testQueueDirectory, recursive: true);
+                }
+            }
         }
 
         private static async Task TerminateProcessAsync(System.Diagnostics.Process process, int gracefulTimeoutMs)

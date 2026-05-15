@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration.Json;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
@@ -63,9 +64,28 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 return new Npgsql.NpgsqlConnection(_connectionString);
             }
 
+            EnsureSqliteDirectoryExists();
             return new Microsoft.Data.Sqlite.SqliteConnection(_connectionString);
         }
 
+        private void EnsureSqliteDirectoryExists()
+        {
+            var connectionStringBuilder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(_connectionString);
+            var dataSource = connectionStringBuilder.DataSource;
+
+            if (string.IsNullOrWhiteSpace(dataSource) || string.Equals(dataSource, ":memory:", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var directoryPath = Path.GetDirectoryName(dataSource);
+            if (string.IsNullOrWhiteSpace(directoryPath))
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(directoryPath);
+        }
 
         public static string GetSetting(string key
 #if NET5_0_OR_GREATER
