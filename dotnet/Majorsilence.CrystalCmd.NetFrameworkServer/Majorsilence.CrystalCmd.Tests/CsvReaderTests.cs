@@ -65,6 +65,72 @@ namespace Majorsilence.CrystalCmd.Tests
 
         }
 
+        [Test]
+        public void DuplicateColumnNames_CaseInsensitive_DoesNotThrow()
+        {
+            // Simulates the merged DataTable produced by Cheque Register and any
+            // other report whose stored proc unions result sets with inconsistently
+            // cased column aliases (INVOICE / Invoice / invoice).
+            var dt = new DataTable("APCHQREGDATA");
+            dt.Columns.Add("BANK", typeof(string));
+            dt.Columns.Add("INVOICE", typeof(string));
+            dt.Columns.Add("Invoice", typeof(string));   // case-insensitive dup
+            dt.Columns.Add("invoice", typeof(string));   // case-insensitive dup
+            dt.Columns.Add("CODENAME", typeof(string));
+            dt.Columns.Add("codename", typeof(string));  // case-insensitive dup
+            dt.Columns.Add("INVAMT", typeof(decimal));
+            dt.Columns.Add("invamt", typeof(decimal));   // case-insensitive dup
+
+            var row0 = dt.NewRow();
+            row0["BANK"] = "BNK3"; row0["INVOICE"] = "AP-1"; row0["CODENAME"] = "AP"; row0["INVAMT"] = 100m;
+            dt.Rows.Add(row0);
+
+            var row1 = dt.NewRow();
+            row1["BANK"] = "BNK3"; row1["Invoice"] = "AR-1"; row1["codename"] = "AR"; row1["INVAMT"] = 200m;
+            dt.Rows.Add(row1);
+
+            var row2 = dt.NewRow();
+            row2["BANK"] = "BNK3"; row2["invoice"] = "GL-1"; row2["codename"] = "GL"; row2["invamt"] = 300m;
+            dt.Rows.Add(row2);
+
+            var reportData = new Common.Data()
+            {
+                DataTables = new Dictionary<string, string>(),
+                MoveObjectPosition = new List<Common.MoveObjects>(),
+                Parameters = new Dictionary<string, object>(),
+                ExportAs = Common.ExportTypes.PDF
+            };
+            reportData.AddData("APCHQREGDATA", dt);
+
+            // Before the fix: this throws ChoRecordConfigurationException with
+            // "Duplicate field name(s) [Name: INVOICE,CODENAME,INVAMT] found."
+            DataTable result = null;
+            Assert.DoesNotThrow(() =>
+            {
+                result = CsvReader.CreateTableEtl(reportData.DataTables.First().Value);
+            });
+
+            // The first occurrence of each name is preserved as-is. This is the
+            // column Crystal's field binder will resolve to, matching in-process
+            // behavior.
+            Assert.That(result.Columns.Contains("INVOICE"), Is.True, "first INVOICE kept");
+            Assert.That(result.Columns.Contains("CODENAME"), Is.True, "first CODENAME kept");
+            Assert.That(result.Columns.Contains("INVAMT"), Is.True, "first INVAMT kept");
+
+            // The first row's INVOICE/CODENAME/INVAMT come through intact.
+            var r0 = result.Rows[0];
+            Assert.That(r0["INVOICE"], Is.EqualTo("AP-1"));
+            Assert.That(r0["CODENAME"], Is.EqualTo("AP"));
+            // INVAMT is decimal but CSV round-trips strings; depending on the
+            // CsvReader's type handling this may be string "100" or decimal 100m.
+            Assert.That(r0["INVAMT"].ToString(), Is.EqualTo("100"));
+
+            // We get 8 columns total because the duplicates are auto-renamed
+            // (INVOICE_2, INVOICE_3, CODENAME_2, INVAMT_2), not dropped. This is
+            // safe: Crystal binds the first match and ignores extras.
+            Assert.That(result.Columns.Count, Is.EqualTo(8));
+        }
+
         static DataTable GetTable()
         {
             // Here we create a DataTable with four columns.
