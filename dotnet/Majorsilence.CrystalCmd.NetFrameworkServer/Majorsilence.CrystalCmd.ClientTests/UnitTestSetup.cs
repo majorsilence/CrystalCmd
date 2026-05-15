@@ -107,7 +107,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             // ping the server to see if it's online
             using (var client = new System.Net.Http.HttpClient())
             {
-                var response = await client.GetAsync("http://localhost:44355/healthz/ready");
+                var response = await client.GetAsync("https://localhost:44356/healthz/ready");
                 Assert.That(response.IsSuccessStatusCode, "Server is not online.");
             }
         }

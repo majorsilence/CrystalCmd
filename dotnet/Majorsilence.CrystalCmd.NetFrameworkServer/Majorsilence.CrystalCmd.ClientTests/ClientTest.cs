@@ -19,7 +19,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
     [TestFixture]
     public class ClientTest
     {
-        private const string baseUrl = "http://localhost:44355/";
+        private const string baseUrl = "https://localhost:44356/";
         private const string username = "user";
         private const string password = "password";
         private const string bearerTokenKey = "PLACEHOLDER_PLACEHOLDER_PLACEHOLDER_PLACEHOLDER"; // match appsettings.json
