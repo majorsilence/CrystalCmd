@@ -11,10 +11,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
     internal class UnitTestSetup
     {
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
-        private const string TestServerBaseUrl = "http://localhost:44355/";
+        internal static string TestServerBaseUrl { get; private set; } = "http://127.0.0.1:44355/";
         private readonly StringBuilder _workerOutput = new StringBuilder();
         private readonly StringBuilder _serverOutput = new StringBuilder();
         private string _testQueueDbPath = string.Empty;
+        private int _httpPort;
+        private int _httpsPort;
         private System.Diagnostics.Process _workerProcess;
         private System.Diagnostics.Process _serverProcess;
 #pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
@@ -34,6 +36,13 @@ namespace Majorsilence.CrystalCmd.ClientTests
             System.IO.Directory.CreateDirectory(testDataDirectory);
             _testQueueDbPath = System.IO.Path.Combine(testDataDirectory, "crystalcmd-workqueue.db");
             var testQueueConnectionString = $"Data Source={_testQueueDbPath};";
+            _httpPort = GetAvailableTcpPort();
+            _httpsPort = GetAvailableTcpPort();
+            if (_httpsPort == _httpPort)
+            {
+                _httpsPort = GetAvailableTcpPort();
+            }
+            TestServerBaseUrl = $"http://127.0.0.1:{_httpPort}/";
 
             string workerExePath = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Console",
@@ -79,7 +88,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess = new System.Diagnostics.Process();
             _serverProcess.StartInfo.FileName = "dotnet";
             _serverProcess.StartInfo.Arguments = "Majorsilence.CrystalCmd.Server.dll";
-            _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = "http://*:44355;https://*:44356";
+            _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = $"http://127.0.0.1:{_httpPort};https://127.0.0.1:{_httpsPort}";
             _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlType"] = "sqlite";
             _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlConnection"] = testQueueConnectionString;
             _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir,
@@ -284,6 +293,20 @@ namespace Majorsilence.CrystalCmd.ClientTests
             }
 
             await Task.Delay(200).ConfigureAwait(false);
+        }
+
+        private static int GetAvailableTcpPort()
+        {
+            var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+            listener.Start();
+            try
+            {
+                return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+            }
+            finally
+            {
+                listener.Stop();
+            }
         }
     }
 }
