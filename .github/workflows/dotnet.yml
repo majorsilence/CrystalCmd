@@ -25,6 +25,10 @@ jobs:
         cd dotnet
         choco install CrystalReports2010Runtime -y --source .
         ./build_zips.ps1
+    - name: Build Obsolete
+      run: |
+        cd dotnet
+        ./build_obsolete.ps1
     - name: Archive artifacts
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
