@@ -31,5 +31,4 @@ Write-Output "Copying nuget packages"
 Get-ChildItem -Recurse "$CURRENTPATH\*Obsolete*.nupkg" | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
 
 
-
 cd $CURRENTPATH
