@@ -22,6 +22,7 @@ else {
 
 cd "$CURRENTPATH\Majorsilence.CrystalCmd.NetFrameworkServer"
 
+dotnet restore
 
 & "$MSBUILD" "Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj" -maxcpucount /verbosity:minimal /property:Configuration="Release" /target:clean /target:rebuild /p:UseOldCrystalReportsReferences="yes"
 if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer, failed" }
