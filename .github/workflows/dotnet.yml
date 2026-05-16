@@ -23,19 +23,15 @@ jobs:
     - name: Install Crystal Reports Runtime 
       run: |
         cd dotnet
-        ./install_crystal_runtime.ps1
+        choco install CrystalReports2010Runtime -y --source .
     - name: Build
       run: |
         cd dotnet
         ./build_zips.ps1
-    - name: Build Obsolete
-      run: |
-        cd dotnet
-        ./build_obsolete.ps1
     - name: Archive artifacts
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
-        name: build-output
+        name: crystalcmd-build-output
         path: |
           dotnet/build
         retention-days: 1

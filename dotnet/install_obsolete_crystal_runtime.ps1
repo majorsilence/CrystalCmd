@@ -19,7 +19,3 @@ $msi_path = Get-ChildItem -Path $extract_path -Recurse -Filter "*.msi" | Select-
 if (-not $msi_path) { throw "MSI file not found in extracted contents" }
 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$($msi_path.FullName)`" /qn" -Wait -NoNewWindow
 
-# install crystal 13sp36 64bit for normal build and tests
-choco install CrystalReports2010Runtime -y --source .
-
-
