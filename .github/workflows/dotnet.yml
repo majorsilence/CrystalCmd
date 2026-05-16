@@ -21,14 +21,10 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - name: Build
-      run: cd dotnet && choco install CrystalReports2010Runtime -y --source . && ./build_zips.ps1
-    - name: Test Report
-      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
-      if: success() || failure() # run this step even if previous step failed
-      with:
-        name: unit tests
-        path: "**/TestResults/*.xml"
-        reporter: dotnet-nunit
+      run: |
+        cd dotnet
+        choco install CrystalReports2010Runtime -y --source .
+        ./build_zips.ps1
     - name: Archive artifacts
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
@@ -36,3 +32,15 @@ jobs:
         path: |
           dotnet/build
         retention-days: 1
+    - name: Test
+      run: |
+        cd dotnet
+        ./test.ps1
+    - name: Record Test Report
+      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+      if: success() || failure() # run this step even if previous step failed
+      with:
+        name: unit tests
+        path: "**/TestResults/*.xml"
+        reporter: dotnet-nunit
+
