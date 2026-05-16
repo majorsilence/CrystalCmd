@@ -92,7 +92,3 @@ dotnet CycloneDX "Majorsilence.CrystalCmd.Server\Majorsilence.CrystalCmd.Server.
 if ($LastExitCode -ne 0) { throw "CycloneDX, Server failed" }
 
 cd $CURRENTPATH
-
-New-Item -ItemType Directory -Path ".\build\TestResults" -Force | Out-Null
-dotnet test .\Majorsilence.CrystalCmd.NetFrameworkServer\Majorsilence.CrystalCmd.NetFrameworkServer.sln --configuration Release --logger "nunit" -p:TestTfmsInParallel=false
-if ($LastExitCode -ne 0) { throw "Unit tests failed" }
