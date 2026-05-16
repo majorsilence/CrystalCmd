@@ -1,0 +1,38 @@
+name: obsolete_crystal
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 #v3.0.0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: 10.0.x
+    - name: Install Crystal Reports Runtime 
+      run: |
+        cd dotnet
+        ./install_obsolete_crystal_runtime.ps1
+    - name: Build Obsolete
+      run: |
+        cd dotnet
+        ./build_obsolete.ps1
+    - name: Archive artifacts
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+      with:
+        name: crystalcmd-build-output-obsolete
+        path: |
+          dotnet/build
+        retention-days: 1
+
