@@ -29,7 +29,15 @@ if ($LastExitCode -ne 0) { throw "Building solution, NetFrameworkServer, failed"
 
 
 Write-Output "Copying nuget packages"
-Get-ChildItem -Recurse "$CURRENTPATH\*Obsolete*.nupkg" | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
+$build_output = Join-Path $CURRENTPATH "build"
+if (Test-Path $build_output -PathType Leaf) {
+	Remove-Item $build_output -Force
+}
+New-Item -ItemType Directory -Force -Path $build_output | Out-Null
+
+Get-ChildItem -Recurse "$CURRENTPATH\*Obsolete*.nupkg" |
+	Where-Object { $_.FullName -notmatch '\\packages\\' } |
+	Copy-Item -Destination $build_output -Force
 
 
 cd $CURRENTPATH
