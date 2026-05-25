@@ -73,18 +73,18 @@ namespace Majorsilence.CrystalCmd.Common
         public void AddData(string name, DataTable dt)
         {
             string csv = DataTable2Csv(dt);
-            DataTables.Add(name, csv);
+            DataTables[name] = csv;
         }
 
         public void AddData<T>(string name, IEnumerable<T> list)
         {
             string csv = GenericListToCsv(list);
-            DataTables.Add(name, csv);
+            DataTables[name] = csv;
         }
 
         public void AddData(string name, string rawCsv)
         {
-            DataTables.Add(name, rawCsv);
+            DataTables[name] = rawCsv;
         }
 
 
