@@ -67,6 +67,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
             data.AddData(EmployeesKey, list1);
 
             Assert.DoesNotThrow(() => data.AddData(EmployeesKey, list2));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.DataTables[EmployeesKey], Does.Contain(Bob));
+                Assert.That(data.DataTables[EmployeesKey], Does.Not.Contain(Alice));
+            });
         }
 
         [Test]
