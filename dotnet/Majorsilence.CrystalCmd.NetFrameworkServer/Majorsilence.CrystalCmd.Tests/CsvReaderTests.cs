@@ -131,6 +131,29 @@ namespace Majorsilence.CrystalCmd.Tests
             Assert.That(result.Columns.Count, Is.EqualTo(8));
         }
 
+        [Test]
+        public void CreateTableEtl_WithValidCsvFile_ReturnsExpectedData()
+        {
+            var csvPath = System.IO.Path.Combine(TestContext.CurrentContext.TestDirectory, "csv_files", "valid.csv");
+            var csvContent = System.IO.File.ReadAllText(csvPath);
+
+            var result = CsvReader.CreateTableEtl(csvContent);
+            string CleanCell(object value) => value?.ToString().Trim('\\', '"').Trim() ?? string.Empty;
+
+            Assert.That(result.Columns.Count, Is.EqualTo(7));
+            Assert.That(result.Rows.Count, Is.EqualTo(5));
+            Assert.That(result.Columns[0].ColumnName, Is.EqualTo("Last Name"));
+            Assert.That(result.Columns[6].ColumnName, Is.EqualTo("PostCode"));
+
+            Assert.That(CleanCell(result.Rows[3]["Last Name"]), Is.EqualTo("LName4"));
+            Assert.That(CleanCell(result.Rows[3]["First Name"]), Is.EqualTo("FName4"));
+            Assert.That(CleanCell(result.Rows[3]["PROV"]), Is.EqualTo("NL"));
+
+            Assert.That(CleanCell(result.Rows[4]["Address2"]), Is.EqualTo("123 fake street"));
+            Assert.That(CleanCell(result.Rows[4]["Address3"]), Is.EqualTo("fake city"));
+            Assert.That(CleanCell(result.Rows[4]["PostCode"]), Is.EqualTo(string.Empty));
+        }
+
         static DataTable GetTable()
         {
             // Here we create a DataTable with four columns.
