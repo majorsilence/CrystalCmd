@@ -154,6 +154,32 @@ namespace Majorsilence.CrystalCmd.Tests
             Assert.That(CleanCell(result.Rows[4]["PostCode"]), Is.EqualTo(string.Empty));
         }
 
+        [Test]
+        public void CreateTableEtl_WithValidDateTimeFormats_ParsesDateTimeValues()
+        {
+            var csvPath = System.IO.Path.Combine(TestContext.CurrentContext.TestDirectory, "csv_files", "valid_datetime_formats.csv");
+            var csvContent = System.IO.File.ReadAllText(csvPath);
+
+            var result = CsvReader.CreateTableEtl(csvContent);
+
+            Assert.That(result.Columns["CreatedOn"].DataType, Is.EqualTo(typeof(DateTime)));
+            Assert.That(result.Rows.Count, Is.EqualTo(6));
+            Assert.That(((DateTime)result.Rows[0]["CreatedOn"]).Date, Is.EqualTo(new DateTime(2024, 1, 31)));
+            Assert.That(((DateTime)result.Rows[1]["CreatedOn"]), Is.EqualTo(new DateTime(2024, 2, 1, 14, 30, 0)));
+            Assert.That(((DateTime)result.Rows[2]["CreatedOn"]), Is.EqualTo(new DateTime(2024, 3, 1, 19, 45, 0)));
+            Assert.That(((DateTime)result.Rows[4]["CreatedOn"]), Is.EqualTo(new DateTime(2024, 3, 4, 8, 9, 10)));
+            Assert.That(((DateTime)result.Rows[5]["CreatedOn"]), Is.EqualTo(new DateTime(2026, 5, 27, 9, 6, 29)));
+        }
+
+        [Test]
+        public void CreateTableEtl_WithInvalidDateTimeFormats_ThrowsFormatException()
+        {
+            var csvPath = System.IO.Path.Combine(TestContext.CurrentContext.TestDirectory, "csv_files", "invalid_datetime_formats.csv");
+            var csvContent = System.IO.File.ReadAllText(csvPath);
+
+            Assert.Throws<FormatException>(() => CsvReader.CreateTableEtl(csvContent));
+        }
+
         static DataTable GetTable()
         {
             // Here we create a DataTable with four columns.

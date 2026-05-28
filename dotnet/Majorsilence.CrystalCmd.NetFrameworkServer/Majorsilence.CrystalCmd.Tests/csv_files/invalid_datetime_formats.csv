@@ -1,0 +1,4 @@
+Id,CreatedOn,Description
+Int32,DateTime,String
+1,not-a-date,Not parseable
+2,2024-02-30,Invalid calendar date

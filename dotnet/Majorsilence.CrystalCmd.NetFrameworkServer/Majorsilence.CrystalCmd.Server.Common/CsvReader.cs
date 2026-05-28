@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -38,7 +39,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     if (rowIdx == 0)
                     {
                         headers = e.Keys.ToArray();
-                        columntypes = e.Values.Select(p => p.ToString()).ToArray();
+                        columntypes = e.Values.Select(p => p?.ToString()?.Trim() ?? string.Empty).ToArray();
                         rowIdx = rowIdx + 1;
 
                         var altHeaders = e.AlternativeKeys?.ToArray();
@@ -64,11 +65,13 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
                     DataRow dr = dt.NewRow();
 
-                    var columns = e.Values.ToList();
+                        var columns = e.Values.ToList();
                     for (int i = 0; i < headers.Length; i++)
                     {
                         var cleaned = columns[i]?.ToString();
-                        if (string.Equals(columntypes[i], "string", StringComparison.InvariantCultureIgnoreCase) && string.IsNullOrWhiteSpace(cleaned))
+                        var columnType = dt.Columns[i].DataType;
+
+                        if (columnType == typeof(string) && string.IsNullOrWhiteSpace(cleaned))
                         {
                             dr[i] = "";
                         }
@@ -76,22 +79,64 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         {
                             dr[i] = DBNull.Value;
                         }
-                        else if (string.Equals(columntypes[i], "byte[]", StringComparison.InvariantCultureIgnoreCase))
+                        else if (columnType == typeof(byte[]))
                         {
                             dr[i] = HexStringToByteArray(cleaned);
                         }
+                        else if (columnType == typeof(DateTime))
+                        {
+                            if (!TryParseDateTime(cleaned, out DateTime dateValue))
+                            {
+                                throw new FormatException($"Unable to parse '{cleaned}' as DateTime for column '{headers[i]}' at row {rowIdx}.");
+                            }
+
+                            dr[i] = dateValue;
+                        }
                         else
                         {
-
                             dr[i] = cleaned;
                         }
                     }
 
                     dt.Rows.Add(dr);
+                    rowIdx = rowIdx + 1;
                 }
             }
 
             return dt;
+        }
+
+        private static bool TryParseDateTime(string value, out DateTime parsed)
+        {
+            value = value?.Trim().Trim('\\', '"') ?? string.Empty;
+
+            string[] formats = new[]
+            {
+                "o",
+                "s",
+                "yyyy-MM-dd",
+                "yyyy/MM/dd",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy/MM/dd HH:mm:ss",
+                "M/d/yyyy h:mm:ss tt",
+                "MM/dd/yyyy h:mm:ss tt",
+                "dd MMM yyyy",
+                "dd MMM yyyy h:mm tt",
+                "dddd, dd MMMM yyyy HH:mm:ss",
+                "MM-dd-yyyy"
+            };
+
+            if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind, out parsed))
+            {
+                return true;
+            }
+
+            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind, out parsed))
+            {
+                return true;
+            }
+
+            return DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind, out parsed);
         }
 
         private static byte[] HexStringToByteArray(string cleaned)
