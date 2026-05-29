@@ -108,7 +108,10 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private static bool TryParseDateTime(string value, out DateTime parsed)
         {
-            value = value?.Trim().Trim('\\', '"') ?? string.Empty;
+            // Trim whitespace and common surrounding wrapper characters that may appear
+            // in exported CSV values (for example: <05/25/2026 9:35:38 AM> or "05/25/2026 ...").
+            value = value?.Trim() ?? string.Empty;
+            value = value.Trim('\\', '"', '\'', '<', '>', '[', ']', '(', ')');
 
             string[] formats = new[]
             {
