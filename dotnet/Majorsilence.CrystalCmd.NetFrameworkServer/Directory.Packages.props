@@ -52,5 +52,7 @@
     <PackageVersion Include="System.Text.Json" Version="8.0.5" />
     <PackageVersion Include="WebGrease" Version="1.6.0" />
     <PackageVersion Include="NReco.Logging.File" Version="1.2.1" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="3.10.0" />
   </ItemGroup>
 </Project>
