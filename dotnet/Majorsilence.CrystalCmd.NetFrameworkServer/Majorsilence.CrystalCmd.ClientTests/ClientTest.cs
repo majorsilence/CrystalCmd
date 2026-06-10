@@ -19,10 +19,37 @@ namespace Majorsilence.CrystalCmd.ClientTests
     [TestFixture]
     public class ClientTest
     {
-        private const string baseUrl = "http://localhost:44355/";
         private const string username = "user";
         private const string password = "password";
         private const string bearerTokenKey = "PLACEHOLDER_PLACEHOLDER_PLACEHOLDER_PLACEHOLDER"; // match appsettings.json
+
+        private static string BaseUrl => UnitTestSetup.TestServerBaseUrl;
+
+        /// <summary>
+        /// Checks server availability once for the whole fixture. When
+        /// [OneTimeSetUp] calls Assert.Ignore NUnit marks every test in the
+        /// fixture as Ignored (Skipped in VSTest) without failing the run.
+        /// </summary>
+        [OneTimeSetUp]
+        public async Task FixtureSetup()
+        {
+            if (!UnitTestSetup.IsServerAvailable)
+                Assert.Ignore($"Server/worker not available — {UnitTestSetup.ServerUnavailableReason}");
+
+            // Confirm the server is still responding after startup. The process
+            // can crash quickly on machines without Crystal Reports installed.
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                var resp = await http.GetAsync(BaseUrl + "healthz/ready").ConfigureAwait(false);
+                if (!resp.IsSuccessStatusCode)
+                    Assert.Ignore($"Server health check returned {(int)resp.StatusCode}.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Ignore($"Server unreachable: {ex.Message}");
+            }
+        }
 
         [SetUp]
         public void Setup()
@@ -227,7 +254,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
             {
                 var rpt = new Majorsilence.CrystalCmd.Client.ReportAnalyzer(instream,
-                    httpClient, username: ClientTest.username, password: ClientTest.password, serverUrl: ClientTest.baseUrl);
+                    httpClient, username: ClientTest.username, password: ClientTest.password, serverUrl: ClientTest.BaseUrl);
 
                 var response = await rpt.Analyze(CancellationToken.None);
                 Assert.That(response != null);
@@ -257,7 +284,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
             {
                 var rpt = new Majorsilence.CrystalCmd.Client.ReportAnalyzer(instream,
-                    httpClient, bearerToken: token, serverUrl: ClientTest.baseUrl);
+                    httpClient, bearerToken: token, serverUrl: ClientTest.BaseUrl);
 
                 var response = await rpt.Analyze(CancellationToken.None);
                 Assert.That(response != null);
@@ -275,7 +302,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             using (var instream = new FileStream("the_dotnet_dataset_report.rpt", FileMode.Open, FileAccess.Read))
             {
                 var rpt = new Majorsilence.CrystalCmd.Client.ReportAnalyzer(instream,
-                    httpClient, bearerToken: token, serverUrl: ClientTest.baseUrl);
+                    httpClient, bearerToken: token, serverUrl: ClientTest.BaseUrl);
 
                 var response = await rpt.Analyze(CancellationToken.None, enablePolling: true);
                 Assert.That(response != null);
@@ -303,7 +330,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             using (var fstream = new FileStream(reportPath, FileMode.Open))
             using (var fstreamOut = new FileStream(pdfOutputPath, FileMode.OpenOrCreate | FileMode.Append))
             {
-                var rpt = new Client.Report(ClientTest.baseUrl, username: ClientTest.username, password: ClientTest.password);
+                var rpt = new Client.Report(ClientTest.BaseUrl, username: ClientTest.username, password: ClientTest.password);
                 using (var stream = await rpt.GenerateAsync(reportData, fstream))
                 {
                     await stream.CopyToAsync(fstreamOut);

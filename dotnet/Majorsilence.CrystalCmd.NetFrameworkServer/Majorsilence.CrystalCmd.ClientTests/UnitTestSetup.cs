@@ -12,6 +12,10 @@ namespace Majorsilence.CrystalCmd.ClientTests
     {
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
         internal static string TestServerBaseUrl { get; private set; } = "http://127.0.0.1:44355/";
+        /// <summary>True once the worker and server processes are confirmed ready.</summary>
+        internal static bool IsServerAvailable { get; private set; } = false;
+        /// <summary>Human-readable reason when IsServerAvailable is false.</summary>
+        internal static string ServerUnavailableReason { get; private set; } = "Server setup has not run yet.";
         private readonly StringBuilder _workerOutput = new StringBuilder();
         private readonly StringBuilder _serverOutput = new StringBuilder();
         private string _testQueueDbPath = string.Empty;
@@ -23,6 +27,23 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
         [OneTimeSetUp]
         public async Task Init()
+        {
+            try
+            {
+                await StartProcessesAsync().ConfigureAwait(false);
+                IsServerAvailable = true;
+                ServerUnavailableReason = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                IsServerAvailable = false;
+                ServerUnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+                TestContext.Progress.WriteLine($"[SetUp] Server/worker failed to start — server-dependent tests will be skipped.{Environment.NewLine}{ex}");
+                // Do not rethrow: pure unit tests (e.g. DataTests) must still run.
+            }
+        }
+
+        private async Task StartProcessesAsync()
         {
 #if DEBUG
             string configuration = "Debug";
@@ -198,7 +219,19 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
             try
             {
-                if (process.HasExited)
+                bool hasExited;
+                try
+                {
+                    hasExited = process.HasExited;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process was never started (startup failed before Start() was called).
+                    process.Dispose();
+                    return;
+                }
+
+                if (hasExited)
                 {
                     process.Dispose();
                     return;
