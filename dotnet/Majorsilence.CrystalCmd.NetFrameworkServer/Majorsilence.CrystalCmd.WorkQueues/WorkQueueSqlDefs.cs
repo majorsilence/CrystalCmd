@@ -19,6 +19,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         private readonly string _markAsCompletedSql;
         private readonly string _cleanupWorkQueueSql;
         private readonly string _cleanupGeneratedReportsSql;
+        private readonly string _claimWorkItemSql;
 
         public string EnqueueSql => _enqueueSql;
         public string DequeueSql => _dequeueSql;
@@ -31,6 +32,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         public string MarkAsCompletedSql => _markAsCompletedSql;
         public string CleanupWorkQueueSql => _cleanupWorkQueueSql;
         public string CleanupGeneratedReportsSql => _cleanupGeneratedReportsSql;
+        public string ClaimWorkItemSql => _claimWorkItemSql;
 
         public WorkQueueSqlDefs(SqlType sqlType)
         {
@@ -47,9 +49,13 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SELECT TOP 1 * FROM dbo.workqueue
                     WHERE Id = @p_id;";
                 _getSql = @"SELECT * FROM dbo.generatedreports WHERE id = @p_id";
-                _updateFailureCountSql = @"UPDATE dbo.workqueue 
-                    SET RetryCount = RetryCount + 1, 
-                        ErrorMessage = @p_errorMessage
+                _claimWorkItemSql = @"UPDATE dbo.workqueue
+                    SET status = @p_status
+                    WHERE id = @p_id;";
+                _updateFailureCountSql = @"UPDATE dbo.workqueue
+                    SET RetryCount = RetryCount + 1,
+                        ErrorMessage = @p_errorMessage,
+                        status = @p_pendingstatus
                     WHERE Id = @p_id;";
                 _generatedReportInsertSql = @"INSERT INTO dbo.generatedreports (id, format, generatedutc, filecontent, filename, metadata)
                     VALUES (@p_id, @p_format, @p_generatedutc, @p_filecontent, @p_filename, @p_metadata);";
@@ -116,9 +122,13 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     SELECT * FROM public.workqueue
                     WHERE id=@p_id;";
                 _getSql = @"SELECT * FROM public.generatedreports WHERE id = @p_id;";
-                _updateFailureCountSql = @"UPDATE public.workqueue 
-                    SET retrycount = retrycount + 1, 
-                        errormessage = @p_errorMessage
+                _claimWorkItemSql = @"UPDATE public.workqueue
+                    SET status = @p_status
+                    WHERE id = @p_id;";
+                _updateFailureCountSql = @"UPDATE public.workqueue
+                    SET retrycount = retrycount + 1,
+                        errormessage = @p_errorMessage,
+                        status = @p_pendingstatus
                     WHERE id = @p_id;";
                 _generatedReportInsertSql = @"INSERT INTO public.generatedreports (id, format, generatedutc, filecontent, filename, metadata)
                     VALUES (@p_id, @p_format, @p_generatedutc, @p_filecontent, @p_filename, @p_metadata);";
@@ -215,9 +225,13 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 _dequeueByIdSql = @"SELECT * FROM WorkQueue
                     WHERE id=@p_id AND (LockedUntilUtc IS NULL OR LockedUntilUtc < @p_now)";
                 _getSql = @"SELECT * FROM generatedreports WHERE Id = @p_id";
-                _updateFailureCountSql = @"UPDATE workqueue 
-                    SET retrycount = retrycount + 1, 
-                        errormessage = @p_errorMessage
+                _claimWorkItemSql = @"UPDATE WorkQueue
+                    SET Status = @p_status
+                    WHERE Id = @p_id;";
+                _updateFailureCountSql = @"UPDATE workqueue
+                    SET retrycount = retrycount + 1,
+                        errormessage = @p_errorMessage,
+                        status = @p_pendingstatus
                     WHERE id = @p_id;";
                 _generatedReportInsertSql = @"INSERT INTO generatedreports (id, format, generatedutc, filecontent, filename, metadata)
                     VALUES (@p_id, @p_format, @p_generatedutc, @p_filecontent, @p_filename, @p_metadata);";

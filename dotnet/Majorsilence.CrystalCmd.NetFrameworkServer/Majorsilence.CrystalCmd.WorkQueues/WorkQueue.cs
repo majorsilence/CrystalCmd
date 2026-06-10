@@ -128,54 +128,83 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             return new WorkQueue(sqlDefs, sqlType, connectionString, channel);
         }
 
-        private async Task UpdateFailureCount(DbConnection con, string id, string errorMessage)
+        private async Task UpdateFailureCount(string id, string errorMessage)
         {
-            using (var command = con.CreateCommand())
+            using (var con = CreateConnection())
             {
-                command.CommandText = _sqlDefs.UpdateFailureCountSql;
-                command.CommandType = CommandType.Text;
-                var idParam = command.CreateParameter();
-                idParam.ParameterName = "@p_id";
-                idParam.Value = id;
-                command.Parameters.Add(idParam);
-                var errorMessageParam = command.CreateParameter();
-                errorMessageParam.ParameterName = "@p_errorMessage";
-                errorMessageParam.Value = errorMessage;
-                command.Parameters.Add(errorMessageParam);
-                var lastAttemptUtcParam = command.CreateParameter();
-                lastAttemptUtcParam.ParameterName = "@p_lastAttemptUtc";
-                lastAttemptUtcParam.Value = DateTime.UtcNow;
-                command.Parameters.Add(lastAttemptUtcParam);
-                await command.ExecuteNonQueryAsync();
+                await con.OpenAsync();
+                using (var command = con.CreateCommand())
+                {
+                    command.CommandText = _sqlDefs.UpdateFailureCountSql;
+                    command.CommandType = CommandType.Text;
+                    var idParam = command.CreateParameter();
+                    idParam.ParameterName = "@p_id";
+                    idParam.Value = id;
+                    command.Parameters.Add(idParam);
+                    var errorMessageParam = command.CreateParameter();
+                    errorMessageParam.ParameterName = "@p_errorMessage";
+                    errorMessageParam.Value = errorMessage;
+                    command.Parameters.Add(errorMessageParam);
+                    var pendingStatusParam = command.CreateParameter();
+                    pendingStatusParam.ParameterName = "@p_pendingstatus";
+                    pendingStatusParam.Value = (int)WorkItemStatus.Pending;
+                    command.Parameters.Add(pendingStatusParam);
+                    await command.ExecuteNonQueryAsync();
+                }
             }
         }
 
         public async Task Dequeue(Func<WorkQueuePoco, Task<GeneratedReportPoco>> callback)
         {
+            // Transaction 1: claim the item and immediately commit so locks are released
+            // before the long-running report generation begins. Holding UPDLOCK across
+            // report generation caused sleeping transactions detected by sp_blitzfirst.
+            WorkQueuePoco result = null;
             using (var con = CreateConnection())
             {
                 await con.OpenAsync();
                 using (var txn = con.BeginTransaction())
                 {
-                    var result = await Dequeue<WorkQueuePoco>
-                        (DefaultChannel, con, txn);
+                    result = await Dequeue<WorkQueuePoco>(DefaultChannel, con, txn);
                     if (result != null)
                     {
-                        try
-                        {
-                            var report = await callback(result);
-                            await SaveGeneratedReport(report, con, txn);
-                            // mark work item as completed
-                            await MarkAsCompleted(con, txn, result.Id, WorkItemStatus.Completed);
-                            txn.Commit();
-                        }
-                        catch (Exception ex)
-                        {
-                            txn.Rollback();
-                            await UpdateFailureCount(con, result.Id, SafeSubString(ex.Message, 0, 1000));
-                            throw;
-                        }
+                        await ClaimWorkItem(con, txn, result.Id);
+                    }
+                    txn.Commit();
+                }
+            }
 
+            if (result == null) return;
+
+            // Do the work outside any transaction — no locks held during report generation
+            GeneratedReportPoco report;
+            try
+            {
+                report = await callback(result);
+            }
+            catch (Exception ex)
+            {
+                await UpdateFailureCount(result.Id, SafeSubString(ex.Message, 0, 1000));
+                throw;
+            }
+
+            // Transaction 2: persist the result and mark completed
+            using (var con = CreateConnection())
+            {
+                await con.OpenAsync();
+                using (var txn = con.BeginTransaction())
+                {
+                    try
+                    {
+                        await SaveGeneratedReport(report, con, txn);
+                        await MarkAsCompleted(con, txn, result.Id, WorkItemStatus.Completed);
+                        txn.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        txn.Rollback();
+                        await UpdateFailureCount(result.Id, SafeSubString(ex.Message, 0, 1000));
+                        throw;
                     }
                 }
             }
@@ -200,6 +229,25 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 statusParam.ParameterName = "@p_status";
                 statusParam.Value = (int)status;
                 command.Parameters.Add(statusParam);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        private async Task ClaimWorkItem(DbConnection con, DbTransaction txn, string id)
+        {
+            using (var command = con.CreateCommand())
+            {
+                command.CommandText = _sqlDefs.ClaimWorkItemSql;
+                command.CommandType = CommandType.Text;
+                command.Transaction = txn;
+                var statusParam = command.CreateParameter();
+                statusParam.ParameterName = "@p_status";
+                statusParam.Value = (int)WorkItemStatus.Processing;
+                command.Parameters.Add(statusParam);
+                var idParam = command.CreateParameter();
+                idParam.ParameterName = "@p_id";
+                idParam.Value = id;
+                command.Parameters.Add(idParam);
                 await command.ExecuteNonQueryAsync();
             }
         }
@@ -358,7 +406,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 command.Parameters.Add(filenameParam);
                 var metadataParam = command.CreateParameter();
                 metadataParam.ParameterName = "@p_metadata";
-                metadataParam.Value = report.Metadata;
+                metadataParam.Value = (object?)report.Metadata ?? DBNull.Value;
                 command.Parameters.Add(metadataParam);
                 await command.ExecuteNonQueryAsync();
             }
