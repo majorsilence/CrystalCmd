@@ -81,7 +81,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
                         }
                         else if (columnType == typeof(byte[]))
                         {
-                            dr[i] = HexStringToByteArray(cleaned);
+                            if (!TryParseByteArray(cleaned, out byte[] bytesValue))
+                            {
+                                throw new FormatException($"Unable to parse '{cleaned}' as Byte[] for column '{headers[i]}' at row {rowIdx}.");
+                            }
+
+                            dr[i] = bytesValue;
                         }
                         else if (columnType == typeof(DateTime))
                         {
@@ -142,15 +147,73 @@ namespace Majorsilence.CrystalCmd.Server.Common
             return DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind, out parsed);
         }
 
-        private static byte[] HexStringToByteArray(string cleaned)
+        private static bool TryParseByteArray(string value, out byte[] parsed)
         {
-            String[] arr = cleaned.Split('-');
-            byte[] array = new byte[arr.Length];
+            parsed = null;
+
+            value = value?.Trim() ?? string.Empty;
+            value = value.Trim('\\', '"', '\'', '<', '>', '[', ']', '(', ')');
+
+            if (value.Length == 0)
+            {
+                parsed = new byte[0];
+                return true;
+            }
+
+            // Dash-delimited hex, the format emitted by the official client via
+            // BitConverter.ToString() (e.g. "4D-56-61"). Try this first because it
+            // is unambiguous and what Data.DataTable2Csv produces.
+            if (TryParseDashHex(value, out parsed))
+            {
+                return true;
+            }
+
+            // Base64, the format used by other producers that serialise byte[]
+            // with Convert.ToBase64String() (e.g. "MVaoMDzqATjm/UaXioVCqg==").
+            // In-process Crystal accepted whatever byte[] it was handed, so the
+            // server must tolerate both encodings rather than throwing.
+            try
+            {
+                parsed = Convert.FromBase64String(value);
+                return true;
+            }
+            catch (FormatException)
+            {
+                parsed = null;
+                return false;
+            }
+        }
+
+        private static bool TryParseDashHex(string value, out byte[] parsed)
+        {
+            parsed = null;
+
+            String[] arr = value.Split('-');
+            var array = new byte[arr.Length];
             for (int i = 0; i < arr.Length; i++)
             {
-                array[i] = Convert.ToByte(arr[i], 16);
+                var token = arr[i];
+                if (token.Length == 0 || token.Length > 2)
+                {
+                    return false;
+                }
+
+                foreach (char c in token)
+                {
+                    bool isHex = (c >= '0' && c <= '9')
+                        || (c >= 'a' && c <= 'f')
+                        || (c >= 'A' && c <= 'F');
+                    if (!isHex)
+                    {
+                        return false;
+                    }
+                }
+
+                array[i] = Convert.ToByte(token, 16);
             }
-            return array;
+
+            parsed = array;
+            return true;
         }
 
         private static string ConvertToWindowsEOL(string readData)

@@ -180,6 +180,51 @@ namespace Majorsilence.CrystalCmd.Tests
             Assert.Throws<FormatException>(() => CsvReader.CreateTableEtl(csvContent));
         }
 
+        [Test]
+        public void CreateTableEtl_WithBase64ByteArray_ParsesBytes()
+        {
+            // Some producers serialise byte[] columns with Convert.ToBase64String()
+            // rather than the BitConverter dash-hex format the official client emits.
+            // Both must be tolerated; previously the Base64 form crashed the render
+            // with a FormatException out of HexStringToByteArray.
+            var expected = new byte[] { 0x31, 0x55, 0xA8, 0x30, 0x3C, 0xEA, 0x01, 0x38,
+                0xE6, 0xFD, 0x46, 0x97, 0x8A, 0x85, 0x42, 0xAA };
+            var base64 = Convert.ToBase64String(expected); // "MVaoMDzqATjm/UaXioVCqg=="
+
+            var csv = "Id,Barcode\nInt32,Byte[]\n\"1\",\"" + base64 + "\"\n";
+
+            var result = CsvReader.CreateTableEtl(csv);
+
+            Assert.That(result.Columns["Barcode"].DataType, Is.EqualTo(typeof(byte[])));
+            Assert.That(result.Rows.Count, Is.EqualTo(1));
+            Assert.That(result.Rows[0]["Barcode"], Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void CreateTableEtl_WithDashHexByteArray_StillParsesBytes()
+        {
+            // The official client (Data.DataTable2Csv via BitConverter.ToString)
+            // continues to work after the Base64 tolerance was added.
+            var expected = System.Text.Encoding.UTF8.GetBytes("Hello world");
+            var dashHex = BitConverter.ToString(expected); // "48-65-6C-6C-6F-..."
+
+            var csv = "Id,Payload\nInt32,Byte[]\n\"1\",\"" + dashHex + "\"\n";
+
+            var result = CsvReader.CreateTableEtl(csv);
+
+            Assert.That(result.Rows[0]["Payload"], Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void CreateTableEtl_WithInvalidByteArray_ThrowsFormatException()
+        {
+            // Neither dash-hex nor Base64 -> surfaced as a clear FormatException
+            // instead of an opaque crash.
+            var csv = "Id,Payload\nInt32,Byte[]\n\"1\",\"not*valid*bytes\"\n";
+
+            Assert.Throws<FormatException>(() => CsvReader.CreateTableEtl(csv));
+        }
+
         static DataTable GetTable()
         {
             // Here we create a DataTable with four columns.
