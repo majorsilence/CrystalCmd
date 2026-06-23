@@ -26,6 +26,20 @@ CrystalCMD is developed with the following work flow:
 * Repeat if it doesn't have a feature that you want it to have, add it
     * If it has a bug you need fixed, fix it
 
+# Git history rewrite (June 2026)
+
+The git history was rewritten with `git filter-repo` to remove the SAP Crystal Reports
+runtime jars (and an old committed build artifact) from **all** commits. They were removed
+because the SAP Crystal runtime is proprietary and must not be redistributed in source
+control, and because the binaries bloated the repository (the `.git` directory shrank from
+~165 MB to ~2 MB).
+
+Consequences:
+
+* **Every commit SHA before the rewrite changed.** If you have an older clone, re-clone or
+  hard-reset to the rewritten history — old branches reference commits that no longer exist.
+* `java/CrystalCmd/lib/` no longer contains the jars. Reconstruct it before building with
+  `scripts/download-crystal-libs.sh` (or `.ps1` on Windows) — see `java/CrystalCmd/lib/README.md`.
 
 # Example usage
 

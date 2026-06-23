@@ -372,6 +372,11 @@ testout.pdf
 .DS_Store
 /java/CrystalCmd/target/classes
 /docker/CrystalCmd_jar
+
+# Crystal Reports runtime jars are proprietary (not redistributable) and the rest are
+# fetched dependencies; reconstruct java/CrystalCmd/lib with scripts/download-crystal-libs.*
+# (lib/README.md is kept).
+/java/CrystalCmd/lib/*.jar
 /dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.NetframeworkConsoleServer/*.zip
 dotnet/build
 *.MSI

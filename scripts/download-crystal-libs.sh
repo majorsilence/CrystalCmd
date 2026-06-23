@@ -47,13 +47,15 @@ unzip -o -j "$zip" 'lib/*.jar' -d "$LIB_DIR" >/dev/null
 fetch() {
     url="$1"; out="$2"
     echo "  $out"
-    curl -fL --retry 3 -o "$LIB_DIR/$out" "$url"
+    if ! curl -fsSL --retry 3 -o "$LIB_DIR/$out" "$url"; then
+        echo "  WARN: failed to download $out from $url" >&2
+    fi
 }
 
 echo "Downloading application dependencies from Maven Central ..."
 fetch "$MAVEN/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar" "gson-2.8.6.jar"
 fetch "$MAVEN/com/h2database/h2/1.4.196/h2-1.4.196.jar" "h2-1.4.196.jar"
-fetch "$MAVEN/net/sourceforge/csvjdbc/csvjdbc/1.0-37/csvjdbc-1.0-37.jar" "csvjdbc-1.0-37.jar"
+fetch "$MAVEN/net/sourceforge/csvjdbc/csvjdbc/1.0.37/csvjdbc-1.0.37.jar" "csvjdbc-1.0.37.jar"
 fetch "$MAVEN/commons-fileupload/commons-fileupload/1.3.3/commons-fileupload-1.3.3.jar" "commons-fileupload-1.3.3.jar"
 fetch "$MAVEN/commons-io/commons-io/2.6/commons-io-2.6.jar" "commons-io-2.6.jar"
 
