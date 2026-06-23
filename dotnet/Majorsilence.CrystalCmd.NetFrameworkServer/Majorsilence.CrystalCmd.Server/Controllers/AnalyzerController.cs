@@ -62,14 +62,21 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 Id = inputResults.Id
             });
 
-            return Ok(inputResults.Id);
+            // Return a handle bound to the authenticated caller (see PollTokenProtector).
+            return Ok(PollTokenProtector.Protect(inputResults.Id, User, _configuration));
         }
 
         [HttpGet("/analyzer/poll")]
         public async Task<IActionResult> AnalyzePollGet([FromHeader(Name = "id")] string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest();
+
+            if (!PollTokenProtector.TryUnprotect(id, User, _configuration, out var reportId))
+                return NotFound();
+
             var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
-            var result = await queue.Get(id);
+            var result = await queue.Get(reportId);
 
             if (result.Status == WorkItemStatus.Unknown)
                 return NotFound();

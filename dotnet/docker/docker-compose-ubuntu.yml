@@ -36,10 +36,19 @@ services:
       ASPNETCORE_URLS: http://+:5000
       WorkQueue__SqlType: psql
       WorkQueue__SqlConnection: Server=postgres;Port=5432;Database=pg_crystalcmd_queue;Userid=postgres;Password=password;Pooling=true;MinPoolSize=2;
-      Credentials__Username: user
-      Credentials__Password: password
+      # The server refuses to start with the default user/password. These are throwaway
+      # local-dev values — set strong, unique credentials for any real deployment.
+      Credentials__Username: crystalcmd
+      Credentials__Password: local-dev-only-change-me
     ports:
       - "5000:5000"
+    # Baseline hardening. The api image already runs non-root (USER $APP_UID) and is plain
+    # ASP.NET (no Wine), so these are safe.
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    pids_limit: 512
 
   worker:
     build:
@@ -57,6 +66,30 @@ services:
     environment:
       appsettings__WorkQueueSqlType: psql
       appsettings__WorkQueueSqlConnection: Server=postgres;Port=5432;Database=pg_crystalcmd_queue;Userid=postgres;Password=password;Pooling=true;MinPoolSize=2;
+    # The worker renders UNTRUSTED Crystal templates. The Linux container (not Wine) is the
+    # security boundary, so constrain its blast radius.
+    # cap_drop: [ALL] verified working: the Crystal engine renders fine under Wine/Xvfb with
+    # all Linux capabilities dropped (same-uid ptrace used by wineserver needs no CAP_SYS_PTRACE).
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    cpus: "2.0"
+    pids_limit: 512
+    # --- Stronger isolation (enable per your environment; test first) ----------------
+    # Egress allow-list: the worker only needs to reach the queue DB. Deny all other
+    # outbound traffic (internet + internal RFC1918) to neutralise SSRF / data exfil from a
+    # malicious template. Compose cannot filter egress itself — enforce it with a host
+    # firewall (nftables/iptables), a Kubernetes NetworkPolicy, or an egress proxy.
+    #
+    # read_only root FS / non-root user are NOT enabled: this image bakes the Wine prefix at
+    # /majorsilence-wine (owned by root) and writes its temp + logs there, so masking it with
+    # a tmpfs or switching users breaks Wine. To use them, rebuild the image to create the
+    # prefix for a non-root user at runtime, then add e.g. `user: "1000:1000"`,
+    # `read_only: true`, `tmpfs: [/tmp]`.
+    #
+    # For genuinely internet-facing untrusted input, run under gVisor (runsc) or Kata, and/or
+    # one ephemeral worker container per job.
 
 volumes:
   crystalcmd_postgres_data:

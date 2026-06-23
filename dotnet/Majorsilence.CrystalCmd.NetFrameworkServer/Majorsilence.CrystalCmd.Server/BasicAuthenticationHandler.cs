@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -45,13 +46,20 @@ namespace Majorsilence.CrystalCmd.Server
 
                 if (string.IsNullOrWhiteSpace(expectedUser) || string.IsNullOrWhiteSpace(expectedPass))
                 {
-                    return Task.FromResult(AuthenticateResult.Fail("Server basic credentials not configured"));
+                    // Log the real reason server-side, but return a generic failure to the
+                    // client so it cannot distinguish "not configured" from "wrong password".
+                    Logger.LogError("Basic authentication is not configured (Credentials:Username/Password missing).");
+                    return Task.FromResult(AuthenticateResult.Fail("Invalid credentials"));
                 }
 
-                if (!string.Equals(username, expectedUser, StringComparison.InvariantCultureIgnoreCase) ||
-                    !string.Equals(password, expectedPass, StringComparison.InvariantCulture))
+                // Compare both fields in constant time (case-sensitive). Evaluating both
+                // comparisons unconditionally avoids leaking, via response timing, which
+                // field was wrong or how many leading characters matched.
+                bool userMatches = FixedTimeEquals(username, expectedUser);
+                bool passMatches = FixedTimeEquals(password, expectedPass);
+                if (!userMatches || !passMatches)
                 {
-                    return Task.FromResult(AuthenticateResult.Fail("Invalid username or password"));
+                    return Task.FromResult(AuthenticateResult.Fail("Invalid credentials"));
                 }
 
                 var claims = new[] { new Claim(ClaimTypes.Name, username) };
@@ -70,6 +78,15 @@ namespace Majorsilence.CrystalCmd.Server
                 Logger.LogError(ex, "Error authenticating");
                 return Task.FromResult(AuthenticateResult.Fail("Error authenticating"));
             }
+        }
+
+        private static bool FixedTimeEquals(string a, string b)
+        {
+            // CryptographicOperations.FixedTimeEquals short-circuits only on length,
+            // which is acceptable here; the byte content is compared in constant time.
+            var ab = Encoding.UTF8.GetBytes(a ?? string.Empty);
+            var bb = Encoding.UTF8.GetBytes(b ?? string.Empty);
+            return CryptographicOperations.FixedTimeEquals(ab, bb);
         }
     }
 }

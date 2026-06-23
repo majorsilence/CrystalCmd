@@ -57,6 +57,68 @@ curl -u "username:password" -F "reportdata=@test.json" -F "reporttemplate=@the_d
      - reporttemplate
      - reportdata
 
+# Security
+
+CrystalCmd renders **whatever Crystal Reports template (`.rpt`) the caller uploads**. That
+is by design, but it has important security consequences, because a `.rpt` can embed its own
+database connections, SQL command objects, and references to external/UNC resources. Treat
+the rendering service as something that runs **untrusted report definitions** and harden the
+deployment accordingly.
+
+## Treat the server/worker as untrusted-code execution
+
+A malicious or compromised client can submit a template that tries to:
+
+- connect to arbitrary databases or hosts reachable from the worker (SSRF / use of any
+  ambient credentials),
+- reference a UNC path (`\\attacker\share\...`) to make a Windows worker authenticate
+  outbound over SMB and leak NetNTLM hashes,
+- abuse `RecordSelectionFormula` / formula fields (Crystal formula injection).
+
+Because any `.rpt` must be accepted, mitigate at the deployment boundary:
+
+- Run the worker as a **low-privilege account**.
+- Place it in an **isolated network segment** with an **egress firewall** that denies
+  outbound traffic except to data sources you explicitly allow. **Block outbound SMB
+  (445/139).**
+- Only expose the API to trusted callers (authenticated, ideally also network-restricted).
+- Where you control the report set, prefer an allow-list of known-good templates over
+  accepting arbitrary uploads.
+
+## Authentication and transport
+
+- **Basic auth** credentials come from `Credentials:Username` / `Credentials:Password`.
+  They ship **empty** — the server rejects all requests until you set them. The server
+  **refuses to start** if they are set to the well-known defaults `user`/`password` (set
+  `Security:AllowDefaultCredentials=true` only for local testing).
+- **JWT** is enabled only when `Jwt:Key` is a real secret of **at least 32 bytes**; the
+  shipped placeholder is ignored so it cannot be used to forge tokens. Use a unique secret.
+- Basic credentials and bearer tokens are sent on every request. **Always use TLS.** Set
+  `Security:RequireHttps=true` to force HSTS + HTTPS redirect when the server is exposed
+  directly, or terminate TLS at a trusted reverse proxy (the server honours
+  `X-Forwarded-Proto`/`X-Forwarded-For`).
+
+## Polling handles
+
+The id returned by `POST /export/poll` and `POST /analyzer/poll` is an opaque handle. When
+a signing key is configured (`Security:PollTokenKey`, falling back to `Jwt:Key`) the handle
+is bound to the authenticated caller via HMAC, so one principal cannot fetch another's
+report by guessing/replaying the id. Set `Security:PollTokenKey` to a shared secret across
+all instances in a multi-instance JWT deployment.
+
+## Resource limits
+
+- `Limits:MaxRequestBodyBytes` (default 100 MB) caps a single request body.
+- GZip request bodies are decompressed with a hard cap (200 MB) to prevent decompression
+  bombs.
+
+## Java server
+
+The reference Java server requires Basic auth on `/export`, reading expected credentials
+from the `CRYSTALCMD_USERNAME` / `CRYSTALCMD_PASSWORD` environment variables (it rejects all
+requests when they are unset). It is still a proof of concept — keep it behind an
+authenticating, TLS-terminating reverse proxy and do not expose it directly.
+
 # Postman Collection
 
 [Majorsilence.CrystalCMD.postman_collection.json](Majorsilence.CrystalCMD.postman_collection.json)

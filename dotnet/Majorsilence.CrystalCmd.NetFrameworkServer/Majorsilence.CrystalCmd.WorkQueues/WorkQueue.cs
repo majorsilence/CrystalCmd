@@ -184,7 +184,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             }
             catch (Exception ex)
             {
-                await UpdateFailureCount(result.Id, SafeSubString(ex.Message, 0, 1000));
+                await UpdateFailureCount(result.Id, SafeSubString(SanitizeErrorMessage(ex.Message), 0, 1000));
                 throw;
             }
 
@@ -203,7 +203,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     catch (Exception ex)
                     {
                         txn.Rollback();
-                        await UpdateFailureCount(result.Id, SafeSubString(ex.Message, 0, 1000));
+                        await UpdateFailureCount(result.Id, SafeSubString(SanitizeErrorMessage(ex.Message), 0, 1000));
                         throw;
                     }
                 }
@@ -250,6 +250,23 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 command.Parameters.Add(idParam);
                 await command.ExecuteNonQueryAsync();
             }
+        }
+
+        // Exception messages from the DB/Crystal layers frequently embed connection
+        // strings. This row is stored in the shared work-queue table (and may be read by
+        // other tenants/operators), so redact credential-bearing key=value pairs.
+        private static readonly System.Text.RegularExpressions.Regex SecretKvRegex =
+            new System.Text.RegularExpressions.Regex(
+                @"(?i)\b(password|pwd|user id|uid|data source|server|address|initial catalog|database|account ?key|shared ?access ?key|token)\s*=\s*[^;""']+",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static string SanitizeErrorMessage(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            return SecretKvRegex.Replace(input, m => m.Groups[1].Value + "=***");
         }
 
         private static string SafeSubString(string input, int startIndex, int length)
@@ -358,11 +375,6 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
                 var generatedReportsPoco = await Query<GeneratedReportPoco>(con, _sqlDefs.GetSql, param: new { p_id = id });
                 var workQueuePoco = await Query<WorkQueuePoco>(con, _sqlDefs.DequeueByIdSql, param: new { p_id = id, p_now = DateTime.UtcNow });
-
-                var settings = new JsonSerializerSettings
-                {
-                    TypeNameHandling = TypeNameHandling.Auto
-                };
 
                 if (generatedReportsPoco != null)
                 {

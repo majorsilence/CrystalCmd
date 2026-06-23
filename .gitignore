@@ -378,3 +378,5 @@ dotnet/build
 /dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.NetFrameworkServer/App_Data/crystalcmd_log.txt
 /dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/ExternalLogAssemblies
 /dotnet/docker/build/oci
+/.claude/settings.local.json
+/dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.Server/appsettings.Development.json

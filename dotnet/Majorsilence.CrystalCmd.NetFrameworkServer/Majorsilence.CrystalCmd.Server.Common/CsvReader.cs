@@ -19,7 +19,10 @@ namespace Majorsilence.CrystalCmd.Server.Common
             DataTable dt = new DataTable();
             using (var reader = ChoCSVReader.LoadText(ConvertToWindowsEOL(csv), new ChoCSVRecordConfiguration()
             {
-                MaxLineSize = int.MaxValue / 5,
+                // Bound the per-line buffer (was int.MaxValue/5 ~= 429 MB, an unnecessary
+                // memory-exhaustion lever). 64 MB comfortably fits legitimate rows,
+                // including base64/hex blob columns, while capping abuse.
+                MaxLineSize = 64 * 1024 * 1024,
 
                 // Tolerate case-insensitively duplicate header names rather
                 // than throwing ChoRecordConfigurationException. In-process Crystal

@@ -46,8 +46,15 @@ public class Program {
 		} else {
 			System.out.println("Running in server mode, http://127.0.0.1:4321/status");
 			HttpServer server = HttpServer.create(new InetSocketAddress(4321), 0);
+			// /status is left unauthenticated for health checks.
 			server.createContext("/status", new ServerStatus());
-			server.createContext("/export", new ServerExport());
+			// /export renders caller-supplied report templates, so it must require
+			// authentication. Credentials come from the CRYSTALCMD_USERNAME /
+			// CRYSTALCMD_PASSWORD environment variables; if they are unset the
+			// authenticator denies every request (fail closed).
+			com.sun.net.httpserver.HttpContext exportContext =
+					server.createContext("/export", new ServerExport());
+			exportContext.setAuthenticator(new BasicAuth("CrystalCmd"));
 			server.setExecutor(null); // creates a default executor
 			server.start();
 

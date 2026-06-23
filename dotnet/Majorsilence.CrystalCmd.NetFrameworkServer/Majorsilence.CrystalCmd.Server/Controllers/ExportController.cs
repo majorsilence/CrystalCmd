@@ -90,7 +90,9 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 ReportTemplate = inputResults.ReportTemplate,
                 Data = inputResults.ReportData
             });
-            return Ok(inputResults.Id);
+            // Return a handle bound to the authenticated caller so other principals cannot
+            // poll for this report by guessing/replaying its id.
+            return Ok(PollTokenProtector.Protect(inputResults.Id, User, _configuration));
         }
 
         [HttpGet("/export/poll")]
@@ -101,8 +103,11 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest();
 
+            if (!PollTokenProtector.TryUnprotect(id, User, _configuration, out var reportId))
+                return NotFound();
+
             var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
-            var result = await queue.Get(id);
+            var result = await queue.Get(reportId);
 
             if (result.Status == WorkItemStatus.Unknown)
                 return NotFound();

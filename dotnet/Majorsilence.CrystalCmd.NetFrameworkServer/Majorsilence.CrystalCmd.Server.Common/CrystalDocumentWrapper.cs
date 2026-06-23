@@ -18,9 +18,30 @@ namespace Majorsilence.CrystalCmd.Server.Common
             _logger = logger;
         }
 
+        // The TraceId is client-supplied and flows into log messages. Strip CR/LF (and
+        // other control chars) and cap the length so it cannot forge or flood log lines.
+        private static string SanitizeForLog(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "";
+            }
+
+            var sb = new System.Text.StringBuilder(value.Length);
+            foreach (char c in value)
+            {
+                sb.Append(char.IsControl(c) ? ' ' : c);
+                if (sb.Length >= 200)
+                {
+                    break;
+                }
+            }
+            return sb.ToString();
+        }
+
         public ReportDocument Create(string reportPath, CrystalCmd.Common.Data datafile)
         {
-            _traceId = datafile.TraceId ?? "";
+            _traceId = SanitizeForLog(datafile.TraceId);
             ReportDocument reportClientDocument=null;
             try
             {
