@@ -1,20 +1,20 @@
-FROM ubuntu:20.04
+FROM eclipse-temurin:21-jre-jammy
 
-LABEL maintainer "Peter Gill"
+LABEL maintainer="Peter Gill"
 
 # make install files accessible
-COPY CrystalCmd.jar /root
+COPY CrystalCmd.jar /root/
 
 WORKDIR /
 
-RUN apt update \
-        && apt-get install -y software-properties-common -y \
-        && apt update \
-        && echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections \
-        && LC_ALL=C DEBIAN_FRONTEND=noninteractive apt install -y openjdk-11-jre fonts-dejavu fontconfig ttf-mscorefonts-installer \
-        && fc-cache -f -v \
-        && ln -s /usr/share/fonts/truetype/msttcorefonts /usr/lib/jvm/java-1.11.0-openjdk-amd64/lib/fonts
-        && rm -rf /var/lib/apt/lists/*
+# Crystal PDF export needs fonts present (see Readme "Crystal Reports and PDF Export").
+# Modern JREs resolve fonts via fontconfig, so no JRE lib/fonts symlink is needed.
+RUN apt-get update \
+    && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        fonts-dejavu fontconfig ttf-mscorefonts-installer \
+    && fc-cache -f \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 4321
 CMD ["java", "-jar", "/root/CrystalCmd.jar"]
-

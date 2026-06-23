@@ -1,69 +1,82 @@
-
-import com.crystaldecisions.sdk.occa.report.lib.ReportSDKException;
+import com.google.gson.Gson;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
+import java.util.concurrent.Executors;
 
+/**
+ * Entry point. Two modes, mirroring the C# implementation:
+ *   - Command line: -reportpath <rpt> -datafile <json> -outpath <out>  (render once to a file)
+ *   - Server:       polling HTTP API (/export, /export/poll, /analyzer, /analyzer/poll, /status)
+ *                   backed by an in-process work queue + Crystal worker.
+ */
 public class Program {
 
-	public static void main(String[] args) throws ReportSDKException, IOException, SQLException {
-		String reportpath = "";
-		String dataFilePath = "";
+    public static void main(String[] args) throws Exception {
+        String reportpath = "";
+        String dataFilePath = "";
+        String outpath = "";
 
-		String outpath = "";
+        for (int i = 0; i <= args.length - 1; i++) {
+            if (args[i].equals("-reportpath") && i + 1 < args.length) {
+                reportpath = args[i + 1].trim();
+            } else if (args[i].equals("-datafile") && i + 1 < args.length) {
+                dataFilePath = args[i + 1].trim();
+            } else if (args[i].equals("-outpath") && i + 1 < args.length) {
+                outpath = args[i + 1].trim();
+            }
+        }
 
-		for (int i = 0; i <= args.length - 1; i++) {
-			System.out.println(args[i]);
-			if (args[i].equals("-reportpath")) {
-				reportpath = args[i + 1].trim();
-			} else if (args[i].equals("-datafile")) {
-				dataFilePath = args[i + 1].trim();
-			} else if (args[i].equals("-outpath")) {
-				outpath = args[i + 1].trim();
-			}
-		}
+        if (!reportpath.isEmpty() && !dataFilePath.isEmpty() && !outpath.isEmpty()) {
+            runCommandLine(reportpath, dataFilePath, outpath);
+        } else {
+            runServer();
+        }
+    }
 
-		System.out.println("-args length: " + args.length);
-		System.out.println("-reportpath: " + reportpath);
-		System.out.println("-datafile: " + dataFilePath);
-		System.out.println("-outpath: " + outpath);
+    private static void runCommandLine(String reportpath, String dataFilePath, String outpath) throws Exception {
+        String json = new String(Files.readAllBytes(Paths.get(dataFilePath)), StandardCharsets.UTF_8);
+        Data data = new Gson().fromJson(json, Data.class);
+        Exporter.ExportResult result = new Exporter().export(reportpath, data);
+        Files.write(Paths.get(outpath), result.content);
+        System.out.println("Wrote " + result.content.length + " bytes (" + result.fileExt + ") to " + outpath);
+    }
 
-		if (!reportpath.trim().isEmpty() && !dataFilePath.trim().isEmpty()) {
-			/// Load from report and data from file system
+    private static void runServer() throws IOException {
+        // Fail closed on insecure defaults before listening.
+        Config.validateSecurity();
 
-			String datafile = readFile(dataFilePath, StandardCharsets.UTF_8);
-			com.google.gson.Gson gson = new com.google.gson.Gson();
-			Data convertedDataFile = gson.fromJson(datafile, Data.class);
+        // In-process worker that renders/analyses queued jobs.
+        ReportWorker worker = new ReportWorker();
+        worker.start();
 
-			PdfExporter pdfExport = new PdfExporter();
-			pdfExport.exportReportToFile(reportpath, outpath, convertedDataFile);
-		} else {
-			System.out.println("Running in server mode, http://127.0.0.1:4321/status");
-			HttpServer server = HttpServer.create(new InetSocketAddress(4321), 0);
-			// /status is left unauthenticated for health checks.
-			server.createContext("/status", new ServerStatus());
-			// /export renders caller-supplied report templates, so it must require
-			// authentication. Credentials come from the CRYSTALCMD_USERNAME /
-			// CRYSTALCMD_PASSWORD environment variables; if they are unset the
-			// authenticator denies every request (fail closed).
-			com.sun.net.httpserver.HttpContext exportContext =
-					server.createContext("/export", new ServerExport());
-			exportContext.setAuthenticator(new BasicAuth("CrystalCmd"));
-			server.setExecutor(null); // creates a default executor
-			server.start();
+        int port = Config.port();
+        System.out.println("Running in server mode, http://127.0.0.1:" + port + "/status");
 
-		}
-	}
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
-	private static String readFile(String path, Charset encoding) throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
-	}
+        AuthFilter auth = new AuthFilter();
 
+        // Health endpoints are unauthenticated.
+        server.createContext("/status", new StatusHandler());
+        server.createContext("/healthz", new StatusHandler());
+
+        // Protected endpoints (Basic or JWT).
+        HttpContext export = server.createContext("/export", new ExportHandler());
+        export.getFilters().add(auth);
+        HttpContext exportPoll = server.createContext("/export/poll", new ExportHandler());
+        exportPoll.getFilters().add(auth);
+        HttpContext analyzer = server.createContext("/analyzer", new AnalyzerHandler());
+        analyzer.getFilters().add(auth);
+        HttpContext analyzerPoll = server.createContext("/analyzer/poll", new AnalyzerHandler());
+        analyzerPoll.getFilters().add(auth);
+
+        server.setExecutor(Executors.newFixedThreadPool(8));
+        server.start();
+    }
 }
