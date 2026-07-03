@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
@@ -337,8 +338,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 case ParameterValueKind.DateParameter:
                 case ParameterValueKind.DateTimeParameter:
                 case ParameterValueKind.TimeParameter:
-                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? DateTime.Now.ToLongDateString() : val.ToString();
-                    rpt.SetParameterValue(name, DateTime.Parse(theValue));
+                    rpt.SetParameterValue(name, ParseDateParameterValue(val));
                     break;
                 default:
                     theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
@@ -346,6 +346,29 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     break;
             }
 
+        }
+
+        // The client libraries default to ISO 8601, and Newtonsoft.Json already
+        // deserializes ISO 8601 parameter values straight into DateTime, so use that
+        // value as-is rather than round-tripping it through a culture-dependent
+        // ToString()/Parse(). If it arrives as a plain string instead (e.g. a caller
+        // that doesn't use ISO 8601), try ISO 8601 first, then fall back to the
+        // culture-sensitive parse this server has always used for other formats.
+        private static DateTime ParseDateParameterValue(object val)
+        {
+            if (val is DateTime dt)
+            {
+                return dt;
+            }
+
+            string theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? DateTime.Now.ToLongDateString() : val.ToString();
+
+            if (DateTime.TryParseExact(theValue, new[] { "o", "s" }, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime iso))
+            {
+                return iso;
+            }
+
+            return DateTime.Parse(theValue);
         }
 
         private DataTable CreateEmptyTableSchema(

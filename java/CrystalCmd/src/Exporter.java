@@ -14,9 +14,11 @@ import java.io.InputStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Map;
 
@@ -317,14 +319,7 @@ public class Exporter {
                     break;
                 case "date":
                 case "datetime":
-                    Date d;
-                    if (isEmpty(s)) {
-                        d = new Date();
-                    } else {
-                        DateTimeFormatter f = new DateTimeFormatterBuilder()
-                                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).toFormatter();
-                        d = Date.from(LocalDateTime.parse(s, f).toInstant(ZoneOffset.ofHours(0)));
-                    }
+                    Date d = isEmpty(s) ? new Date() : parseIso8601DateTime(s);
                     controller.setCurrentValue(reportName, name, d);
                     break;
                 default:
@@ -333,6 +328,22 @@ public class Exporter {
             }
             return;
         }
+    }
+
+    // The client libraries default to ISO 8601. Accept both offset/zoned forms (e.g.
+    // .NET's round-trip "O" format, which includes an offset or trailing "Z") and the
+    // bare local form this server has always accepted, treating an offset-less value
+    // as UTC as before.
+    private static Date parseIso8601DateTime(String s) {
+        try {
+            return Date.from(OffsetDateTime.parse(s).toInstant());
+        } catch (DateTimeParseException ignored) {
+            // not an offset/zoned ISO 8601 value; fall through to the local form
+        }
+
+        DateTimeFormatter f = new DateTimeFormatterBuilder()
+                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).toFormatter();
+        return Date.from(LocalDateTime.parse(s, f).toInstant(ZoneOffset.ofHours(0)));
     }
 
     private void moveReportObject(ReportClientDocument doc, MoveObjects item) throws Exception {
