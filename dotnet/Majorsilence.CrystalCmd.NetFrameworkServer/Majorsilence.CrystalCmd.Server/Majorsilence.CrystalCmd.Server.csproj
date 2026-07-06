@@ -18,9 +18,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="ChoETL" />
 		<PackageReference Include="Microsoft.AspNet.WebApi.Client" />

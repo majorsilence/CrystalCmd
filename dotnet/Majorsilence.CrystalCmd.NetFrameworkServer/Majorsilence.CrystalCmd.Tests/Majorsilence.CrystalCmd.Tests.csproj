@@ -53,6 +53,7 @@
 	<PackageReference Include="NunitXml.TestLogger" />
 	<PackageReference Include="PdfPig" />
 	<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

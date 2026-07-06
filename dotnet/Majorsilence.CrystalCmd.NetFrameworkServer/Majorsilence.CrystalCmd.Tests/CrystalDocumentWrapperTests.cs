@@ -1,13 +1,9 @@
-﻿using CrystalDecisions.CrystalReports.Engine;
-using Majorsilence.CrystalCmd.Server.Common;
+﻿using Majorsilence.CrystalCmd.Server.Common;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Drawing.Imaging;
-using System.Text;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
@@ -50,10 +46,10 @@ namespace Majorsilence.CrystalCmd.Tests
                 } },
             }))
             {
-                Assert.Multiple(() =>
+                Assert.Multiple((Action)(() =>
                 {
                     Assert.That(reportClientDocument.ReportDefinition.ReportObjects[objectName].Top, Is.EqualTo(finalPosition));
-                });
+                }));
             }
 
         }
@@ -68,12 +64,12 @@ namespace Majorsilence.CrystalCmd.Tests
         {
             var dto = Newtonsoft.Json.JsonConvert.DeserializeObject<ReportDto>(System.IO.File.ReadAllText("C:\\Path\\To\\Data\\9d57fd6c-8d62-4066-be3f-387f6ae251db.json"));
             var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
-            Assert.DoesNotThrow(() =>
+            Assert.DoesNotThrow((Action)(() =>
             {
                 using (var reportClientDocument = crystalWrapper.Create("thereport.rpt", dto.ReportData))
                 {
                 }
-            });
+            }));
         }
 
     }

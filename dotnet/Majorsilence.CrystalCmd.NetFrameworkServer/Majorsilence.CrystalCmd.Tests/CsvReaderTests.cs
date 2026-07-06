@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Tests
 {
@@ -105,10 +103,10 @@ namespace Majorsilence.CrystalCmd.Tests
             // Before the fix: this throws ChoRecordConfigurationException with
             // "Duplicate field name(s) [Name: INVOICE,CODENAME,INVAMT] found."
             DataTable result = null;
-            Assert.DoesNotThrow(() =>
-            {
+            Assert.DoesNotThrow((Action)(() => 
+            { 
                 result = CsvReader.CreateTableEtl(reportData.DataTables.First().Value);
-            });
+            }));
 
             // The first occurrence of each name is preserved as-is. This is the
             // column Crystal's field binder will resolve to, matching in-process
@@ -177,7 +175,7 @@ namespace Majorsilence.CrystalCmd.Tests
             var csvPath = System.IO.Path.Combine(TestContext.CurrentContext.TestDirectory, "csv_files", "invalid_datetime_formats.csv");
             var csvContent = System.IO.File.ReadAllText(csvPath);
 
-            Assert.Throws<FormatException>(() => CsvReader.CreateTableEtl(csvContent));
+            Assert.Throws<FormatException>((Action)(() => CsvReader.CreateTableEtl(csvContent)));
         }
 
         [Test]
@@ -222,7 +220,7 @@ namespace Majorsilence.CrystalCmd.Tests
             // instead of an opaque crash.
             var csv = "Id,Payload\nInt32,Byte[]\n\"1\",\"not*valid*bytes\"\n";
 
-            Assert.Throws<FormatException>(() => CsvReader.CreateTableEtl(csv));
+            Assert.Throws<FormatException>((Action)(() => CsvReader.CreateTableEtl(csv)));
         }
 
         static DataTable GetTable()
