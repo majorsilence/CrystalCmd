@@ -40,6 +40,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             {
                 exporter.Stop();
             }
+            analyzerExport?.Stop();
             Console.WriteLine($"{_serviceName} stopped.");
         }
     }

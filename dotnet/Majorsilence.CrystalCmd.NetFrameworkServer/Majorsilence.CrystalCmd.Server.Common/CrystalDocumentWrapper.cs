@@ -157,7 +157,20 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while setting parameter {ParameterName} ({TraceId})",
+                    // A parameter the report requires must end up with a usable value;
+                    // failing loudly beats rendering the report with a silent default.
+                    // Optional parameters and ones with a design-time default are
+                    // logged and skipped so one bad value can't abort the export.
+                    var par = FindParameterField(param.Key, reportClientDocument);
+                    if (IsRequiredWithoutValue(par))
+                    {
+                        _logger.LogError(ex, "Unusable value for required parameter {ParameterName} ({TraceId})",
+                            param.Key, _traceId);
+                        throw new InvalidOperationException(
+                            $"The report requires parameter \"{par.Name}\" but the supplied value could not be applied.", ex);
+                    }
+
+                    _logger.LogError(ex, "Error while setting parameter {ParameterName}; skipped because the parameter is optional or already has a value ({TraceId})",
                         param.Key, _traceId);
                 }
             }
@@ -169,11 +182,16 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     continue;
                 }
 
-                if (x.HasCurrentValue == false && x.ReportParameterType == ParameterType.ReportParameter)
+                if (!string.IsNullOrEmpty(x.ReportName))
                 {
-                    // to get things up and running, add defaults for missing parameters
+                    // Subreport-owned/linked parameters are supplied via SubReportParameters.
+                    continue;
+                }
 
-                    SetParameterValue(x.Name, "", reportClientDocument);
+                if (IsRequiredWithoutValue(x))
+                {
+                    throw new InvalidOperationException(
+                        $"The report requires parameter \"{x.Name}\" but no value was supplied in the report data.");
                 }
             }
 
@@ -361,6 +379,16 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
             }
             return caseInsensitiveMatch;
+        }
+
+        // A prompting report parameter with no design-time default and no optional
+        // flag must receive a value from the client, or the export has to hard fail.
+        private static bool IsRequiredWithoutValue(ParameterField par)
+        {
+            return par != null
+                && par.ReportParameterType == ParameterType.ReportParameter
+                && !par.IsOptionalPrompt
+                && par.HasCurrentValue == false;
         }
 
         private void SetParameterValue(string name, object val, ReportDocument rpt)

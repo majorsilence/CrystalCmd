@@ -38,7 +38,17 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         public void Stop()
         {
             _cancellationTokenSource.Cancel();
-            _backgroundTask?.Wait();
+            try
+            {
+                // Bounded wait: RunQueue only observes cancellation between dequeues,
+                // so an in-flight report could otherwise block service shutdown
+                // indefinitely (the SCM only allows ~30s for OnStop).
+                _backgroundTask?.Wait(TimeSpan.FromSeconds(25));
+            }
+            catch (AggregateException ex)
+            {
+                _logger.LogError(ex, "Error while stopping export queue ({Channel})", channel);
+            }
         }
 
         public static List<ExportQueue> Create(ILogger logger, string channel, int threadCount=1)
@@ -87,7 +97,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         }
 
 
-        async Task<GeneratedReportPoco> ProcessData(QueueItem item, WorkQueue queue)
+        internal async Task<GeneratedReportPoco> ProcessData(QueueItem item, WorkQueue queue)
         {
 
             var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
@@ -97,52 +107,55 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             string rptFile = System.IO.Path.Combine(workingDir, $"{item.Id}.rpt");
             System.IO.File.WriteAllBytes(rptFile, item.ReportTemplate);
 
-            GeneratedReportPoco poco = null;
-
-            if (item.Data != null)
-            {
-                // export pdf
-
-                var output = exporter.exportReportToStream(rptFile, item.Data);
-                var bytes = output.Item1;
-                var fileExt = output.Item2;
-                var mimeType = output.Item3;
-                poco = new GeneratedReportPoco
-                {
-                    Id = item.Id,
-                    FileContent = bytes,
-                    Format = fileExt,
-                    Metadata = mimeType,
-                    FileName = $"{item.Id}.{fileExt}",
-                    GeneratedUtc = DateTime.UtcNow
-                };
-            }
-            else
-            {
-                // report analysis
-                var analyzer = new CrystalReportsAnalyzer();
-                var response = analyzer.GetFullAnalysis(rptFile);
-                return new GeneratedReportPoco
-                {
-                    Id = item.Id,
-                    GeneratedUtc = DateTime.UtcNow,
-                    FileName = $"{item.Id}_analysis.json",
-                    Format = "json",
-                    FileContent = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(response)),
-                    Metadata = "application/json"
-                };
-            }
-
             try
             {
-                System.IO.Directory.Delete(workingDir, true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error deleting working folder {workingDir}: {ex.Message}");
-            }
+                if (item.Data != null)
+                {
+                    // export pdf
 
-            return poco;
+                    var output = exporter.exportReportToStream(rptFile, item.Data);
+                    var bytes = output.Item1;
+                    var fileExt = output.Item2;
+                    var mimeType = output.Item3;
+                    return new GeneratedReportPoco
+                    {
+                        Id = item.Id,
+                        FileContent = bytes,
+                        Format = fileExt,
+                        Metadata = mimeType,
+                        FileName = $"{item.Id}.{fileExt}",
+                        GeneratedUtc = DateTime.UtcNow
+                    };
+                }
+                else
+                {
+                    // report analysis
+                    var analyzer = new CrystalReportsAnalyzer();
+                    var response = analyzer.GetFullAnalysis(rptFile);
+                    return new GeneratedReportPoco
+                    {
+                        Id = item.Id,
+                        GeneratedUtc = DateTime.UtcNow,
+                        FileName = $"{item.Id}_analysis.json",
+                        Format = "json",
+                        FileContent = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(response)),
+                        Metadata = "application/json"
+                    };
+                }
+            }
+            finally
+            {
+                // Clean up the uploaded .rpt on every path (export, analysis, or throw);
+                // the analyzer branch and the exception path used to leak this folder.
+                try
+                {
+                    System.IO.Directory.Delete(workingDir, true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error deleting working folder {workingDir}: {ex.Message}");
+                }
+            }
         }
     }
 }

@@ -85,10 +85,56 @@ namespace Majorsilence.CrystalCmd.Tests
             }));
         }
 
-        // A malformed value for one parameter (e.g. "not-a-bool" for a boolean field)
-        // must not abort the whole report; remaining parameters still get applied.
+        // A malformed value for a parameter the report requires must fail the export
+        // with an error naming the parameter, not render with a silent default.
         [Test]
-        public void MalformedParameterValueDoesNotAbortReport()
+        public void MalformedValueForRequiredParameterFailsReport()
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            var ex = Assert.Throws<InvalidOperationException>((TestDelegate)(() =>
+            {
+                using (crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+                {
+                    ExportAs = Common.ExportTypes.PDF,
+                    Parameters = new Dictionary<string, object>()
+                    {
+                        { "MyParameter", "hello world" },
+                        { "MyParameter2", "not-a-bool" }
+                    }
+                }))
+                {
+                }
+            }));
+            Assert.That(ex.Message, Does.Contain("MyParameter2"));
+        }
+
+        // Omitting a parameter the report requires must fail the export with an error
+        // naming the parameter (previously it was silently defaulted to blank).
+        [Test]
+        public void MissingRequiredParameterFailsReport()
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            var ex = Assert.Throws<InvalidOperationException>((TestDelegate)(() =>
+            {
+                using (crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+                {
+                    ExportAs = Common.ExportTypes.PDF,
+                    Parameters = new Dictionary<string, object>()
+                    {
+                        { "MyParameter", "hello world" }
+                        // MyParameter2 deliberately omitted
+                    }
+                }))
+                {
+                }
+            }));
+            Assert.That(ex.Message, Does.Contain("MyParameter2"));
+        }
+
+        // Parameter names that don't exist in the report are logged and ignored;
+        // they must not abort the export.
+        [Test]
+        public void UnknownParameterNameDoesNotAbortReport()
         {
             var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
             Assert.DoesNotThrow((Action)(() =>
@@ -98,8 +144,9 @@ namespace Majorsilence.CrystalCmd.Tests
                     ExportAs = Common.ExportTypes.PDF,
                     Parameters = new Dictionary<string, object>()
                     {
-                        { "MyParameter2", "not-a-bool" },
-                        { "MyParameter", "hello world" }
+                        { "NoSuchParameter", "whatever" },
+                        { "MyParameter", "hello world" },
+                        { "MyParameter2", true }
                     }
                 }))
                 {
