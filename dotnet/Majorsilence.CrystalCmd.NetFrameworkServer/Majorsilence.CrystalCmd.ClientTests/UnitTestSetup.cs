@@ -12,6 +12,13 @@ namespace Majorsilence.CrystalCmd.ClientTests
     {
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
         internal static string TestServerBaseUrl { get; private set; } = "http://127.0.0.1:44355/";
+        /// <summary>
+        /// JWT signing key shared between the test-hosted server and the tests' bearer tokens.
+        /// The server rejects the shipped placeholder key and anything under 32 bytes, so a
+        /// fresh random key is generated per test run and passed to the server via Jwt__Key.
+        /// </summary>
+        internal static string TestJwtKey { get; } =
+            "unit-test-key-" + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
         /// <summary>True once the worker and server processes are confirmed ready.</summary>
         internal static bool IsServerAvailable { get; private set; } = false;
         /// <summary>Human-readable reason when IsServerAvailable is false.</summary>
@@ -112,6 +119,15 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _serverProcess.StartInfo.EnvironmentVariables["ASPNETCORE_URLS"] = $"http://127.0.0.1:{_httpPort};https://127.0.0.1:{_httpsPort}";
             _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlType"] = "sqlite";
             _serverProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlConnection"] = testQueueConnectionString;
+            // The server ships locked down: empty Basic credentials (rejects everything), the
+            // default user/password pair blocked, and JWT disabled while Jwt:Key is the
+            // placeholder. Configure the test credentials the ClientTest fixtures use.
+            _serverProcess.StartInfo.EnvironmentVariables["Credentials__Username"] = "user";
+            _serverProcess.StartInfo.EnvironmentVariables["Credentials__Password"] = "password";
+            _serverProcess.StartInfo.EnvironmentVariables["Security__AllowDefaultCredentials"] = "true";
+            _serverProcess.StartInfo.EnvironmentVariables["Jwt__Key"] = TestJwtKey;
+            _serverProcess.StartInfo.EnvironmentVariables["Jwt__Issuer"] = "https://localhost/";
+            _serverProcess.StartInfo.EnvironmentVariables["Jwt__Audience"] = "https://localhost/";
             _serverProcess.StartInfo.WorkingDirectory = System.IO.Path.Combine(baseDir,
                 "Majorsilence.CrystalCmd.Server",
                 "bin",

@@ -21,7 +21,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
     {
         private const string username = "user";
         private const string password = "password";
-        private const string bearerTokenKey = "PLACEHOLDER_PLACEHOLDER_PLACEHOLDER_PLACEHOLDER"; // match appsettings.json
+        // Must match the Jwt__Key the test-hosted server is started with; the server
+        // rejects the shipped placeholder key, so UnitTestSetup generates a real one.
+        private static string bearerTokenKey => UnitTestSetup.TestJwtKey;
 
         private static string BaseUrl => UnitTestSetup.TestServerBaseUrl;
 
