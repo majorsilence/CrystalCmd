@@ -85,6 +85,117 @@ namespace Majorsilence.CrystalCmd.Tests
             }));
         }
 
+        // A malformed value for one parameter (e.g. "not-a-bool" for a boolean field)
+        // must not abort the whole report; remaining parameters still get applied.
+        [Test]
+        public void MalformedParameterValueDoesNotAbortReport()
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            Assert.DoesNotThrow((Action)(() =>
+            {
+                using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+                {
+                    ExportAs = Common.ExportTypes.PDF,
+                    Parameters = new Dictionary<string, object>()
+                    {
+                        { "MyParameter2", "not-a-bool" },
+                        { "MyParameter", "hello world" }
+                    }
+                }))
+                {
+                    Assert.That((reportClientDocument.ParameterFields["MyParameter"].CurrentValues[0]
+                        as CrystalDecisions.Shared.ParameterDiscreteValue).Value, Is.EqualTo("hello world"));
+                }
+            }));
+        }
+
+        // References to nonexistent report objects/formulas, and a sort request against
+        // a report that defines no sort fields, must be logged and skipped, not thrown.
+        [Test]
+        public void InvalidObjectAndSortKeysDoNotAbortReport()
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            Assert.DoesNotThrow((Action)(() =>
+            {
+                using (var reportClientDocument = crystalWrapper.Create("thereport.rpt", new CrystalCmd.Common.Data()
+                {
+                    ExportAs = Common.ExportTypes.PDF,
+                    FormulaFieldText = new Dictionary<string, string>() { { "NoSuchFormula", "'x'" } },
+                    CanGrow = new Dictionary<string, bool>() { { "NoSuchObject", true } },
+                    Resize = new Dictionary<string, int>() { { "NoSuchObject", 100 } },
+                    SortByField = new Dictionary<string, string>() { { "NoSuchTable", "NoSuchField" } }
+                }))
+                {
+                }
+            }));
+        }
+
+        private static void WithCulture(string cultureName, Action action)
+        {
+            var original = System.Threading.Thread.CurrentThread.CurrentCulture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo(cultureName);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = original;
+            }
+        }
+
+        // "1.5" must mean one-and-a-half no matter what locale the server runs under.
+        // Before the invariant-first parse, a German-locale server read it as 15.
+        [Test]
+        public void ParseDecimalIsNotAffectedByServerLocale()
+        {
+            WithCulture("de-DE", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDecimal("1.5"), Is.EqualTo(1.5m));
+            }));
+            WithCulture("en-US", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDecimal("1.5"), Is.EqualTo(1.5m));
+            }));
+        }
+
+        // Values only the server locale can interpret still work via the fallback,
+        // so pre-existing locale-dependent callers are not broken.
+        [Test]
+        public void ParseDecimalFallsBackToServerLocale()
+        {
+            WithCulture("de-DE", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDecimal("1,5"), Is.EqualTo(1.5m));
+            }));
+            WithCulture("en-US", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDecimal("1,000.25"), Is.EqualTo(1000.25m));
+            }));
+        }
+
+        [Test]
+        public void ParseDateParameterValueIsNotAffectedByServerLocale()
+        {
+            WithCulture("de-DE", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDateParameterValue("2026-07-16T13:45:00"),
+                    Is.EqualTo(new DateTime(2026, 7, 16, 13, 45, 0)));
+                Assert.That(CrystalDocumentWrapper.ParseDateParameterValue(new DateTime(2026, 7, 16)),
+                    Is.EqualTo(new DateTime(2026, 7, 16)));
+            }));
+        }
+
+        [Test]
+        public void ParseDateParameterValueFallsBackToServerLocale()
+        {
+            WithCulture("de-DE", (Action)(() =>
+            {
+                Assert.That(CrystalDocumentWrapper.ParseDateParameterValue("31.12.2026"),
+                    Is.EqualTo(new DateTime(2026, 12, 31)));
+            }));
+        }
+
         class ReportDto
         {
             public Majorsilence.CrystalCmd.Common.Data ReportData { get; set; }

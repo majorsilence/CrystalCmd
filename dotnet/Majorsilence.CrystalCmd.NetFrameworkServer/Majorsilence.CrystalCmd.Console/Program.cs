@@ -44,14 +44,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
             if (Environment.UserInteractive)
             {
-                var exporters =  ExportQueue.Create(logger, "crystal-reports", threadCount);
+                var exporters =  ExportQueue.Create(logger, ExportQueue.ReportsChannel, threadCount);
                 foreach(var exporter in exporters)
                 {
                     exporter.Start();
                 }
 
-                // crystal-analyzer
-                var analyzerExport = new ExportQueue(logger, "crystal-analyzer");
+                var analyzerExport = new ExportQueue(logger, ExportQueue.AnalyzerChannel);
                 analyzerExport.Start();
 
                 Console.WriteLine("Press ctrl+c to stop the CrystalCmd report processing service...");

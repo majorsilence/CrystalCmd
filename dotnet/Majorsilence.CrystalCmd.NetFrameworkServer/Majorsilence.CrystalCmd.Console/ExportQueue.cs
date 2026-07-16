@@ -15,6 +15,11 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 {
     internal class ExportQueue
     {
+        // Channel names must match what the server controllers enqueue on
+        // (ExportController/AnalyzerController in Majorsilence.CrystalCmd.Server).
+        public const string ReportsChannel = "crystal-reports";
+        public const string AnalyzerChannel = "crystal-analyzer";
+
         private readonly ILogger _logger;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Task _backgroundTask;

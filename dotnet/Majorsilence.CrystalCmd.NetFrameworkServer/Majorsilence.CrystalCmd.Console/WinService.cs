@@ -23,13 +23,13 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             // Start your service logic here
             bool isSqlite = string.Equals(WorkQueue.GetSetting("WorkQueueSqlType"), "sqlite", StringComparison.InvariantCultureIgnoreCase);
             int threadCount = isSqlite ? 1 : Environment.ProcessorCount;
-            exporters = ExportQueue.Create(_logger, "crystal-reports", threadCount);
+            exporters = ExportQueue.Create(_logger, ExportQueue.ReportsChannel, threadCount);
             foreach (var exporter in exporters)
             {
                 exporter.Start();
             }
 
-            analyzerExport = new ExportQueue(_logger, "analyzer-reports");
+            analyzerExport = new ExportQueue(_logger, ExportQueue.AnalyzerChannel);
             analyzerExport.Start();
             Console.WriteLine($"{_serviceName} started.");
         }

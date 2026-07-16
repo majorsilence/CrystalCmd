@@ -37,7 +37,6 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 var result = Export(datafile.ExportAs, reportClientDocument);
                 reportClientDocument?.Close();
-                reportClientDocument?.Dispose();
                 return result;
             }
         }
@@ -97,24 +96,21 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     break;
             }
 
-            string fileName = Path.Combine(WorkingFolder.GetMajorsilenceTempFolder(), $"{Guid.NewGuid().ToString()}.{fileExt}");
+            string workingDir = WorkingFolder.GetMajorsilenceTempFolder();
+            System.IO.Directory.CreateDirectory(workingDir);
+            string fileName = Path.Combine(workingDir, $"{Guid.NewGuid().ToString()}.{fileExt}");
             rpt.ExportToDisk(exp, fileName);
 
-            byte[] myData;
-            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            {
-                myData = new byte[Convert.ToInt32(fs.Length - 1) + 1];
-                fs.Read(myData, 0, Convert.ToInt32(fs.Length));
-                fs.Close();
-            }
+            byte[] myData = File.ReadAllBytes(fileName);
 
             try
             {
                 System.IO.File.Delete(fileName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // fixme: data cleanup
+                _logger.LogWarning(ex, "Failed to delete temporary export file {FileName}", fileName);
             }
 
             return Tuple.Create(myData, fileExt, mimetype);

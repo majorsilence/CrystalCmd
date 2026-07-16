@@ -39,6 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Majorsilence.CrystalCmd.Client\Majorsilence.CrystalCmd.Client.csproj" />
     <ProjectReference Include="..\Majorsilence.CrystalCmd.Server.Common\Majorsilence.CrystalCmd.Server.Common.csproj" />
+    <ProjectReference Include="..\Majorsilence.CrystalCmd.Console\Majorsilence.CrystalCmd.NetframeworkConsole.csproj" />
   </ItemGroup>
   <ItemGroup>
 	<Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">

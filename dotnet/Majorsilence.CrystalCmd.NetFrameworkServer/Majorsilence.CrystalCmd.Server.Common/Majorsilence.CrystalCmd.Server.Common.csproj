@@ -62,6 +62,9 @@
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+		<InternalsVisibleTo Include="Majorsilence.CrystalCmd.Tests" />
+	</ItemGroup>
+	<ItemGroup>
 	  <Folder Include="Properties\" />
 	</ItemGroup>
 </Project>

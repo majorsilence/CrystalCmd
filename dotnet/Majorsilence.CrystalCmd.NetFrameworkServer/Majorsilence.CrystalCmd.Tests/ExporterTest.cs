@@ -65,6 +65,27 @@ namespace Majorsilence.CrystalCmd.Tests
 
         }
 
+        // The export writes a temp file into the shared temp root, reads it back, and
+        // deletes it. Verify no temp file is left behind on the success path.
+        [Test]
+        public void ExportCleansUpTemporaryFile()
+        {
+            string workingDir = WorkingFolder.GetMajorsilenceTempFolder();
+            int filesBefore = System.IO.Directory.GetFiles(workingDir).Length;
+
+            var export = new Majorsilence.CrystalCmd.Server.Common.Exporter(_mockLogger.Object);
+            var result = export.exportReportToStream("thereport.rpt", new CrystalCmd.Common.Data()
+            {
+                ExportAs = CrystalCmd.Common.ExportTypes.PDF
+            });
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(result.Item1, Is.Not.Empty);
+                Assert.That(System.IO.Directory.GetFiles(workingDir).Length, Is.EqualTo(filesBefore));
+            }));
+        }
+
         private static string ExtractTextFromPdf(byte[] reportData)
         {
             using (var document = PdfDocument.Open(reportData))

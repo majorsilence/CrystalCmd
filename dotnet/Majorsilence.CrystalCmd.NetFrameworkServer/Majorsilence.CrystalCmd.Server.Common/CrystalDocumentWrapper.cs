@@ -151,7 +151,15 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             foreach (var param in datafile.Parameters)
             {
-                SetParameterValue(param.Key, param.Value, reportClientDocument);
+                try
+                {
+                    SetParameterValue(param.Key, param.Value, reportClientDocument);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while setting parameter {ParameterName} ({TraceId})",
+                        param.Key, _traceId);
+                }
             }
 
             foreach (ParameterField x in reportClientDocument.ParameterFields)
@@ -199,12 +207,28 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             foreach (var item in datafile.FormulaFieldText)
             {
-                SetFormulaText(reportClientDocument, item);
+                try
+                {
+                    SetFormulaText(reportClientDocument, item);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while setting formula text ({FormulaName}) ({TraceId})",
+                        item.Key, _traceId);
+                }
             }
 
             foreach (var item in datafile.CanGrow)
             {
-                reportClientDocument.ReportDefinition.ReportObjects[item.Key].ObjectFormat.EnableCanGrow = item.Value;
+                try
+                {
+                    reportClientDocument.ReportDefinition.ReportObjects[item.Key].ObjectFormat.EnableCanGrow = item.Value;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while setting can grow ({ObjectName}) ({TraceId})",
+                        item.Key, _traceId);
+                }
             }
 
             foreach (var item in datafile.Suppress)
@@ -214,12 +238,28 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
             foreach (var item in datafile.SortByField)
             {
-                SetSortOrder(reportClientDocument, item);
+                try
+                {
+                    SetSortOrder(reportClientDocument, item);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while setting sort order ({TableName}) ({TraceId})",
+                        item.Key, _traceId);
+                }
             }
 
             foreach (var item in datafile.Resize)
             {
-                SetResize(reportClientDocument, item);
+                try
+                {
+                    SetResize(reportClientDocument, item);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while resizing report object ({ObjectName}) ({TraceId})",
+                        item.Key, _traceId);
+                }
             }
 
             foreach (var item in datafile.ObjectText)
@@ -278,6 +318,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private static void SetSortOrder(ReportDocument reportClientDocument, KeyValuePair<string, string> item)
         {
+            if (reportClientDocument.DataDefinition.SortFields.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot set sort order for table \"{item.Key}\": the report defines no sort fields.");
+            }
+
             FieldDefinition FieldDef = reportClientDocument.Database.Tables[item.Key].Fields[item.Value];
             reportClientDocument.DataDefinition.SortFields[0].Field = FieldDef;
         }
@@ -357,17 +403,17 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     break;
                 case ParameterValueKind.CurrencyParameter:
                     theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
-                    rpt.SetParameterValue(name, decimal.Parse(theValue));
+                    rpt.SetParameterValue(name, ParseDecimal(theValue));
                     break;
                 case ParameterValueKind.NumberParameter:
                     theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? "0" : val.ToString();
-                    try
+                    if (int.TryParse(theValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
                     {
-                        rpt.SetParameterValue(name, int.Parse(theValue));
+                        rpt.SetParameterValue(name, intValue);
                     }
-                    catch (Exception)
+                    else
                     {
-                        rpt.SetParameterValue(name, decimal.Parse(theValue));
+                        rpt.SetParameterValue(name, ParseDecimal(theValue));
                     }
 
                     break;
@@ -384,13 +430,29 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         }
 
+        // Parameter values arrive as strings from arbitrary clients; the server's own
+        // locale must not change how they are interpreted. Parse invariant first and
+        // only fall back to the current culture so callers that have always relied on
+        // the server locale (e.g. comma decimal separators) keep working. The invariant
+        // attempt uses NumberStyles.Float (no group separators) so a value like "1,5"
+        // falls through to the culture-aware parse instead of reading as 15.
+        internal static decimal ParseDecimal(string theValue)
+        {
+            if (decimal.TryParse(theValue, NumberStyles.Float, CultureInfo.InvariantCulture, out decimal result))
+            {
+                return result;
+            }
+
+            return decimal.Parse(theValue, NumberStyles.Number, CultureInfo.CurrentCulture);
+        }
+
         // The client libraries default to ISO 8601, and Newtonsoft.Json already
         // deserializes ISO 8601 parameter values straight into DateTime, so use that
         // value as-is rather than round-tripping it through a culture-dependent
         // ToString()/Parse(). If it arrives as a plain string instead (e.g. a caller
         // that doesn't use ISO 8601), try ISO 8601 first, then fall back to the
         // culture-sensitive parse this server has always used for other formats.
-        private static DateTime ParseDateParameterValue(object val)
+        internal static DateTime ParseDateParameterValue(object val)
         {
             if (val is DateTime dt)
             {
@@ -402,6 +464,11 @@ namespace Majorsilence.CrystalCmd.Server.Common
             if (DateTime.TryParseExact(theValue, new[] { "o", "s" }, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime iso))
             {
                 return iso;
+            }
+
+            if (DateTime.TryParse(theValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime invariant))
+            {
+                return invariant;
             }
 
             return DateTime.Parse(theValue);
