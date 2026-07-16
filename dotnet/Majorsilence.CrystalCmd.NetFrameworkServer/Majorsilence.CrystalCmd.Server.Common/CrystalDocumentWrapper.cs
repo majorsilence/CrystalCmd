@@ -157,21 +157,31 @@ namespace Majorsilence.CrystalCmd.Server.Common
                 }
                 catch (Exception ex)
                 {
-                    // A parameter the report requires must end up with a usable value;
-                    // failing loudly beats rendering the report with a silent default.
-                    // Optional parameters and ones with a design-time default are
-                    // logged and skipped so one bad value can't abort the export.
+                    // The report still renders, but this is a caller bug: the value it
+                    // sent was unusable. Warn loudly and fall back to a blank default
+                    // (only needed when the rpt has no default value of its own).
                     var par = FindParameterField(param.Key, reportClientDocument);
                     if (IsRequiredWithoutValue(par))
                     {
-                        _logger.LogError(ex, "Unusable value for required parameter {ParameterName} ({TraceId})",
+                        _logger.LogWarning(ex,
+                            "PARAMETER PROBLEM: the report requires parameter \"{ParameterName}\" but the supplied value could not be applied; a blank default was substituted. The report output is likely wrong - fix the caller to send a usable value. ({TraceId})",
                             param.Key, _traceId);
-                        throw new InvalidOperationException(
-                            $"The report requires parameter \"{par.Name}\" but the supplied value could not be applied.", ex);
+                        try
+                        {
+                            SetParameterValue(param.Key, "", reportClientDocument);
+                        }
+                        catch (Exception fallbackEx)
+                        {
+                            _logger.LogError(fallbackEx, "Error while setting default value for parameter {ParameterName} ({TraceId})",
+                                param.Key, _traceId);
+                        }
                     }
-
-                    _logger.LogError(ex, "Error while setting parameter {ParameterName}; skipped because the parameter is optional or already has a value ({TraceId})",
-                        param.Key, _traceId);
+                    else
+                    {
+                        _logger.LogWarning(ex,
+                            "PARAMETER PROBLEM: the value supplied for parameter \"{ParameterName}\" could not be applied; the report's own default value was used instead. Fix the caller to send a usable value. ({TraceId})",
+                            param.Key, _traceId);
+                    }
                 }
             }
 
@@ -190,8 +200,14 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
                 if (IsRequiredWithoutValue(x))
                 {
-                    throw new InvalidOperationException(
-                        $"The report requires parameter \"{x.Name}\" but no value was supplied in the report data.");
+                    // The report still renders, but this is a caller bug: the rpt file
+                    // has no default value for this parameter and the dataset did not
+                    // supply one. Warn loudly so the missing parameter is visible in
+                    // the logs instead of silently shipping blank/zero output.
+                    _logger.LogWarning(
+                        "MISSING PARAMETER: the report requires parameter \"{ParameterName}\" but no value was supplied in the report data; a blank default was substituted. The report output is likely wrong - fix the caller to send this parameter. ({TraceId})",
+                        x.Name, _traceId);
+                    SetParameterValue(x.Name, "", reportClientDocument);
                 }
             }
 
@@ -381,13 +397,14 @@ namespace Majorsilence.CrystalCmd.Server.Common
             return caseInsensitiveMatch;
         }
 
-        // A prompting report parameter with no design-time default and no optional
-        // flag must receive a value from the client, or the export has to hard fail.
+        // A report parameter with a default value saved in the rpt file is fine on its
+        // own; any other prompting parameter must receive a value from the dataset, or
+        // the export has to hard fail. (Query/stored-procedure parameters are excluded:
+        // they get their values from the data source, not from the client.)
         private static bool IsRequiredWithoutValue(ParameterField par)
         {
             return par != null
                 && par.ReportParameterType == ParameterType.ReportParameter
-                && !par.IsOptionalPrompt
                 && par.HasCurrentValue == false;
         }
 

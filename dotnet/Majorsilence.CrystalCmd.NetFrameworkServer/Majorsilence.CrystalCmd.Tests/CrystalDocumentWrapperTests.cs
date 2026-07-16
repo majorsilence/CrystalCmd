@@ -85,50 +85,73 @@ namespace Majorsilence.CrystalCmd.Tests
             }));
         }
 
-        // A malformed value for a parameter the report requires must fail the export
-        // with an error naming the parameter, not render with a silent default.
-        [Test]
-        public void MalformedValueForRequiredParameterFailsReport()
+        private static void VerifyWarningLogged(Mock<ILogger> logger, string expectedSubstring)
         {
-            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
-            var ex = Assert.Throws<InvalidOperationException>((TestDelegate)(() =>
-            {
-                using (crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
-                {
-                    ExportAs = Common.ExportTypes.PDF,
-                    Parameters = new Dictionary<string, object>()
-                    {
-                        { "MyParameter", "hello world" },
-                        { "MyParameter2", "not-a-bool" }
-                    }
-                }))
-                {
-                }
-            }));
-            Assert.That(ex.Message, Does.Contain("MyParameter2"));
+            logger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((state, _) => state.ToString().Contains(expectedSubstring)),
+                    It.IsAny<Exception>(),
+                    (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+                Times.AtLeastOnce,
+                $"expected a warning naming \"{expectedSubstring}\" to be logged");
         }
 
-        // Omitting a parameter the report requires must fail the export with an error
-        // naming the parameter (previously it was silently defaulted to blank).
+        // A malformed value for a parameter the report requires still renders the
+        // report with a default value, but must log an obvious warning naming the
+        // parameter so the caller bug is visible.
         [Test]
-        public void MissingRequiredParameterFailsReport()
+        public void MalformedParameterValueIsDefaultedWithWarning()
         {
-            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
-            var ex = Assert.Throws<InvalidOperationException>((TestDelegate)(() =>
+            var mockLogger = new Mock<ILogger>();
+            var crystalWrapper = new CrystalDocumentWrapper(mockLogger.Object);
+            using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
             {
-                using (crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+                ExportAs = Common.ExportTypes.PDF,
+                Parameters = new Dictionary<string, object>()
                 {
-                    ExportAs = Common.ExportTypes.PDF,
-                    Parameters = new Dictionary<string, object>()
-                    {
-                        { "MyParameter", "hello world" }
-                        // MyParameter2 deliberately omitted
-                    }
-                }))
-                {
+                    { "MyParameter", "hello world" },
+                    { "MyParameter2", "not-a-bool" }
                 }
-            }));
-            Assert.That(ex.Message, Does.Contain("MyParameter2"));
+            }))
+            {
+                Assert.Multiple((Action)(() =>
+                {
+                    Assert.That((reportClientDocument.ParameterFields["MyParameter"].CurrentValues[0]
+                        as CrystalDecisions.Shared.ParameterDiscreteValue).Value, Is.EqualTo("hello world"));
+                    Assert.That(reportClientDocument.ParameterFields["MyParameter2"].HasCurrentValue, Is.True,
+                        "malformed parameter should receive a default value so the report still renders");
+                    Assert.That((reportClientDocument.ParameterFields["MyParameter2"].CurrentValues[0]
+                        as CrystalDecisions.Shared.ParameterDiscreteValue).Value, Is.EqualTo(false));
+                }));
+            }
+            VerifyWarningLogged(mockLogger, "MyParameter2");
+        }
+
+        // A parameter the report requires that is absent from the dataset still gets a
+        // default value so the report renders, but must log an obvious warning naming
+        // the parameter so the caller bug is visible.
+        [Test]
+        public void MissingRequiredParameterIsDefaultedWithWarning()
+        {
+            var mockLogger = new Mock<ILogger>();
+            var crystalWrapper = new CrystalDocumentWrapper(mockLogger.Object);
+            using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+            {
+                ExportAs = Common.ExportTypes.PDF,
+                Parameters = new Dictionary<string, object>()
+                {
+                    { "MyParameter", "hello world" }
+                    // MyParameter2 deliberately omitted
+                }
+            }))
+            {
+                Assert.That(reportClientDocument.ParameterFields["MyParameter2"].HasCurrentValue, Is.True,
+                    "missing parameter should receive a default value so the report still renders");
+            }
+            VerifyWarningLogged(mockLogger, "MISSING PARAMETER");
+            VerifyWarningLogged(mockLogger, "MyParameter2");
         }
 
         // Parameter names that don't exist in the report are logged and ignored;
