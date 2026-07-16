@@ -282,11 +282,47 @@ namespace Majorsilence.CrystalCmd.Server.Common
             reportClientDocument.DataDefinition.SortFields[0].Field = FieldDef;
         }
 
+        // Clients send parameter names that don't always match the report's casing
+        // (e.g. "PayAmount" vs a "payamount" parameter field). Resolve to the report's
+        // canonical field rather than depending on the Crystal indexer's undocumented
+        // case tolerance: exact match wins, otherwise the first case-insensitive match.
+        // Scope matters: with no subreport name this must only match main-report fields
+        // (ReportName is empty), mirroring the ParameterFields[name] indexer — matching a
+        // subreport-owned/linked field here makes Crystal throw "Operation illegal on
+        // linked parameter" at export time.
+        private static ParameterField FindParameterField(string name, ReportDocument rpt, string subreportName = null)
+        {
+            ParameterField caseInsensitiveMatch = null;
+            foreach (ParameterField field in rpt.ParameterFields)
+            {
+                bool scopeMatches = subreportName == null
+                    ? string.IsNullOrEmpty(field.ReportName)
+                    : string.Equals(field.ReportName, subreportName, StringComparison.OrdinalIgnoreCase);
+                if (!scopeMatches)
+                {
+                    continue;
+                }
+
+                if (string.Equals(field.Name, name, StringComparison.Ordinal))
+                {
+                    return field;
+                }
+
+                if (caseInsensitiveMatch == null
+                    && string.Equals(field.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    caseInsensitiveMatch = field;
+                }
+            }
+            return caseInsensitiveMatch;
+        }
+
         private void SetParameterValue(string name, object val, ReportDocument rpt)
         {
-            if (rpt.ParameterFields[name] != null)
+            var par = FindParameterField(name, rpt);
+            if (par != null)
             {
-                SetAnyLayerParameterValue(name, val, rpt);
+                SetAnyLayerParameterValue(par, val, rpt);
 
             }
             else
@@ -297,13 +333,13 @@ namespace Majorsilence.CrystalCmd.Server.Common
 
         private void SetSubreportParameterValue(string name, object val, ReportDocument rpt, string subreportName)
         {
-            rpt.SetParameterValue(name, val, subreportName);
+            var par = FindParameterField(name, rpt, subreportName);
+            rpt.SetParameterValue(par?.Name ?? name, val, subreportName);
         }
 
-        private void SetAnyLayerParameterValue(string name, object val, ReportDocument rpt)
+        private void SetAnyLayerParameterValue(ParameterField par, object val, ReportDocument rpt)
         {
-
-            var par = rpt.ParameterFields[name];
+            string name = par.Name;
             string theValue;
             switch (par.ParameterValueType)
             {

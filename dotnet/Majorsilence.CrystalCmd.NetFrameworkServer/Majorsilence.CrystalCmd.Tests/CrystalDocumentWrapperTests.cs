@@ -54,6 +54,37 @@ namespace Majorsilence.CrystalCmd.Tests
 
         }
 
+        // Parameter names from clients don't always match the report's casing; the
+        // wrapper resolves them case-insensitively to the report's canonical field.
+        [TestCase("MyParameter", "MyParameter2")]
+        [TestCase("MYPARAMETER", "MYPARAMETER2")]
+        [TestCase("myparameter", "myparameter2")]
+        public void SetParameterValueIsCaseInsensitive(string stringParamName, string boolParamName)
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            Assert.DoesNotThrow((Action)(() =>
+            {
+                using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+                {
+                    ExportAs = Common.ExportTypes.PDF,
+                    Parameters = new Dictionary<string, object>()
+                    {
+                        { stringParamName, "hello world" },
+                        { boolParamName, true }
+                    }
+                }))
+                {
+                    var stringParam = reportClientDocument.ParameterFields["MyParameter"];
+                    Assert.Multiple((Action)(() =>
+                    {
+                        Assert.That(stringParam.HasCurrentValue, Is.True);
+                        Assert.That((reportClientDocument.ParameterFields["MyParameter"].CurrentValues[0]
+                            as CrystalDecisions.Shared.ParameterDiscreteValue).Value, Is.EqualTo("hello world"));
+                    }));
+                }
+            }));
+        }
+
         class ReportDto
         {
             public Majorsilence.CrystalCmd.Common.Data ReportData { get; set; }
