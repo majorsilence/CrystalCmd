@@ -1,4 +1,4 @@
-﻿using ChoETL;
+using ChoETL;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
 using System;
@@ -18,7 +18,7 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 reportDocument.Load(reportPath);
 
-                return new CrystalCmd.Common.FullReportAnalysisResponse()
+                var result = new CrystalCmd.Common.FullReportAnalysisResponse()
                 {
                     Parameters = GetReportParameters(reportDocument),
                     ParametersExtended = GetReportParametersExtended(reportDocument),
@@ -26,6 +26,16 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     DataTables = GetDataTables(reportDocument),
                     ReportObjects = GetReportObjects(reportDocument)
                 };
+
+                // Close() before Dispose(), matching the byte[] overload below and
+                // Exporter.exportReportToStream. Dispose() alone is not reliably enough
+                // to make the Crystal runtime release the report job: the handles
+                // accumulate until the engine refuses new work with "the maximum report
+                // processing jobs limit ... has been reached". This path was the only
+                // one in the codebase not doing it.
+                reportDocument.Close();
+
+                return result;
             }
         }
 
