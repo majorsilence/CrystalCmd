@@ -47,3 +47,26 @@ jobs:
         path: "**/TestResults/*.xml"
         reporter: dotnet-nunit
 
+  # The work queue tests need Linux Docker containers (SQL Server, PostgreSQL),
+  # which Windows runners cannot start; on windows-build those fixtures skip
+  # themselves, so this job is where they actually run.
+  linux-workqueue-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Test
+      run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.WorkQueues.IntegrationTests/Majorsilence.CrystalCmd.WorkQueues.IntegrationTests.csproj --configuration Release --logger "nunit" -p:TestTfmsInParallel=false
+    - name: Record Test Report
+      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+      if: success() || failure() # run this step even if previous step failed
+      with:
+        name: work queue integration tests
+        path: "**/TestResults/*.xml"
+        reporter: dotnet-nunit
+
