@@ -1,14 +1,14 @@
-namespace Majorsilence.CrystalCmd.WorkQueues.IntegrationTests;
+﻿namespace Majorsilence.CrystalCmd.WorkQueues.IntegrationTests;
 
 [TestFixture]
 [Category("Integration")]
 [Category("PostgreSql")]
 public class WorkQueuePostgreSqlTests : WorkQueueTestBase
 {
-    protected override WorkQueue CreateQueue(string channel)
+    protected override WorkQueue CreateQueue(string channel, int leaseMinutes)
     {
         var sqlDefs = new WorkQueueSqlDefs(SqlType.PostgreSQL);
         return new WorkQueue(sqlDefs, SqlType.PostgreSQL,
-            ContainerSetup.PostgreSql.GetConnectionString(), channel);
+            ContainerSetup.PostgreSql.GetConnectionString(), channel, leaseMinutes);
     }
 }
