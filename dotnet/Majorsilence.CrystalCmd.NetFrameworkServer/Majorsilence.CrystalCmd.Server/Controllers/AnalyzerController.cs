@@ -87,7 +87,13 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 return File(Encoding.UTF8.GetBytes(jsonResponse), "application/json");
             }
             else if (result.Status == WorkItemStatus.Failed)
-                return StatusCode(500);
+            {
+                // Surface the worker's stored (sanitized) error so callers see why the
+                // analysis failed instead of a bare 500 with no body.
+                return StatusCode(500, string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? "Report analysis failed."
+                    : $"Report analysis failed: {result.ErrorMessage}");
+            }
             else if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
                 return Accepted("Processing report");
             else
@@ -120,7 +126,9 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 }
                 else
                 {
-                    throw new Exception("Analyzer failed");
+                    throw new Exception(string.IsNullOrWhiteSpace(result.ErrorMessage)
+                        ? "Analyzer failed"
+                        : $"Analyzer failed: {result.ErrorMessage}");
                 }
             }
 

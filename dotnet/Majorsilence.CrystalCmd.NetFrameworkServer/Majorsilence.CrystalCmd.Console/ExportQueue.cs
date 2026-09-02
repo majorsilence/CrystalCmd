@@ -71,6 +71,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 bool processed = false;
+                bool failed = false;
 
                 try
                 {
@@ -83,9 +84,19 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error processing queue item: {ex.Message}");
+                    failed = true;
+                    _logger.LogError(ex, "Error processing queue item ({Channel})", channel);
                 }
 
+                if (failed)
+                {
+                    // Back off before re-dequeuing: the failed item went straight back to
+                    // Pending, so without this pause all of its retries burn within a few
+                    // seconds and a short-lived transient error (engine warm-up, temp file
+                    // contention) permanently parks the item as Failed.
+                    await Task.Delay(5000);
+                    continue;
+                }
 
                 if (!processed)
                 {

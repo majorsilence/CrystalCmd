@@ -1,4 +1,4 @@
-namespace Majorsilence.CrystalCmd.WorkQueues.IntegrationTests;
+﻿namespace Majorsilence.CrystalCmd.WorkQueues.IntegrationTests;
 
 /// <summary>
 /// Shared test logic run against both SQL Server and PostgreSQL.
@@ -9,7 +9,9 @@ public abstract class WorkQueueTestBase
     // Each test gets its own channel so rows from parallel tests don't interfere.
     protected string Channel { get; private set; } = string.Empty;
 
-    protected abstract WorkQueue CreateQueue(string channel);
+    protected abstract WorkQueue CreateQueue(string channel, int leaseMinutes);
+
+    protected WorkQueue CreateQueue(string channel) => CreateQueue(channel, WorkQueue.DefaultLeaseMinutes);
 
     [SetUp]
     public async Task SetUpTest()
@@ -53,7 +55,7 @@ public abstract class WorkQueueTestBase
 
         Assert.That(processedId, Is.EqualTo(itemId));
 
-        var (report, status) = await queue.Get(itemId);
+        var (report, status, _) = await queue.Get(itemId);
         Assert.That(status, Is.EqualTo(WorkItemStatus.Completed));
         Assert.That(report, Is.Not.Null);
         Assert.That(report!.FileContent, Is.EqualTo(new byte[] { 1, 2, 3 }));
@@ -118,7 +120,7 @@ public abstract class WorkQueueTestBase
             // The claim transaction has already committed; a fresh connection
             // must see Processing, not Pending and not Completed yet.
             var observer = CreateQueue(workItem.Channel);
-            var (_, s) = await observer.Get(workItem.Id);
+            var (_, s, _) = await observer.Get(workItem.Id);
             statusDuringCallback = s;
             return MakeReport(workItem.Id);
         });
@@ -126,7 +128,7 @@ public abstract class WorkQueueTestBase
         Assert.That(statusDuringCallback, Is.EqualTo(WorkItemStatus.Processing),
             "Status must be Processing while the callback runs (claim transaction committed before callback)");
 
-        var (_, finalStatus) = await queue.Get(itemId);
+        var (_, finalStatus, _) = await queue.Get(itemId);
         Assert.That(finalStatus, Is.EqualTo(WorkItemStatus.Completed));
     }
 
@@ -147,7 +149,7 @@ public abstract class WorkQueueTestBase
         });
 
         // Status must be back to Pending so the item can be retried.
-        var (_, status) = await queue.Get(itemId);
+        var (_, status, _) = await queue.Get(itemId);
         Assert.That(status, Is.EqualTo(WorkItemStatus.Pending));
     }
 
@@ -174,6 +176,24 @@ public abstract class WorkQueueTestBase
     }
 
     [Test]
+    public async Task Dequeue_AfterMaxRetries_ItemIsMarkedFailed()
+    {
+        var queue = CreateQueue(Channel);
+        var itemId = Guid.NewGuid().ToString();
+        await queue.Enqueue(MakeQueueItem(itemId));
+
+        for (int i = 0; i < 3; i++)
+        {
+            try { await queue.Dequeue(_ => throw new InvalidOperationException()); } catch { }
+        }
+
+        // Parked as Failed rather than left Pending forever: a row that can never be
+        // dequeued again must still become eligible for garbage collection.
+        var (_, status, _) = await queue.Get(itemId);
+        Assert.That(status, Is.EqualTo(WorkItemStatus.Failed));
+    }
+
+    [Test]
     public async Task Dequeue_AfterMaxRetries_ItemNotDequeued()
     {
         var queue = CreateQueue(Channel);
@@ -195,6 +215,79 @@ public abstract class WorkQueueTestBase
 
         Assert.That(callbackInvoked, Is.False,
             "Item must not be dequeued after RetryCount exceeds MaxRetries");
+    }
+
+    // -------------------------------------------------------------------------
+    // Lease expiry — an item stranded by a worker that died must be reclaimable
+    // -------------------------------------------------------------------------
+
+    [Test]
+    public async Task Dequeue_WhenLeaseHasExpired_ItemIsReclaimed()
+    {
+        // A negative lease is already expired when it is taken, standing in for a
+        // worker that was killed mid-report and left the item sitting in Processing.
+        var queue = CreateQueue(Channel, leaseMinutes: -1);
+        var itemId = Guid.NewGuid().ToString();
+        await queue.Enqueue(MakeQueueItem(itemId));
+
+        var claimed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var strandedWorker = queue.Dequeue(async workItem =>
+        {
+            claimed.SetResult();
+            await release.Task;
+            return MakeReport(workItem.Id);
+        });
+
+        await claimed.Task.WaitAsync(TimeSpan.FromSeconds(30));
+
+        string? reclaimedId = null;
+        await CreateQueue(Channel, leaseMinutes: -1).Dequeue(async workItem =>
+        {
+            reclaimedId = workItem.Id;
+            return MakeReport(workItem.Id);
+        });
+
+        Assert.That(reclaimedId, Is.EqualTo(itemId),
+            "An item whose lease has expired must be reclaimable by another worker");
+
+        release.SetResult();
+        // The stranded worker loses the race to save its report; that is expected.
+        try { await strandedWorker; } catch { }
+    }
+
+    [Test]
+    public async Task Dequeue_WhileLeaseIsHeld_ItemIsNotReclaimed()
+    {
+        var queue = CreateQueue(Channel);
+        var itemId = Guid.NewGuid().ToString();
+        await queue.Enqueue(MakeQueueItem(itemId));
+
+        var claimed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var worker = queue.Dequeue(async workItem =>
+        {
+            claimed.SetResult();
+            await release.Task;
+            return MakeReport(workItem.Id);
+        });
+
+        await claimed.Task.WaitAsync(TimeSpan.FromSeconds(30));
+
+        bool secondWorkerRan = false;
+        await CreateQueue(Channel).Dequeue(async workItem =>
+        {
+            secondWorkerRan = true;
+            return MakeReport(workItem.Id);
+        });
+
+        Assert.That(secondWorkerRan, Is.False,
+            "An item with a live lease must not be handed to a second worker");
+
+        release.SetResult();
+        await worker;
     }
 
     // -------------------------------------------------------------------------
