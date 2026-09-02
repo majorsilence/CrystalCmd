@@ -60,6 +60,12 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                     }
                     else
                     {
+                        if (result.Status == WorkItemStatus.Failed)
+                        {
+                            return StatusCode(500, string.IsNullOrWhiteSpace(result.ErrorMessage)
+                                ? "Report generation failed."
+                                : $"Report generation failed: {result.ErrorMessage}");
+                        }
                         return StatusCode(500, "Timed out waiting.  You should use the export/poll POST then GET flow. See https://github.com/majorsilence/CrystalCmd/wiki/Polled-report-generation-(export-poll).");
                     }
                 }
@@ -119,7 +125,13 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 return File(bytes, mimeType, fileName);
             }
             else if (result.Status == WorkItemStatus.Failed)
-                return StatusCode(500);
+            {
+                // Surface the worker's stored (sanitized) error so callers see why the
+                // report failed instead of a bare 500 with no body.
+                return StatusCode(500, string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? "Report generation failed."
+                    : $"Report generation failed: {result.ErrorMessage}");
+            }
             else if (result.Status == WorkItemStatus.Processing || result.Status == WorkItemStatus.Pending)
                 return Accepted("Processing report");
             else

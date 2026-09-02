@@ -419,7 +419,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         }
 
 
-        public async Task<(GeneratedReportPoco Report, WorkItemStatus Status)>
+        public async Task<(GeneratedReportPoco Report, WorkItemStatus Status, string ErrorMessage)>
             Get(string id)
         {
             using (var con = CreateConnection())
@@ -431,14 +431,16 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
                 if (generatedReportsPoco != null)
                 {
-                    return (generatedReportsPoco, WorkItemStatus.Completed);
+                    return (generatedReportsPoco, WorkItemStatus.Completed, null);
                 }
                 else if (workQueuePoco != null)
                 {
-                    return (null, workQueuePoco.Status);
+                    // ErrorMessage carries the worker's last (sanitized) exception so a
+                    // Failed item can be reported to the caller instead of a bare 500.
+                    return (null, workQueuePoco.Status, workQueuePoco.ErrorMessage);
                 }
 
-                return (null, WorkItemStatus.Unknown);
+                return (null, WorkItemStatus.Unknown, null);
             }
         }
 

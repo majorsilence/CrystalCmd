@@ -55,7 +55,7 @@ public abstract class WorkQueueTestBase
 
         Assert.That(processedId, Is.EqualTo(itemId));
 
-        var (report, status) = await queue.Get(itemId);
+        var (report, status, _) = await queue.Get(itemId);
         Assert.That(status, Is.EqualTo(WorkItemStatus.Completed));
         Assert.That(report, Is.Not.Null);
         Assert.That(report!.FileContent, Is.EqualTo(new byte[] { 1, 2, 3 }));
@@ -120,7 +120,7 @@ public abstract class WorkQueueTestBase
             // The claim transaction has already committed; a fresh connection
             // must see Processing, not Pending and not Completed yet.
             var observer = CreateQueue(workItem.Channel);
-            var (_, s) = await observer.Get(workItem.Id);
+            var (_, s, _) = await observer.Get(workItem.Id);
             statusDuringCallback = s;
             return MakeReport(workItem.Id);
         });
@@ -128,7 +128,7 @@ public abstract class WorkQueueTestBase
         Assert.That(statusDuringCallback, Is.EqualTo(WorkItemStatus.Processing),
             "Status must be Processing while the callback runs (claim transaction committed before callback)");
 
-        var (_, finalStatus) = await queue.Get(itemId);
+        var (_, finalStatus, _) = await queue.Get(itemId);
         Assert.That(finalStatus, Is.EqualTo(WorkItemStatus.Completed));
     }
 
@@ -149,7 +149,7 @@ public abstract class WorkQueueTestBase
         });
 
         // Status must be back to Pending so the item can be retried.
-        var (_, status) = await queue.Get(itemId);
+        var (_, status, _) = await queue.Get(itemId);
         Assert.That(status, Is.EqualTo(WorkItemStatus.Pending));
     }
 
@@ -189,7 +189,7 @@ public abstract class WorkQueueTestBase
 
         // Parked as Failed rather than left Pending forever: a row that can never be
         // dequeued again must still become eligible for garbage collection.
-        var (_, status) = await queue.Get(itemId);
+        var (_, status, _) = await queue.Get(itemId);
         Assert.That(status, Is.EqualTo(WorkItemStatus.Failed));
     }
 
