@@ -18,6 +18,7 @@
 		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="Microsoft.Extensions.Logging" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">

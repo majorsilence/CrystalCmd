@@ -19,7 +19,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
-        dotnet-version: 10.0.x
+        # The client tests target net8.0, net9.0 and net10.0 besides net48; a runtime
+        # the image lacks makes vstest wait 90 s for a test host that never starts and
+        # fail the step with no test named, so every runtime they need is installed.
+        dotnet-version: |
+          8.0.x
+          9.0.x
+          10.0.x
     - name: Install Crystal Reports Runtime 
       run: |
         cd dotnet
@@ -70,3 +76,26 @@ jobs:
         path: "**/TestResults/*.xml"
         reporter: dotnet-nunit
 
+  # The Majorsilence.Crystal backend and its worker need no SAP runtime, so they are
+  # built and tested here without the Crystal Reports install the Windows job depends
+  # on (a download from SAP's site that is not always available). This is the job that
+  # answers for the new worker on every pull request.
+  linux-rptengine-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: 10.0.x
+    - name: Build the worker
+      run: dotnet build dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.RptEngineWorker/Majorsilence.CrystalCmd.RptEngineWorker.csproj --configuration Release
+    - name: Test the backend
+      run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.RptEngine.Tests/Majorsilence.CrystalCmd.RptEngine.Tests.csproj --configuration Release --logger "nunit"
+    - name: Record Test Report
+      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+      if: success() || failure() # run this step even if previous step failed
+      with:
+        name: rptengine backend tests
+        path: "**/TestResults/*.xml"
+        reporter: dotnet-nunit
