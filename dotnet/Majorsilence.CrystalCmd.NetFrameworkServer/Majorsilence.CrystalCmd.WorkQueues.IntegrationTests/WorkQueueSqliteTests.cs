@@ -27,6 +27,23 @@ public class WorkQueueSqliteTests : WorkQueueTestBase
         }
     }
 
+    // The server and its workers are separate processes on this one file. Rollback-journal
+    // mode made the server's poll and the worker's claim collide with "database is locked";
+    // Migrate() switches the file to WAL, where readers and the writer never block each other.
+    [Test]
+    public async Task Migrate_PutsTheFileInWalMode()
+    {
+        await CreateQueue(Channel).Migrate();
+
+        using var con = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath};");
+        await con.OpenAsync();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = "PRAGMA journal_mode;";
+        var mode = (await cmd.ExecuteScalarAsync())?.ToString();
+
+        Assert.That(mode, Is.EqualTo("wal").IgnoreCase);
+    }
+
     protected override WorkQueue CreateQueue(string channel, int leaseMinutes)
     {
         var sqlDefs = new WorkQueueSqlDefs(SqlType.Sqlite);
