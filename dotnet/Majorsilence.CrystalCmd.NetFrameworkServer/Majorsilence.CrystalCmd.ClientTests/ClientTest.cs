@@ -63,6 +63,18 @@ namespace Majorsilence.CrystalCmd.ClientTests
             }
         }
 
+        [TearDown]
+        public void DumpProcessOutputOnFailure()
+        {
+            // TestContext.Progress lines are not visible in CI logs; attaching the
+            // captured server/worker output to the failed test's own result is.
+            if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Failed)
+            {
+                TestContext.Out.WriteLine("---- test-hosted server/worker output ----");
+                TestContext.Out.WriteLine(UnitTestSetup.GetProcessDiagnostics());
+            }
+        }
+
         [Test]
         public async Task Test_ConnectToServerWritePdfAsync()
         {

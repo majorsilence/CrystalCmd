@@ -17,6 +17,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.WorkQueues
@@ -34,6 +35,23 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         private readonly SqlType _sqlType;
         private readonly string _connectionString;
         private readonly string DefaultChannel;
+        private readonly TimeSpan _leaseDuration;
+
+        /// <summary>
+        /// How long a claimed work item stays leased to the worker that claimed it.
+        /// A worker that dies mid-report leaves its row in Processing; once the lease
+        /// expires another worker reclaims it instead of the item being stranded
+        /// forever. This must comfortably exceed the longest expected report
+        /// generation time, otherwise a slow report can be picked up a second time.
+        /// A negative value produces an already-expired lease, which is only useful
+        /// for testing the reclaim path.
+        /// </summary>
+        public const int DefaultLeaseMinutes = 60;
+
+        // Longer than the batched cleanup normally needs, but bounded: the SQL itself
+        // sets a short lock timeout, so a contended pass fails fast rather than
+        // sitting here.
+        private const int CleanupCommandTimeoutSeconds = 120;
 
         /// <summary>
         /// 
@@ -44,13 +62,63 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
         public WorkQueue(WorkQueueSqlDefs sqlDefs,
             SqlType sqlType, string connectionString,
-            string channel
+            string channel,
+            int leaseMinutes = DefaultLeaseMinutes
             )
         {
             _sqlDefs = sqlDefs;
             _sqlType = sqlType;
-            _connectionString = connectionString;
             DefaultChannel = channel;
+            _connectionString = ApplyApplicationName(connectionString, sqlType, channel);
+            _leaseDuration = TimeSpan.FromMinutes(leaseMinutes);
+        }
+
+        /// <summary>
+        /// Stamp the connection with an application name so these sessions are
+        /// identifiable in the server's own diagnostics (sys.dm_exec_sessions,
+        /// pg_stat_activity). Without it every session reports only the generic
+        /// provider name and the cleanup service cannot be told apart from a worker.
+        /// </summary>
+        private static string ApplyApplicationName(string connectionString, SqlType sqlType, string channel)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return connectionString;
+            }
+
+            var applicationName = "CrystalCmd-" + (string.IsNullOrWhiteSpace(channel) ? "cleanup" : channel);
+
+            try
+            {
+                if (sqlType == SqlType.SqlServer)
+                {
+                    var builder = new SqlConnectionStringBuilder(connectionString);
+                    // The provider defaults this to its own name; only override that.
+                    if (string.IsNullOrWhiteSpace(builder.ApplicationName)
+                        || builder.ApplicationName.IndexOf("SqlClient Data Provider", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        builder.ApplicationName = applicationName;
+                    }
+                    return builder.ConnectionString;
+                }
+
+                if (sqlType == SqlType.PostgreSQL)
+                {
+                    var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+                    if (string.IsNullOrWhiteSpace(builder.ApplicationName))
+                    {
+                        builder.ApplicationName = applicationName;
+                    }
+                    return builder.ConnectionString;
+                }
+            }
+            catch (Exception)
+            {
+                // A connection string we cannot parse is the connection's problem to
+                // report, not this helper's; fall back to using it verbatim.
+            }
+
+            return connectionString;
         }
 
         private DbConnection CreateConnection()
@@ -117,15 +185,23 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 #if NET48
             var sqlTypeStr = GetSetting("WorkQueueSqlType");
             var connectionString = GetSetting("WorkQueueSqlConnection");
+            var leaseMinutesStr = GetSetting("WorkQueueLeaseMinutes");
 #else
 
             var sqlTypeStr = GetSetting("WorkQueue:SqlType", configuration);
             var connectionString = GetSetting("WorkQueue:SqlConnection", configuration);
+            var leaseMinutesStr = GetSetting("WorkQueue:LeaseMinutes", configuration);
 #endif
             var sqlType = WorkQueueSqlDefs.ParseSqlType(sqlTypeStr);
             var sqlDefs = new WorkQueueSqlDefs(sqlType);
 
-            return new WorkQueue(sqlDefs, sqlType, connectionString, channel);
+            if (!int.TryParse(leaseMinutesStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out var leaseMinutes)
+                || leaseMinutes < 0)
+            {
+                leaseMinutes = DefaultLeaseMinutes;
+            }
+
+            return new WorkQueue(sqlDefs, sqlType, connectionString, channel, leaseMinutes);
         }
 
         private async Task UpdateFailureCount(string id, string errorMessage)
@@ -149,6 +225,14 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                     pendingStatusParam.ParameterName = "@p_pendingstatus";
                     pendingStatusParam.Value = (int)WorkItemStatus.Pending;
                     command.Parameters.Add(pendingStatusParam);
+                    var failedStatusParam = command.CreateParameter();
+                    failedStatusParam.ParameterName = "@p_failedstatus";
+                    failedStatusParam.Value = (int)WorkItemStatus.Failed;
+                    command.Parameters.Add(failedStatusParam);
+                    var timeProcessedUtcParam = command.CreateParameter();
+                    timeProcessedUtcParam.ParameterName = "@p_timeprocessedutc";
+                    timeProcessedUtcParam.Value = DateTime.UtcNow;
+                    command.Parameters.Add(timeProcessedUtcParam);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -156,23 +240,11 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
         public async Task Dequeue(Func<WorkQueuePoco, Task<GeneratedReportPoco>> callback)
         {
-            // Transaction 1: claim the item and immediately commit so locks are released
-            // before the long-running report generation begins. Holding UPDLOCK across
-            // report generation caused sleeping transactions detected by sp_blitzfirst.
-            WorkQueuePoco result = null;
-            using (var con = CreateConnection())
-            {
-                await con.OpenAsync();
-                using (var txn = con.BeginTransaction())
-                {
-                    result = await Dequeue<WorkQueuePoco>(DefaultChannel, con, txn);
-                    if (result != null)
-                    {
-                        await ClaimWorkItem(con, txn, result.Id);
-                    }
-                    txn.Commit();
-                }
-            }
+            // Claim the item with a single atomic statement. No client-side transaction
+            // spans round trips, so a worker killed mid-claim cannot leave a sleeping
+            // session holding locks on the queue table - which previously blocked the
+            // cleanup job until the orphaned connection was killed by hand.
+            WorkQueuePoco result = await ClaimNextWorkItem();
 
             if (result == null) return;
 
@@ -229,25 +301,6 @@ namespace Majorsilence.CrystalCmd.WorkQueues
                 statusParam.ParameterName = "@p_status";
                 statusParam.Value = (int)status;
                 command.Parameters.Add(statusParam);
-                await command.ExecuteNonQueryAsync();
-            }
-        }
-
-        private async Task ClaimWorkItem(DbConnection con, DbTransaction txn, string id)
-        {
-            using (var command = con.CreateCommand())
-            {
-                command.CommandText = _sqlDefs.ClaimWorkItemSql;
-                command.CommandType = CommandType.Text;
-                command.Transaction = txn;
-                var statusParam = command.CreateParameter();
-                statusParam.ParameterName = "@p_status";
-                statusParam.Value = (int)WorkItemStatus.Processing;
-                command.Parameters.Add(statusParam);
-                var idParam = command.CreateParameter();
-                idParam.ParameterName = "@p_id";
-                idParam.Value = id;
-                command.Parameters.Add(idParam);
                 await command.ExecuteNonQueryAsync();
             }
         }
@@ -366,7 +419,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
         }
 
 
-        public async Task<(GeneratedReportPoco Report, WorkItemStatus Status)>
+        public async Task<(GeneratedReportPoco Report, WorkItemStatus Status, string ErrorMessage)>
             Get(string id)
         {
             using (var con = CreateConnection())
@@ -378,14 +431,16 @@ namespace Majorsilence.CrystalCmd.WorkQueues
 
                 if (generatedReportsPoco != null)
                 {
-                    return (generatedReportsPoco, WorkItemStatus.Completed);
+                    return (generatedReportsPoco, WorkItemStatus.Completed, null);
                 }
                 else if (workQueuePoco != null)
                 {
-                    return (null, workQueuePoco.Status);
+                    // ErrorMessage carries the worker's last (sanitized) exception so a
+                    // Failed item can be reported to the caller instead of a bare 500.
+                    return (null, workQueuePoco.Status, workQueuePoco.ErrorMessage);
                 }
 
-                return (null, WorkItemStatus.Unknown);
+                return (null, WorkItemStatus.Unknown, null);
             }
         }
 
@@ -513,25 +568,31 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             }
         }
 
-        private async Task<T> Dequeue<T>(string channel, DbConnection con, DbTransaction txn, int offset = 0)
+        /// <summary>
+        /// Selects the next pending item (or one whose lease has expired) and marks it
+        /// Processing in one statement, returning the claimed row.
+        /// </summary>
+        private async Task<WorkQueuePoco> ClaimNextWorkItem()
         {
-            if (string.IsNullOrWhiteSpace(channel))
-                throw new ArgumentNullException(nameof(channel));
+            if (string.IsNullOrWhiteSpace(DefaultChannel))
+                throw new ArgumentNullException(nameof(DefaultChannel));
 
-            if (con is null)
-                throw new ArgumentNullException(nameof(con));
+            var now = DateTime.UtcNow;
 
-            if (txn is null)
-                throw new ArgumentNullException(nameof(txn));
-
-            if (con.State == ConnectionState.Closed) await con.OpenAsync();
-
-            return await Query<T>(con, _sqlDefs.DequeueSql, new
+            using (var con = CreateConnection())
             {
-                p_channel = channel,
-                p_status = (int)WorkItemStatus.Pending,
-                p_now = DateTime.UtcNow
-            }, txn);
+                await con.OpenAsync();
+
+                return await Query<WorkQueuePoco>(con, _sqlDefs.DequeueSql, new
+                {
+                    p_channel = DefaultChannel,
+                    p_pendingstatus = (int)WorkItemStatus.Pending,
+                    p_processingstatus = (int)WorkItemStatus.Processing,
+                    p_now = now,
+                    p_lockid = Guid.NewGuid().ToString(),
+                    p_lockeduntilutc = now.Add(_leaseDuration)
+                });
+            }
         }
 
         public async Task Migrate()
@@ -552,19 +613,20 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             }
         }
 
-        public async Task GarbageCollection()
+        public async Task GarbageCollection(CancellationToken cancellationToken = default)
         {
             using (var con = CreateConnection())
             {
-                await con.OpenAsync();
+                await con.OpenAsync(cancellationToken);
                 using (var command = con.CreateCommand())
                 {
+                    command.CommandTimeout = CleanupCommandTimeoutSeconds;
                     command.CommandText = _sqlDefs.CleanupGeneratedReportsSql;
                     command.CommandType = CommandType.Text;
-                    await command.ExecuteNonQueryAsync();
+                    await command.ExecuteNonQueryAsync(cancellationToken);
                     command.CommandText = _sqlDefs.CleanupWorkQueueSql;
                     command.CommandType = CommandType.Text;
-                    await command.ExecuteNonQueryAsync();
+                    await command.ExecuteNonQueryAsync(cancellationToken);
                 }
             }
         }

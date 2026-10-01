@@ -23,8 +23,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
         internal static bool IsServerAvailable { get; private set; } = false;
         /// <summary>Human-readable reason when IsServerAvailable is false.</summary>
         internal static string ServerUnavailableReason { get; private set; } = "Server setup has not run yet.";
-        private readonly StringBuilder _workerOutput = new StringBuilder();
-        private readonly StringBuilder _serverOutput = new StringBuilder();
+        private static readonly object _outputLock = new object();
+        private static readonly StringBuilder _workerOutput = new StringBuilder();
+        private static readonly StringBuilder _serverOutput = new StringBuilder();
         private string _testQueueDbPath = string.Empty;
         private int _httpPort;
         private int _httpsPort;
@@ -97,7 +98,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
-                    _workerOutput.AppendLine(args.Data);
+                    lock (_outputLock) { _workerOutput.AppendLine(args.Data); }
                     TestContext.Progress.WriteLine("[Worker STDOUT] " + args.Data);
                 }
             };
@@ -105,7 +106,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
-                    _workerOutput.AppendLine(args.Data);
+                    lock (_outputLock) { _workerOutput.AppendLine(args.Data); }
                     TestContext.Progress.WriteLine("[Worker STDERR] " + args.Data);
                 }
             };
@@ -144,7 +145,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
-                    _serverOutput.AppendLine(args.Data);
+                    lock (_outputLock) { _serverOutput.AppendLine(args.Data); }
                     TestContext.Progress.WriteLine("[Server STDOUT] " + args.Data);
                 }
             };
@@ -152,7 +153,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
             {
                 if (!string.IsNullOrEmpty(args.Data))
                 {
-                    _serverOutput.AppendLine(args.Data);
+                    lock (_outputLock) { _serverOutput.AppendLine(args.Data); }
                     TestContext.Progress.WriteLine("[Server STDERR] " + args.Data);
                 }
             };
@@ -205,9 +206,17 @@ namespace Majorsilence.CrystalCmd.ClientTests
             throw new TimeoutException($"Server did not become ready within 30 seconds. {GetProcessDiagnostics()}", lastException);
         }
 
-        private string GetProcessDiagnostics()
+        /// <summary>
+        /// Captured stdout/stderr of the test-hosted server and worker processes.
+        /// TestContext.Progress output is not shown in CI logs, so failed tests dump
+        /// this into their own result output instead (see ClientTest teardown).
+        /// </summary>
+        internal static string GetProcessDiagnostics()
         {
-            return $"Server output:{Environment.NewLine}{_serverOutput}{Environment.NewLine}Worker output:{Environment.NewLine}{_workerOutput}";
+            lock (_outputLock)
+            {
+                return $"Server output:{Environment.NewLine}{_serverOutput}{Environment.NewLine}Worker output:{Environment.NewLine}{_workerOutput}";
+            }
         }
 
         [OneTimeTearDown]

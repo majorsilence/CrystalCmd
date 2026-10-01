@@ -16,12 +16,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
-    public class Exporter
+    public class Exporter : CrystalCmd.Common.IReportExporter
     {
         private readonly ILogger _logger;
         public Exporter(ILogger logger)
         {
             _logger = logger;
+        }
+
+        public CrystalCmd.Common.ReportExport Export(string reportPath, CrystalCmd.Common.Data data)
+        {
+            var result = exportReportToStream(reportPath, data);
+            return new CrystalCmd.Common.ReportExport(result.Item1, result.Item2, result.Item3);
         }
 
         /// <summary>
