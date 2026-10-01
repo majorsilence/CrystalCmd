@@ -24,10 +24,23 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Task _backgroundTask;
         private readonly string channel;
+        private readonly CrystalCmd.Common.IReportExporter _exporter;
+        private readonly CrystalCmd.Common.IReportAnalyzer _analyzer;
+
+        /// <summary>A queue worker on the Crystal Reports runtime.</summary>
         public ExportQueue(ILogger logger, string channel)
+            : this(logger, channel, new Exporter(logger), new CrystalReportsAnalyzer())
+        {
+        }
+
+        /// <summary>A queue worker on whichever backend implements the two interfaces.</summary>
+        public ExportQueue(ILogger logger, string channel, CrystalCmd.Common.IReportExporter exporter,
+            CrystalCmd.Common.IReportAnalyzer analyzer)
         {
             _logger = logger;
             this.channel = channel;
+            _exporter = exporter ?? throw new ArgumentNullException(nameof(exporter));
+            _analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
         }
 
         public void Start()
@@ -110,9 +123,6 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
 
         internal async Task<GeneratedReportPoco> ProcessData(QueueItem item, WorkQueue queue)
         {
-
-            var exporter = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
-
             string workingDir = System.IO.Path.Combine(Server.Common.WorkingFolder.GetMajorsilenceTempFolder(), item.Id);
             System.IO.Directory.CreateDirectory(workingDir);
             string rptFile = System.IO.Path.Combine(workingDir, $"{item.Id}.rpt");
@@ -124,10 +134,10 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 {
                     // export pdf
 
-                    var output = exporter.exportReportToStream(rptFile, item.Data);
-                    var bytes = output.Item1;
-                    var fileExt = output.Item2;
-                    var mimeType = output.Item3;
+                    var output = _exporter.Export(rptFile, item.Data);
+                    var bytes = output.Content;
+                    var fileExt = output.Extension;
+                    var mimeType = output.MediaType;
                     return new GeneratedReportPoco
                     {
                         Id = item.Id,
@@ -141,8 +151,7 @@ namespace Majorsilence.CrystalCmd.NetframeworkConsole
                 else
                 {
                     // report analysis
-                    var analyzer = new CrystalReportsAnalyzer();
-                    var response = analyzer.GetFullAnalysis(rptFile);
+                    var response = _analyzer.Analyze(rptFile);
                     return new GeneratedReportPoco
                     {
                         Id = item.Id,

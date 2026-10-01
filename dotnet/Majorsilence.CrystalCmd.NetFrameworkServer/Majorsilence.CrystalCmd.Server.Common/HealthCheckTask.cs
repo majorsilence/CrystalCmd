@@ -19,14 +19,17 @@ namespace Majorsilence.CrystalCmd.Server.Common
         private readonly ILogger _logger;
         private readonly bool _failureShouldExitProcess;
         private readonly TimeSpan _checkInterval;
+        private readonly CrystalCmd.Common.IReportExporter _exporter;
 
+        /// <param name="exporter">The backend to prove alive; the Crystal runtime when null.</param>
         public HealthCheckTask(ILogger logger, string rptFilePath, bool failureShouldExitProcess,
-            TimeSpan? checkInterval = null)
+            TimeSpan? checkInterval = null, CrystalCmd.Common.IReportExporter exporter = null)
         {
             _logger = logger;
             _rptFilePath = rptFilePath;
             _failureShouldExitProcess = failureShouldExitProcess;
             _checkInterval = checkInterval ?? TimeSpan.FromSeconds(60);
+            _exporter = exporter ?? new Exporter(logger);
         }
 
         // Exposed for tests so they can observe that the background task ends on its
@@ -60,15 +63,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
             {
                 try
                 {
-                    var export = new Majorsilence.CrystalCmd.Server.Common.Exporter(_logger);
-                    
-                    var result = export.exportReportToStream(_rptFilePath, new CrystalCmd.Common.Data()
+                    var result = _exporter.Export(_rptFilePath, new CrystalCmd.Common.Data()
                     {
                         ExportAs = CrystalCmd.Common.ExportTypes.PDF
                     });
 
-                    
-                    IsHealthy = result != null && result.Item1 != null && result.Item1.Length > 1000;
+                    IsHealthy = result != null && result.Content != null && result.Content.Length > 1000;
                     _logger.LogInformation("HealthCheckTask: IsHealthy = " + IsHealthy);
                     failCount = 0;
                 }

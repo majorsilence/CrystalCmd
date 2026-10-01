@@ -9,8 +9,12 @@ using System.Threading.Tasks;
 
 namespace Majorsilence.CrystalCmd.Server.Common
 {
-    public class CrystalReportsAnalyzer
+    public class CrystalReportsAnalyzer : CrystalCmd.Common.IReportAnalyzer
     {
+        public CrystalCmd.Common.FullReportAnalysisResponse Analyze(string reportPath) => GetFullAnalysis(reportPath);
+
+        public CrystalCmd.Common.FullReportAnalysisResponse Analyze(byte[] reportTemplate) => GetFullAnalysis(reportTemplate);
+
 
         public CrystalCmd.Common.FullReportAnalysisResponse GetFullAnalysis(string reportPath)
         {
