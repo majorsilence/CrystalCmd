@@ -264,7 +264,7 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             using (var con = CreateConnection())
             {
                 await con.OpenAsync();
-                using (var txn = con.BeginTransaction())
+                using (var txn = BeginWriteTransaction(con))
                 {
                     try
                     {
@@ -595,11 +595,48 @@ namespace Majorsilence.CrystalCmd.WorkQueues
             }
         }
 
+        // SQLite is the shipped default, and the server and its workers are separate
+        // processes sharing one database file. In the default rollback-journal mode a
+        // writer committing needs every reader out of the way and a reader cannot start
+        // while a writer commits, so the server's poll (two SELECTs every half second per
+        // waiting request) and the worker's claim and completion (writes every second)
+        // collided with "database is locked" and the poll answered 500. In WAL mode
+        // readers and the writer never block each other; only two writers contend, and
+        // the busy timeout handles that. Set once here: the mode persists in the file.
+        private async Task EnableSqliteWriteAheadLog(DbConnection con)
+        {
+            if (_sqlType != SqlType.Sqlite) return;
+            using (var command = con.CreateCommand())
+            {
+                command.CommandText = "PRAGMA journal_mode=WAL;";
+                var mode = (await command.ExecuteScalarAsync())?.ToString();
+                if (!string.Equals(mode, "wal", StringComparison.OrdinalIgnoreCase))
+                {
+                    // In-memory and some network file systems refuse WAL; the queue still
+                    // works there, with the contention this was added to remove.
+                    System.Diagnostics.Trace.TraceWarning($"SQLite journal_mode is '{mode}', not WAL; concurrent readers and writers may see 'database is locked'.");
+                }
+            }
+        }
+
+        // A write transaction takes the write lock as it begins (BEGIN IMMEDIATE on
+        // SQLite, via Serializable), so two writers queue on the busy timeout instead of
+        // one of them failing at once when it tries to upgrade a deferred transaction
+        // that another writer has already locked out. The other databases keep their
+        // default isolation; Serializable means something else to them.
+        private DbTransaction BeginWriteTransaction(DbConnection con)
+        {
+            return _sqlType == SqlType.Sqlite
+                ? con.BeginTransaction(IsolationLevel.Serializable)
+                : con.BeginTransaction();
+        }
+
         public async Task Migrate()
         {
             using (var con = CreateConnection())
             {
                 await con.OpenAsync();
+                await EnableSqliteWriteAheadLog(con);
                 using (var command = con.CreateCommand())
                 {
                     command.CommandText = _sqlDefs.MigrateWorkeQueueSql;
