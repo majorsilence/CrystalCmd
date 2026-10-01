@@ -19,7 +19,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
-        dotnet-version: 10.0.x
+        # The client tests target net8.0, net9.0 and net10.0 besides net48; a runtime
+        # the image lacks makes vstest wait 90 s for a test host that never starts and
+        # fail the step with no test named, so every runtime they need is installed.
+        dotnet-version: |
+          8.0.x
+          9.0.x
+          10.0.x
     - name: Install Crystal Reports Runtime 
       run: |
         cd dotnet
