@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <Description>The Majorsilence.Crystal rendering backend for CrystalCmd: translates a request into the engine's runtime overrides, exports with Majorsilence.Crystal.RptEngine and analyzes templates with its parser. No SAP Crystal Reports runtime involved.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Majorsilence.Crystal.RptEngine" />
+    <PackageReference Include="ChoETL" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>
