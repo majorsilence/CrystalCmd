@@ -70,6 +70,12 @@ namespace Majorsilence.CrystalCmd.Common
 
         public string RecordSelectionFormula { get; set; }
 
+        /// <summary>
+        /// Which rendering backend to use. Unset means the server's configured default. See
+        /// <see cref="RenderBackend"/> for what each accepts.
+        /// </summary>
+        public RenderBackend? Backend { get; set; }
+
         public void AddData(string name, DataTable dt)
         {
             string csv = DataTable2Csv(dt);

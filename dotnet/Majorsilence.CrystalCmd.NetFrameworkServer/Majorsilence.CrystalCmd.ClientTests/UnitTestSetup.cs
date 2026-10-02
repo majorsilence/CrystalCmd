@@ -30,6 +30,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         private int _httpPort;
         private int _httpsPort;
         private System.Diagnostics.Process _workerProcess;
+        private System.Diagnostics.Process _rptEngineWorkerProcess;
         private System.Diagnostics.Process _serverProcess;
 #pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
 
@@ -113,6 +114,46 @@ namespace Majorsilence.CrystalCmd.ClientTests
             _workerProcess.Start();
             _workerProcess.BeginErrorReadLine();
             _workerProcess.BeginOutputReadLine();
+
+            // The second worker, on the Majorsilence.Crystal engine, consuming its own
+            // channels of the same queue; the server routes requests to it by the Backend
+            // field, the default, or the serviceable rule.
+            string rptEngineWorkerDir = System.IO.Path.Combine(baseDir,
+                "Majorsilence.CrystalCmd.RptEngineWorker",
+                "bin",
+                configuration,
+                "net10.0");
+            _rptEngineWorkerProcess = new System.Diagnostics.Process();
+            _rptEngineWorkerProcess.StartInfo.FileName = "dotnet";
+            _rptEngineWorkerProcess.StartInfo.Arguments = "Majorsilence.CrystalCmd.RptEngineWorker.dll";
+            _rptEngineWorkerProcess.StartInfo.WorkingDirectory = rptEngineWorkerDir;
+            _rptEngineWorkerProcess.StartInfo.UseShellExecute = false;
+            _rptEngineWorkerProcess.StartInfo.CreateNoWindow = true;
+            _rptEngineWorkerProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlType"] = "sqlite";
+            _rptEngineWorkerProcess.StartInfo.EnvironmentVariables["WorkQueue__SqlConnection"] = testQueueConnectionString;
+            _rptEngineWorkerProcess.StartInfo.RedirectStandardOutput = true;
+            _rptEngineWorkerProcess.StartInfo.RedirectStandardError = true;
+            _rptEngineWorkerProcess.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            _rptEngineWorkerProcess.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+            _rptEngineWorkerProcess.OutputDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    lock (_outputLock) { _workerOutput.AppendLine("[rptengine] " + args.Data); }
+                    TestContext.Progress.WriteLine("[RptEngine Worker STDOUT] " + args.Data);
+                }
+            };
+            _rptEngineWorkerProcess.ErrorDataReceived += (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    lock (_outputLock) { _workerOutput.AppendLine("[rptengine] " + args.Data); }
+                    TestContext.Progress.WriteLine("[RptEngine Worker STDERR] " + args.Data);
+                }
+            };
+            _rptEngineWorkerProcess.Start();
+            _rptEngineWorkerProcess.BeginErrorReadLine();
+            _rptEngineWorkerProcess.BeginOutputReadLine();
 
             _serverProcess = new System.Diagnostics.Process();
             _serverProcess.StartInfo.FileName = "dotnet";
@@ -223,6 +264,7 @@ namespace Majorsilence.CrystalCmd.ClientTests
         public async Task Cleanup()
         {
             await TerminateProcessAsync(_workerProcess, 5000).ConfigureAwait(false);
+            await TerminateProcessAsync(_rptEngineWorkerProcess, 5000).ConfigureAwait(false);
             await TerminateProcessAsync(_serverProcess, 5000).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(_testQueueDbPath))

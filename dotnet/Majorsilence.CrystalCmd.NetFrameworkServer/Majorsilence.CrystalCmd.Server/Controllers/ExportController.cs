@@ -1,3 +1,4 @@
+using Majorsilence.CrystalCmd.Routing;
 using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +30,16 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers));
-            var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
+            RoutingDecision route;
+            try
+            {
+                route = Routing.Route(inputResults.ReportData, inputResults.ReportTemplate, inputResults.Id, _configuration, _logger);
+            }
+            catch (BackendRefusedException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            var queue = WorkQueue.CreateDefault(route.ReportsChannel, _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Data = inputResults.ReportData,
@@ -89,7 +99,16 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
 
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers));
-            var queue = WorkQueue.CreateDefault("crystal-reports", _configuration);
+            RoutingDecision route;
+            try
+            {
+                route = Routing.Route(inputResults.ReportData, inputResults.ReportTemplate, inputResults.Id, _configuration, _logger);
+            }
+            catch (BackendRefusedException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            var queue = WorkQueue.CreateDefault(route.ReportsChannel, _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Id = inputResults.Id,

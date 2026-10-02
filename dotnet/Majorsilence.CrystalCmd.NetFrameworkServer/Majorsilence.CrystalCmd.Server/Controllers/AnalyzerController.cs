@@ -1,4 +1,5 @@
 using Majorsilence.CrystalCmd.Common;
+using Majorsilence.CrystalCmd.Routing;
 using Majorsilence.CrystalCmd.WorkQueues;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +37,12 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             byte[] jsonBytes;
             try
             {
-                jsonBytes = await AnalyzerResultsBytes(inputResults.ReportTemplate, inputResults.Id);
+                var route = Routing.Route(null, inputResults.ReportTemplate, inputResults.Id, _configuration, _logger);
+                jsonBytes = await AnalyzerResultsBytes(inputResults.ReportTemplate, inputResults.Id, route.AnalyzerChannel);
+            }
+            catch (BackendRefusedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch
             {
@@ -54,7 +60,16 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             var baseRoute = new BaseRoute(_logger);
             var inputResults = await baseRoute.ReadInput(Request.Body, Request.ContentType, BaseRoute.HeadersFromAsp(headers), templateOnly: true);
 
-            var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
+            RoutingDecision route;
+            try
+            {
+                route = Routing.Route(null, inputResults.ReportTemplate, inputResults.Id, _configuration, _logger);
+            }
+            catch (BackendRefusedException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            var queue = WorkQueue.CreateDefault(route.AnalyzerChannel, _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Data = null,
@@ -100,9 +115,9 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
                 return StatusCode(452, "Unknown");
         }
 
-        private async Task<byte[]> AnalyzerResultsBytes(byte[] report, string id)
+        private async Task<byte[]> AnalyzerResultsBytes(byte[] report, string id, string channel)
         {
-            var queue = WorkQueue.CreateDefault("crystal-analyzer", _configuration);
+            var queue = WorkQueue.CreateDefault(channel, _configuration);
             await queue.Enqueue(new QueueItem()
             {
                 Data = null,

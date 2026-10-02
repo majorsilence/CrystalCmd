@@ -18,6 +18,6 @@ public sealed class NotServiceableException : CrystalCmdException
 /// <summary>The queue channels the Majorsilence.Crystal worker consumes.</summary>
 public static class RptEngineWorkerChannels
 {
-    public const string Reports = "rptengine-reports";
-    public const string Analyzer = "rptengine-analyzer";
+    public const string Reports = QueueChannels.RptEngineReports;
+    public const string Analyzer = QueueChannels.RptEngineAnalyzer;
 }
