@@ -42,6 +42,7 @@
     <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageVersion Include="NunitXml.TestLogger" Version="8.0.0" />
     <PackageVersion Include="PdfPig" Version="0.1.15" />
+    <PackageVersion Include="PDFtoImage" Version="4.1.0" />
     <PackageVersion Include="System.CodeDom" Version="10.0.9" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
