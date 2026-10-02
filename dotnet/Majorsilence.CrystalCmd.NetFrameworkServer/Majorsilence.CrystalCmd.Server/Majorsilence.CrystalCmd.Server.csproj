@@ -31,5 +31,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.Common\Majorsilence.CrystalCmd.Common.csproj" />
 		<ProjectReference Include="..\Majorsilence.CrystalCmd.WorkQueues\Majorsilence.CrystalCmd.WorkQueues.csproj" />
+		<ProjectReference Include="..\Majorsilence.CrystalCmd.Routing\Majorsilence.CrystalCmd.Routing.csproj" />
 	</ItemGroup>
 </Project>

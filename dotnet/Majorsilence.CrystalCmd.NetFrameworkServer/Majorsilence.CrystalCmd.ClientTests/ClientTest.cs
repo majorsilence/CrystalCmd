@@ -339,6 +339,58 @@ namespace Majorsilence.CrystalCmd.ClientTests
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        // The request asks for the Majorsilence.Crystal backend; the server routes it to that
+        // worker's channel and the result is a PDF, with no SAP runtime in that path.
+        [Test]
+        public async Task Test_RptEngineBackend_RendersTheDatasetReport()
+        {
+            var data = new Data { Backend = RenderBackend.RptEngine };
+            data.AddData("EMPLOYEE", GetTable());
+
+            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "rptengine_dataset_report.pdf", data);
+
+            var bytes = File.ReadAllBytes("rptengine_dataset_report.pdf");
+            Assert.That(bytes.Length, Is.GreaterThan(500));
+            Assert.That(Encoding.ASCII.GetString(bytes, 0, 5), Is.EqualTo("%PDF-"));
+            Assert.That(UnitTestSetup.GetProcessDiagnostics(), Does.Contain("routed to RptEngine"));
+        }
+
+        // An explicit request for that backend with something its rule rejects is a 400
+        // naming the rule, not a wrong document and not a silent fall-back.
+        [Test]
+        public void Test_RptEngineBackend_RefusesWhatTheRuleRejects()
+        {
+            var data = new Data { Backend = RenderBackend.RptEngine, ExportAs = ExportTypes.TEXT };
+
+            var ex = Assert.ThrowsAsync<HttpRequestException>(async () =>
+                await CreatePdfFromReport("thereport.rpt", "rptengine_refused.txt", data));
+
+            Assert.That(ex.Message, Does.Contain("RptEngine").And.Contain("TEXT"));
+        }
+
+        // Auto lets the rule decide: a subreport reading its own table goes to Crystal, the
+        // plain dataset report to RptEngine, and the server log says which and why.
+        [Test]
+        public async Task Test_AutoBackend_FollowsTheRule()
+        {
+            var plain = new Data { Backend = RenderBackend.Auto };
+            plain.AddData("EMPLOYEE", GetTable());
+            await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "auto_dataset_report.pdf", plain);
+
+            var withSubreportData = new Data { Backend = RenderBackend.Auto };
+            withSubreportData.AddData("the_dotnet_dataset_report.rpt", "Employee", GetTable());
+            await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "auto_subreport_report.pdf", withSubreportData);
+
+            string log = UnitTestSetup.GetProcessDiagnostics();
+            Assert.Multiple(() =>
+            {
+                Assert.That(new FileInfo("auto_dataset_report.pdf").Length, Is.GreaterThan(0));
+                Assert.That(new FileInfo("auto_subreport_report.pdf").Length, Is.GreaterThan(0));
+                Assert.That(log, Does.Contain("RptEngine, by the serviceable rule"));
+                Assert.That(log, Does.Contain("Crystal, because"));
+            });
+        }
+
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)
         {
             using (var fstream = new FileStream(reportPath, FileMode.Open))

@@ -92,6 +92,8 @@ jobs:
       run: dotnet build dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.RptEngineWorker/Majorsilence.CrystalCmd.RptEngineWorker.csproj --configuration Release
     - name: Test the backend
       run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.RptEngine.Tests/Majorsilence.CrystalCmd.RptEngine.Tests.csproj --configuration Release --logger "nunit"
+    - name: Test the routing
+      run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.Routing.Tests/Majorsilence.CrystalCmd.Routing.Tests.csproj --configuration Release --logger "nunit"
     - name: Record Test Report
       uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
       if: success() || failure() # run this step even if previous step failed
