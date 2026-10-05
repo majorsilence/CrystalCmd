@@ -28,19 +28,20 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
         // Ink agreement, percent, Crystal against RptEngine, first page, as last measured.
         // Raise a value when a run reports an improvement; never lower one without saying
-        // what was given up. Measured on Majorsilence.Crystal 0.1.0, which renders the
-        // plain and parameter reports blank (a Details section that reads no table was
-        // dropped, majorsilence.crystal #32) and the dataset report without its grey title
-        // band (section colours, #34); both are fixed there and raise these once released.
-        // The dataset report's page also differs in size: it follows the printer, and the
-        // Crystal host's printer may not be Letter (#33), which the shared-canvas comparison
-        // below tolerates.
+        // what was given up. Measured on Majorsilence.Crystal 0.2.1 (0.1.0 scored 15.9, 0, 0
+        // and 0), on a host whose default printer holds A4 and without Worker__PrinterPaper,
+        // so the dataset report, which prints on its printer's paper, is A4 from Crystal and
+        // Letter from RptEngine; the shared canvas below compares them aligned at the top
+        // left. With Worker__PrinterPaper=A4 set in the environment it scored 84.1: both
+        // pages are then A4, and RptEngine's lines sit about half a point above Crystal's.
+        // The subreport scenario draws its subreport only once the engine draws a subreport
+        // whose dataset has no rows (majorsilence/Reporting#345).
         private static readonly Dictionary<string, double> Baseline = new()
         {
-            ["dataset-report"] = 15.9,
-            ["plain-report"] = 0.0,
-            ["parameters"] = 0.0,
-            ["subreport-parameters"] = 0.0,
+            ["dataset-report"] = 89.5,
+            ["plain-report"] = 87.8,
+            ["parameters"] = 95.7,
+            ["subreport-parameters"] = 5.4,
         };
 
         public sealed record Scenario(string Name, string Template, Func<Data> MakeData);

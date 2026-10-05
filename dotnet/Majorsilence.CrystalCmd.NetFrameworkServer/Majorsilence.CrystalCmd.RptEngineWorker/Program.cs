@@ -14,6 +14,8 @@ if (args.Any(a => a is "/?" or "-help" or "help" or "--help"))
     Console.WriteLine("Configure the work queue in appsettings.json or with the environment variables");
     Console.WriteLine("WorkQueue__SqlType (sqlite, mssql, psql) and WorkQueue__SqlConnection, the same keys the server uses.");
     Console.WriteLine("Worker__ReportsChannel and Worker__AnalyzerChannel override the queue channels.");
+    Console.WriteLine("Worker__PrinterPaper (Letter, A4 or Legal) is the paper the Crystal host's printer holds,");
+    Console.WriteLine("for templates that print on their printer's default paper.");
     return 0;
 }
 
@@ -39,7 +41,13 @@ int threadCount = isSqlite ? 1 : Environment.ProcessorCount;
 string workingRoot = Path.Combine(Path.GetTempPath(), "majorsilence", "crystalcmd-rptengine");
 Directory.CreateDirectory(workingRoot);
 
-var exporter = new RptEngineExporter(logger);
+// The paper a template that names none prints on, in Crystal: its printer's. A wrong value
+// stops the worker here rather than being ignored.
+var printerPaper = RptEngineExporter.ParsePrinterPaper(configuration["Worker:PrinterPaper"]);
+logger.LogInformation("Templates that print on their printer's default paper are laid out on {Paper}",
+    printerPaper is null ? "the page they were designed on" : configuration["Worker:PrinterPaper"]!.Trim());
+
+var exporter = new RptEngineExporter(logger, printerPaper);
 var analyzer = new RptEngineAnalyzer();
 
 var health = new BackendHealthCheck(logger, exporter, Path.Combine(AppContext.BaseDirectory, "thereport.rpt"),
