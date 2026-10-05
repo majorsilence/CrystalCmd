@@ -28,17 +28,16 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
         // Ink agreement, percent, Crystal against RptEngine, first page, as last measured.
         // Raise a value when a run reports an improvement; never lower one without saying
-        // what was given up. The first measurement (Majorsilence.Crystal 0.1.0) found three
-        // things, all on that engine's side and raised in its tracker: a Details section
-        // with no database fields is dropped entirely (Crystal prints it once), so the
-        // plain and parameter reports render blank; the templates' paper size is read as
-        // Letter where Crystal has A4; and a section's static background colour is not
-        // carried, so the grey title band is missing (majorsilence.crystal #32, #33, #34).
-        // The dataset report's content is otherwise the same; its score is the paper size
-        // and the band.
+        // what was given up. Measured on Majorsilence.Crystal 0.1.0, which renders the
+        // plain and parameter reports blank (a Details section that reads no table was
+        // dropped, majorsilence.crystal #32) and the dataset report without its grey title
+        // band (section colours, #34); both are fixed there and raise these once released.
+        // The dataset report's page also differs in size: it follows the printer, and the
+        // Crystal host's printer may not be Letter (#33), which the shared-canvas comparison
+        // below tolerates.
         private static readonly Dictionary<string, double> Baseline = new()
         {
-            ["dataset-report"] = 9.3,
+            ["dataset-report"] = 15.9,
             ["plain-report"] = 0.0,
             ["parameters"] = 0.0,
             ["subreport-parameters"] = 0.0,
@@ -147,32 +146,37 @@ namespace Majorsilence.CrystalCmd.ClientTests
             return bytes;
         }
 
-        // Same measure as majorsilence.crystal's visual suite: the fraction of inked 8px
-        // cells the two pages share, over the union, after aligning dimensions.
-        private static double InkAgreementPercent(SKBitmap reference, SKBitmap ours, int cell = 8)
+        // Ink on a page at the same scale for both backends, padded to a shared canvas: a
+        // cell beyond a page's own edge simply has no ink. Pages are aligned at the top left
+        // and never stretched onto each other, because the two can legitimately differ in
+        // paper size (a template that follows the printer gets the Crystal host's printer's
+        // paper), and stretching a Letter page onto an A4 one would move every line on it.
+        private static bool[] InkCells(SKBitmap page, int cols, int rows, int cell)
         {
-            using SKBitmap oursResized = (reference.Width == ours.Width && reference.Height == ours.Height)
-                ? ours.Copy()
-                : ours.Resize(new SKImageInfo(reference.Width, reference.Height), SKFilterQuality.Medium);
-            using SKBitmap a = reference.Copy(SKColorType.Bgra8888);
-            using SKBitmap b = oursResized.Copy(SKColorType.Bgra8888);
-            byte[] aBytes = a.Bytes;
-            byte[] bBytes = b.Bytes;
-
-            int cols = (a.Width + cell - 1) / cell;
-            int rows = (a.Height + cell - 1) / cell;
-            var aInk = new bool[cols * rows];
-            var bInk = new bool[cols * rows];
-            for (int y = 0; y < a.Height; y++)
+            using SKBitmap bgra = page.Copy(SKColorType.Bgra8888);
+            byte[] bytes = bgra.Bytes;
+            var ink = new bool[cols * rows];
+            for (int y = 0; y < bgra.Height; y++)
             {
-                for (int x = 0; x < a.Width; x++)
+                for (int x = 0; x < bgra.Width; x++)
                 {
-                    int o = (y * a.Width + x) * 4;
-                    int cellIndex = (y / cell) * cols + (x / cell);
-                    if (765 - (aBytes[o] + aBytes[o + 1] + aBytes[o + 2]) > 90) aInk[cellIndex] = true;
-                    if (765 - (bBytes[o] + bBytes[o + 1] + bBytes[o + 2]) > 90) bInk[cellIndex] = true;
+                    int o = (y * bgra.Width + x) * 4;
+                    if (765 - (bytes[o] + bytes[o + 1] + bytes[o + 2]) > 90)
+                        ink[(y / cell) * cols + (x / cell)] = true;
                 }
             }
+            return ink;
+        }
+
+        // Same measure as majorsilence.crystal's visual suite, the fraction of inked 8px
+        // cells the two pages share over the union of their inked cells, but on the shared
+        // canvas above rather than with one page resized to the other.
+        private static double InkAgreementPercent(SKBitmap reference, SKBitmap ours, int cell = 8)
+        {
+            int cols = (Math.Max(reference.Width, ours.Width) + cell - 1) / cell;
+            int rows = (Math.Max(reference.Height, ours.Height) + cell - 1) / cell;
+            var aInk = InkCells(reference, cols, rows, cell);
+            var bInk = InkCells(ours, cols, rows, cell);
 
             int intersection = 0, union = 0;
             for (int i = 0; i < aInk.Length; i++)
@@ -183,23 +187,19 @@ namespace Majorsilence.CrystalCmd.ClientTests
             return union == 0 ? 100.0 : 100.0 * intersection / union;
         }
 
-        // Where the two differ: Crystal-only ink in red, RptEngine-only in blue, shared in grey.
+        // Where the two differ, on the same shared canvas: Crystal-only ink in red,
+        // RptEngine-only in blue, shared in grey.
         private static void WriteDiff(SKBitmap reference, SKBitmap ours, string path)
         {
-            using SKBitmap oursResized = (reference.Width == ours.Width && reference.Height == ours.Height)
-                ? ours.Copy()
-                : ours.Resize(new SKImageInfo(reference.Width, reference.Height), SKFilterQuality.Medium);
-            using SKBitmap a = reference.Copy(SKColorType.Bgra8888);
-            using SKBitmap b = oursResized.Copy(SKColorType.Bgra8888);
-            using var diff = new SKBitmap(new SKImageInfo(a.Width, a.Height, SKColorType.Bgra8888));
-            byte[] aBytes = a.Bytes, bBytes = b.Bytes;
-            for (int y = 0; y < a.Height; y++)
+            int width = Math.Max(reference.Width, ours.Width), height = Math.Max(reference.Height, ours.Height);
+            var aInk = InkCells(reference, width, height, 1);
+            var bInk = InkCells(ours, width, height, 1);
+            using var diff = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < a.Width; x++)
+                for (int x = 0; x < width; x++)
                 {
-                    int o = (y * a.Width + x) * 4;
-                    bool inkA = 765 - (aBytes[o] + aBytes[o + 1] + aBytes[o + 2]) > 90;
-                    bool inkB = 765 - (bBytes[o] + bBytes[o + 1] + bBytes[o + 2]) > 90;
+                    bool inkA = aInk[y * width + x], inkB = bInk[y * width + x];
                     diff.SetPixel(x, y, inkA && inkB ? new SKColor(120, 120, 120)
                         : inkA ? new SKColor(220, 40, 40)
                         : inkB ? new SKColor(40, 80, 220)
