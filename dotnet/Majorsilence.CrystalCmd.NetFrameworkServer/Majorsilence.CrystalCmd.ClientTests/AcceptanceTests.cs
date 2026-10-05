@@ -10,8 +10,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
     /// The acceptance corpus: every serviceable end-to-end scenario rendered through both
     /// backends by way of the real server, and the two PDFs compared by ink agreement, the
     /// measure majorsilence.crystal's visual suite uses (the Jaccard index of inked 8px
-    /// cells on the first page, which a blank render scores 0 on by construction). Each
-    /// scenario has a recorded baseline; a drop of more than the tolerance on either
+    /// cells on the first page, which a blank render scores 0 on by construction), after
+    /// RptEngine's page is moved up to 12pt to line up with Crystal's, since Crystal's moves
+    /// with the host printer's margins. Each scenario has a recorded baseline; a drop of more than the tolerance on either
     /// backend fails, a rise says to raise the baseline. Both PDFs and a diff image are
     /// attached to every result for triage.
     ///
@@ -26,21 +27,21 @@ namespace Majorsilence.CrystalCmd.ClientTests
         private const string Password = "password";
         private const double Tolerance = 2.0;
 
-        // Ink agreement, percent, Crystal against RptEngine, first page, as last measured.
-        // Raise a value when a run reports an improvement; never lower one without saying
-        // what was given up. Measured on Majorsilence.Crystal 0.1.0, which renders the
-        // plain and parameter reports blank (a Details section that reads no table was
-        // dropped, majorsilence.crystal #32) and the dataset report without its grey title
-        // band (section colours, #34); both are fixed there and raise these once released.
-        // The dataset report's page also differs in size: it follows the printer, and the
-        // Crystal host's printer may not be Letter (#33), which the shared-canvas comparison
-        // below tolerates.
+        // Ink agreement, percent, Crystal against RptEngine, first page, aligned, as last
+        // measured. Raise a value when a run reports an improvement; never lower one without
+        // saying what was given up. Measured on Majorsilence.Crystal 0.2.1 (0.1.0 scored 15.9,
+        // 0, 0 and 0 unaligned) on a host whose default printer holds A4, without
+        // Worker__PrinterPaper: the dataset report, which prints on its printer's paper, is A4
+        // from Crystal and Letter from RptEngine there. With Worker__PrinterPaper=A4 set in the
+        // environment both pages are A4 and it scores 94.3. The subreport scenario draws its
+        // subreport only once the engine draws a subreport whose dataset has no rows
+        // (majorsilence/Reporting#345).
         private static readonly Dictionary<string, double> Baseline = new()
         {
-            ["dataset-report"] = 15.9,
-            ["plain-report"] = 0.0,
-            ["parameters"] = 0.0,
-            ["subreport-parameters"] = 0.0,
+            ["dataset-report"] = 96.8,
+            ["plain-report"] = 95.0,
+            ["parameters"] = 95.7,
+            ["subreport-parameters"] = 5.9,
         };
 
         public sealed record Scenario(string Name, string Template, Func<Data> MakeData);
@@ -111,16 +112,20 @@ namespace Majorsilence.CrystalCmd.ClientTests
             TestContext.AddTestAttachment(crystalPath);
             TestContext.AddTestAttachment(rptEnginePath);
 
-            using var reference = PDFtoImage.Conversion.ToImage(new MemoryStream(crystal), page: new Index(0));
-            using var ours = PDFtoImage.Conversion.ToImage(new MemoryStream(rptEngine), page: new Index(0));
+            var render = new PDFtoImage.RenderOptions(Dpi: Dpi);
+            using var reference = PDFtoImage.Conversion.ToImage(new MemoryStream(crystal), page: new Index(0), options: render);
+            using var ours = PDFtoImage.Conversion.ToImage(new MemoryStream(rptEngine), page: new Index(0), options: render);
             int crystalPages = PDFtoImage.Conversion.GetPageCount(new MemoryStream(crystal));
             int rptEnginePages = PDFtoImage.Conversion.GetPageCount(new MemoryStream(rptEngine));
 
-            double agreement = InkAgreementPercent(reference, ours);
+            var (dx, dy) = InkOffset(reference, ours, MaxShiftPoints * Dpi / 72);
+            double unaligned = InkAgreementPercent(reference, ours, 0, 0);
+            double agreement = InkAgreementPercent(reference, ours, dx, dy);
             string diffPath = Path.Combine(dir, "diff.png");
-            WriteDiff(reference, ours, diffPath);
+            WriteDiff(reference, ours, dx, dy, diffPath);
             TestContext.AddTestAttachment(diffPath);
-            TestContext.Out.WriteLine($"{scenario.Name}: ink agreement {agreement:F1}% (pages: Crystal {crystalPages}, RptEngine {rptEnginePages})");
+            TestContext.Out.WriteLine($"{scenario.Name}: ink agreement {agreement:F1}% (pages: Crystal {crystalPages}, RptEngine {rptEnginePages}); "
+                + $"RptEngine's page moved {dx * 72.0 / Dpi:F1}pt right and {dy * 72.0 / Dpi:F1}pt down to line up, {unaligned:F1}% before");
 
             Assert.That(rptEnginePages, Is.EqualTo(crystalPages), "page counts differ");
             if (!Baseline.TryGetValue(scenario.Name, out double baseline))
@@ -151,7 +156,72 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // and never stretched onto each other, because the two can legitimately differ in
         // paper size (a template that follows the printer gets the Crystal host's printer's
         // paper), and stretching a Letter page onto an A4 one would move every line on it.
-        private static bool[] InkCells(SKBitmap page, int cols, int rows, int cell)
+        // The scale both pages are rasterized at.
+        private const int Dpi = 300;
+
+        // How far RptEngine's page may be moved to line up with Crystal's before scoring. Crystal
+        // formats a report against the host's printer, and a template that keeps the printer's
+        // margins moves with them: against Microsoft Print to PDF the same template prints 6pt
+        // right of and below where it prints against a laser printer, which alone took a page
+        // holding one line from 88% to 7%. RptEngine has no printer, so that offset belongs to
+        // the host, not to either backend. A layout error is larger than this, and still shows.
+        private const int MaxShiftPoints = 12;
+
+        // The move, in pixels, that best lines RptEngine's ink up with Crystal's: each axis on
+        // its own, from how much ink each row and column holds.
+        private static (int Dx, int Dy) InkOffset(SKBitmap reference, SKBitmap ours, int maxShift)
+        {
+            var (refRows, refCols) = InkProfiles(reference);
+            var (ourRows, ourCols) = InkProfiles(ours);
+            return (BestShift(refCols, ourCols, maxShift), BestShift(refRows, ourRows, maxShift));
+        }
+
+        private static (int[] Rows, int[] Cols) InkProfiles(SKBitmap page)
+        {
+            using SKBitmap bgra = page.Copy(SKColorType.Bgra8888);
+            byte[] bytes = bgra.Bytes;
+            var rows = new int[bgra.Height];
+            var cols = new int[bgra.Width];
+            for (int y = 0; y < bgra.Height; y++)
+            {
+                for (int x = 0; x < bgra.Width; x++)
+                {
+                    int o = (y * bgra.Width + x) * 4;
+                    if (765 - (bytes[o] + bytes[o + 1] + bytes[o + 2]) > 90)
+                    {
+                        rows[y]++;
+                        cols[x]++;
+                    }
+                }
+            }
+            return (rows, cols);
+        }
+
+        // The shift s, within plus or minus max, under which ours[i] best overlaps reference[i + s];
+        // the smallest such shift on a tie, so pages that already line up are left where they are.
+        private static int BestShift(int[] reference, int[] ours, int max)
+        {
+            int best = 0;
+            long bestScore = -1;
+            for (int s = -max; s <= max; s++)
+            {
+                long score = 0;
+                for (int i = 0; i < ours.Length; i++)
+                {
+                    int j = i + s;
+                    if (j >= 0 && j < reference.Length)
+                        score += Math.Min(ours[i], reference[j]);
+                }
+                if (score > bestScore || (score == bestScore && Math.Abs(s) < Math.Abs(best)))
+                {
+                    bestScore = score;
+                    best = s;
+                }
+            }
+            return best;
+        }
+
+        private static bool[] InkCells(SKBitmap page, int cols, int rows, int cell, int dx = 0, int dy = 0)
         {
             using SKBitmap bgra = page.Copy(SKColorType.Bgra8888);
             byte[] bytes = bgra.Bytes;
@@ -162,7 +232,11 @@ namespace Majorsilence.CrystalCmd.ClientTests
                 {
                     int o = (y * bgra.Width + x) * 4;
                     if (765 - (bytes[o] + bytes[o + 1] + bytes[o + 2]) > 90)
-                        ink[(y / cell) * cols + (x / cell)] = true;
+                    {
+                        int cx = (x + dx) / cell, cy = (y + dy) / cell;
+                        if (x + dx >= 0 && y + dy >= 0 && cx < cols && cy < rows)
+                            ink[cy * cols + cx] = true;
+                    }
                 }
             }
             return ink;
@@ -171,12 +245,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // Same measure as majorsilence.crystal's visual suite, the fraction of inked 8px
         // cells the two pages share over the union of their inked cells, but on the shared
         // canvas above rather than with one page resized to the other.
-        private static double InkAgreementPercent(SKBitmap reference, SKBitmap ours, int cell = 8)
+        private static double InkAgreementPercent(SKBitmap reference, SKBitmap ours, int dx, int dy, int cell = 8)
         {
             int cols = (Math.Max(reference.Width, ours.Width) + cell - 1) / cell;
             int rows = (Math.Max(reference.Height, ours.Height) + cell - 1) / cell;
             var aInk = InkCells(reference, cols, rows, cell);
-            var bInk = InkCells(ours, cols, rows, cell);
+            var bInk = InkCells(ours, cols, rows, cell, dx, dy);
 
             int intersection = 0, union = 0;
             for (int i = 0; i < aInk.Length; i++)
@@ -189,11 +263,11 @@ namespace Majorsilence.CrystalCmd.ClientTests
 
         // Where the two differ, on the same shared canvas: Crystal-only ink in red,
         // RptEngine-only in blue, shared in grey.
-        private static void WriteDiff(SKBitmap reference, SKBitmap ours, string path)
+        private static void WriteDiff(SKBitmap reference, SKBitmap ours, int dx, int dy, string path)
         {
             int width = Math.Max(reference.Width, ours.Width), height = Math.Max(reference.Height, ours.Height);
             var aInk = InkCells(reference, width, height, 1);
-            var bInk = InkCells(ours, width, height, 1);
+            var bInk = InkCells(ours, width, height, 1, dx, dy);
             using var diff = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888));
             for (int y = 0; y < height; y++)
             {
