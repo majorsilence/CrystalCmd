@@ -94,6 +94,20 @@ jobs:
       run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.RptEngine.Tests/Majorsilence.CrystalCmd.RptEngine.Tests.csproj --configuration Release --logger "nunit"
     - name: Test the routing
       run: dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.Routing.Tests/Majorsilence.CrystalCmd.Routing.Tests.csproj --configuration Release --logger "nunit"
+    # The image the worker ships in: no Wine and no SAP runtime. Run as a deployment would,
+    # read-only with no capabilities, until its health check has rendered the bundled sample.
+    - name: Build the worker image
+      run: docker build -f dotnet/docker/Dockerfile.crystalcmd.rptengine.workeronly -t crystalcmd-rptengine-worker:ci dotnet/Majorsilence.CrystalCmd.NetFrameworkServer
+    - name: Run the worker image until it renders
+      run: |
+        docker run -d --name rptengine-worker --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true           -e WorkQueue__SqlType=sqlite -e "WorkQueue__SqlConnection=Data Source=/tmp/queue.db;" crystalcmd-rptengine-worker:ci
+        for i in $(seq 1 60); do
+          if docker logs rptengine-worker 2>&1 | grep -q "IsHealthy = True"; then echo "the worker rendered its health-check sample"; exit 0; fi
+          if [ "$(docker inspect -f '{{.State.Running}}' rptengine-worker)" != "true" ]; then break; fi
+          sleep 2
+        done
+        docker logs rptengine-worker
+        exit 1
     - name: Record Test Report
       uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
       if: success() || failure() # run this step even if previous step failed

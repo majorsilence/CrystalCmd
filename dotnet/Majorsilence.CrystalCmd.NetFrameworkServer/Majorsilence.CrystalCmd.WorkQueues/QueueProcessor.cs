@@ -37,7 +37,20 @@ public class QueueProcessor
 
     public void Start()
     {
-        _backgroundTask = Task.Run(async () => await RunQueue());
+        _backgroundTask = Task.Run(async () =>
+        {
+            try
+            {
+                await RunQueue();
+            }
+            catch (Exception ex)
+            {
+                // Nothing awaits this task until Stop, so a loop that ends this way would
+                // otherwise end without a word while the worker looks alive.
+                _logger.LogError(ex, "Queue processor ({Channel}) stopped", Channel);
+                throw;
+            }
+        });
     }
 
     public void Stop()
@@ -59,7 +72,8 @@ public class QueueProcessor
     public async Task RunQueue()
     {
         var queue = _queueFactory();
-        await queue.Migrate();
+        if (!await MigrateUntilReady(queue))
+            return;
 
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
@@ -83,6 +97,37 @@ public class QueueProcessor
             {
                 // No items to process, wait a bit
                 await Task.Delay(1000);
+            }
+        }
+    }
+
+    // A worker starts one loop per core and every loop migrates. On a database the queue has
+    // not been created in, their CREATE TABLE IF NOT EXISTS statements race, and PostgreSQL
+    // fails all but one of them on a duplicate type. A database not reachable yet fails the
+    // same way. Either is retried, so a loop that loses comes up a moment later instead of
+    // ending; false only when the loop is stopped first.
+    private async Task<bool> MigrateUntilReady(WorkQueue queue)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await queue.Migrate();
+                return true;
+            }
+            catch (Exception ex) when (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                _logger.LogWarning("Queue processor ({Channel}) could not prepare the work queue (attempt {Attempt}), retrying: {Message}",
+                    Channel, attempt, ex.Message);
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(attempt, 10)), _cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
         }
     }
