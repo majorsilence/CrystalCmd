@@ -195,6 +195,99 @@ flowchart TD
 ```
 
 
+# Alternative backend (preview)
+
+CrystalCmd can render with [Majorsilence.Crystal](https://github.com/majorsilence/majorsilence.crystal)
+instead of the SAP Crystal Reports runtime. Majorsilence.Crystal reads `.rpt` templates
+itself and renders them with [Majorsilence Reporting](https://github.com/majorsilence/Reporting).
+It runs in its own worker, `Majorsilence.CrystalCmd.RptEngineWorker`, which needs .NET 10
+and nothing else: no SAP runtime and no Wine, on Windows or Linux.
+
+It is opt-in. A deployment that changes nothing keeps rendering every request with Crystal.
+
+## How it fits
+
+Both workers read the same work-queue database. The server puts each request on one of two
+pairs of channels: `crystal-reports` and `crystal-analyzer` for the Crystal worker, or
+`rptengine-reports` and `rptengine-analyzer` for the new one. The endpoints and the request
+format stay the same, apart from one optional field.
+
+## Which backend renders a request
+
+Three inputs decide, in this order:
+
+1. **The request's own `Backend` field**: `Crystal`, `RptEngine` or `Auto`. In JSON it is
+   `"Backend": "Auto"`; with the .NET client, `data.Backend = RenderBackend.Auto`.
+2. **The server's default**, the setting `Routing:DefaultBackend` (environment variable
+   `Routing__DefaultBackend`). It takes the same three values and is `Crystal` when unset.
+3. **For `Auto`, the serviceable rule.** The server parses the template when the request
+   arrives and sends it to the new worker only if the rule accepts it. Anything else goes
+   to the Crystal worker.
+
+A request that asks for `RptEngine` and fails the rule is refused with HTTP 400, naming every
+reason. It is never rendered wrong or sent somewhere else. Analysis requests (`/analyzer`)
+are routed the same way, on the template alone. The server logs each routing decision and
+its reason.
+
+## The serviceable rule
+
+The new worker takes a request only when all of these hold:
+
+- The request carries at most one table, and the template reads at most one.
+- The request pushes no data to a subreport, and no subreport reads its own table.
+- The report has no cross-tab and no chart, including inside subreports.
+- The export type is `PDF`, `CSV`, `Excel`, `ExcelDataOnly` or `RichText`.
+- The template parses.
+
+## What differs from the Crystal worker
+
+- **Excel is `.xlsx`**, for both `Excel` and `ExcelDataOnly`. The Crystal runtime writes `.xls`.
+- **No `CrystalReport`, `TEXT` or `WordDoc` export.** `CrystalReport` returns the template
+  itself, and the others have no equivalent. `RichText` is the nearest to `WordDoc`, and
+  Word opens it.
+- **Data is pushed only.** The engine never opens the database connection a template
+  names. It renders from the tables in the request, and a template given none renders with
+  no rows.
+- **One sort field.** `SortByField` applies its first entry, since the report has one
+  primary sort. The worker logs a warning for the rest.
+- **Fonts.** On Linux, Arial, Times New Roman and Courier New are drawn in the
+  metric-compatible Liberation fonts. Text wraps and paginates as with the Microsoft
+  fonts, but the glyphs differ. [dotnet/docker/Readme.md](dotnet/docker/Readme.md) has the
+  measurement.
+- **Culture.** Dates and numbers format in the worker's culture, as they do in Crystal.
+  Run it in the culture of the Crystal host, with `LANG` on Linux.
+- **Paper.** A template that prints on its printer's default paper is laid out on the page
+  it was designed on, where Crystal uses the printer's paper.
+
+**Fidelity is measured, not guaranteed.** The acceptance tests render CrystalCmd's sample
+scenarios through both workers and compare the pages:
+
+```bash
+dotnet test dotnet/Majorsilence.CrystalCmd.NetFrameworkServer/Majorsilence.CrystalCmd.ClientTests -f net10.0 --filter Category=Acceptance
+```
+
+Each scenario's recorded agreement is in `AcceptanceTests.cs`, with what keeps it there.
+Try your own templates with `Backend` set on a few requests before changing the default.
+
+## Deploying it
+
+1. **Get the worker.** Use the container image
+   (`dotnet/docker/Dockerfile.crystalcmd.rptengine.workeronly`; see
+   [dotnet/docker/Readme.md](dotnet/docker/Readme.md)) or the release zip for your
+   platform, `Majorsilence.CrystalCmd.RptEngineWorker-win-x64-<version>.zip` or
+   `-linux-x64-`. The zips need the .NET 10 runtime.
+2. **Point it at the server's queue.** Use the same settings and database as the server,
+   in `appsettings.json` or the environment: `WorkQueue__SqlType` (`sqlite`, `mssql` or
+   `psql`) and `WorkQueue__SqlConnection`. `Worker__ReportsChannel` and
+   `Worker__AnalyzerChannel` change its channels, which you should not need to do.
+3. **Run it.** Use `dotnet Majorsilence.CrystalCmd.RptEngineWorker.dll`, or the `.exe` on
+   Windows. Every minute it renders a bundled sample and logs `HealthCheckTask: IsHealthy = True`.
+   After repeated failures it exits, so run it under something that restarts it: a service
+   manager, systemd, or a container restart policy.
+4. **Send requests to it.** Set `Backend` on a request, or set `Routing__DefaultBackend` on
+   the server to `Auto` to send it everything it can serve. Keep the Crystal worker running
+   for the rest, unless every request is known to pass the rule.
+
 # Crystal report examples
 
 https://wiki.scn.sap.com/wiki/display/BOBJ/Crystal+Reports+Java++SDK+Samples#CrystalReportsJavaSDKSamples-Database
