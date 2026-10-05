@@ -68,6 +68,16 @@ dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output
 
 dotnet publish "Majorsilence.CrystalCmd.Server" --configuration Release --output "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server$Version" --framework net10.0
 
+# The Majorsilence.Crystal worker, which needs .NET 10 and no SAP runtime. One build per
+# platform: a portable one carries every platform's native libraries (about 500 MB). The
+# native SkiaSharp symbols (80 MB) are not needed to run it.
+foreach ($rid in @("win-x64", "linux-x64")) {
+	$out = "$CURRENTPATH\build\Majorsilence.CrystalCmd.RptEngineWorker-$rid-$Version"
+	dotnet publish "Majorsilence.CrystalCmd.RptEngineWorker" --configuration Release --runtime $rid --self-contained false --output "$out"
+	if ($LastExitCode -ne 0) { throw "Publish, RptEngineWorker $rid, failed" }
+	Remove-Item "$out\libSkiaSharp.pdb" -ErrorAction SilentlyContinue
+}
+
 Write-Output "Creating zip files"
 
 Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetframeworkConsole$Version" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetframeworkConsole$Version.zip"
@@ -75,6 +85,10 @@ Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.NetframeworkC
 Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server-win-x64-$Version\*" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server-win-x64-$Version.zip"
 
 Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server$Version\*" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.Server$Version.zip"
+
+foreach ($rid in @("win-x64", "linux-x64")) {
+	Compress-Archive -Path "$CURRENTPATH\build\Majorsilence.CrystalCmd.RptEngineWorker-$rid-$Version\*" -DestinationPath "$CURRENTPATH\build\Majorsilence.CrystalCmd.RptEngineWorker-$rid-$Version.zip"
+}
 
 Write-Output "Copying nuget packages"
 Get-ChildItem -Recurse "$CURRENTPATH\*.nupkg" | Where-Object { $_.FullName -notmatch '\\packages\\' } | Copy-Item -Destination  "$CURRENTPATH/build"
@@ -90,5 +104,8 @@ if ($LastExitCode -ne 0) { throw "CycloneDX, NetFrameworkConsole failed" }
 
 dotnet CycloneDX "Majorsilence.CrystalCmd.Server\Majorsilence.CrystalCmd.Server.csproj" --set-name "Majorsilence.CrystalCmd.Server" --set-version "$Version" --set-type "Application" --github-username "$env:GITHUB_SBOM_USERNAME" --github-token "$env:GITHUB_SBOM" -o "$CURRENTPATH\build\sbom" --filename "majorsilence-Server-bom.xml"
 if ($LastExitCode -ne 0) { throw "CycloneDX, Server failed" }
+
+dotnet CycloneDX "Majorsilence.CrystalCmd.RptEngineWorker\Majorsilence.CrystalCmd.RptEngineWorker.csproj" --set-name "Majorsilence.CrystalCmd.RptEngineWorker" --set-version "$Version" --set-type "Application" --github-username "$env:GITHUB_SBOM_USERNAME" --github-token "$env:GITHUB_SBOM" -o "$CURRENTPATH\build\sbom" --filename "majorsilence-RptEngineWorker-bom.xml"
+if ($LastExitCode -ne 0) { throw "CycloneDX, RptEngineWorker failed" }
 
 cd $CURRENTPATH
