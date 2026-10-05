@@ -40,6 +40,9 @@ services:
       # local-dev values — set strong, unique credentials for any real deployment.
       Credentials__Username: crystalcmd
       Credentials__Password: local-dev-only-change-me
+      # Where requests go: Crystal (the default), RptEngine, or Auto, which sends what the
+      # rptengine-worker can serve to it and everything else to the worker.
+      # Routing__DefaultBackend: Auto
     ports:
       - "5000:5000"
     # Baseline hardening. The api image already runs non-root (USER $APP_UID) and is plain
@@ -90,6 +93,34 @@ services:
     #
     # For genuinely internet-facing untrusted input, run under gVisor (runsc) or Kata, and/or
     # one ephemeral worker container per job.
+
+  # The Majorsilence.Crystal worker (preview): plain .NET 10, no Wine and no SAP runtime,
+  # built from source. It renders only what the API routes to its rptengine-* channels,
+  # so it needs an API with routing (newer than release 2.0.13) and Routing__DefaultBackend
+  # set on the api service above, or a request's own Backend field. It writes only under
+  # /tmp, so the root filesystem is read-only.
+  rptengine-worker:
+    build:
+      context: ../Majorsilence.CrystalCmd.NetFrameworkServer
+      dockerfile: ../docker/Dockerfile.crystalcmd.rptengine.workeronly
+    image: crystalcmd-rptengine-worker:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      WorkQueue__SqlType: psql
+      WorkQueue__SqlConnection: Server=postgres;Port=5432;Database=pg_crystalcmd_queue;Userid=postgres;Password=password;Pooling=true;MinPoolSize=2;
+      # Dates and numbers format in this culture; match the Crystal host's.
+      # LANG: en_US.UTF-8
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    cpus: "2.0"
+    pids_limit: 512
 
 volumes:
   crystalcmd_postgres_data:

@@ -1,0 +1,40 @@
+# The CrystalCmd worker on Majorsilence.Crystal's engine: plain .NET 10, no Wine and no SAP
+# runtime. It consumes the rptengine-* channels the API routes serviceable requests to.
+#
+# Build from the solution folder, which is the context:
+#   docker build -f dotnet/docker/Dockerfile.crystalcmd.rptengine.workeronly dotnet/Majorsilence.CrystalCmd.NetFrameworkServer
+#
+# Fonts. The engine's PDF writer carries its own fonts and, on Linux, draws Arial, Times
+# New Roman and Courier New in the metric-compatible Liberation Sans, Serif and Mono, and
+# Calibri and Cambria in Carlito and Caladea. Text wraps and paginates where it does with
+# the Microsoft fonts, but the glyphs differ. Verdana and Tahoma, which have no such
+# substitute, are drawn in Liberation Sans. Installed font packages do not change any of
+# this, so the image installs none. dotnet/docker/Readme.md has the measurement
+# and the culture setting.
+#
+# Culture. Dates and numbers format in the process culture, as they do in Crystal. LANG
+# defaults to en_US.UTF-8; set it to the culture the Crystal host formats in (and leave
+# LC_ALL unset, which would override it).
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet publish Majorsilence.CrystalCmd.RptEngineWorker/Majorsilence.CrystalCmd.RptEngineWorker.csproj \
+        -c Release -r linux-x64 --self-contained false -o /app
+
+FROM mcr.microsoft.com/dotnet/runtime:10.0
+LABEL maintainer="Peter Gill <peter@majorsilence.com>"
+ENV LANG=en_US.UTF-8
+# The worker writes only under /tmp (its work files, the engine's unpacked fonts, and here
+# fontconfig's cache), so the root filesystem can be mounted read-only with a tmpfs on /tmp.
+ENV XDG_CACHE_HOME=/tmp/.cache
+# SkiaSharp's Linux native library links against fontconfig; without it the first render
+# fails to load libSkiaSharp.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /app .
+# USER app is the default from runtime:8.0 on; the worker writes only under /tmp.
+USER $APP_UID
+ENTRYPOINT ["dotnet", "/app/Majorsilence.CrystalCmd.RptEngineWorker.dll"]
