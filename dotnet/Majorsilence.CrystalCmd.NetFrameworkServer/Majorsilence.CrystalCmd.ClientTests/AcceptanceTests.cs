@@ -34,16 +34,17 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // Worker__PrinterPaper: the dataset report, which prints on its printer's paper, is A4
         // from Crystal and Letter from RptEngine there. With Worker__PrinterPaper=A4 set in the
         // environment both pages are A4 and it scores 94.3. The two subreport scenarios were
-        // measured on Majorsilence.Crystal 0.3.1.
+        // measured on Majorsilence.Crystal 0.3.2.
         private static readonly Dictionary<string, double> Baseline = new()
         {
             ["dataset-report"] = 96.8,
             ["plain-report"] = 95.0,
             ["parameters"] = 95.7,
-            // The subreport's frame is drawn, but collapsed and empty: the engine draws a
-            // subreport whose dataset has no rows only from the Reporting release after
-            // 26.0.6 (majorsilence/Reporting#345). 0.2.1 scored 5.9.
-            ["subreport-parameters"] = 17.8,
+            // The subreport's text lines up with Crystal's, but its frame stays the 15.4pt
+            // strip it was placed as: the engine does not grow a Rectangle with a subreport
+            // that grows inside it, where Crystal's frame wraps the whole subreport. 0.2.1
+            // scored 5.9; 0.3.1 scored 17.8, before the engine drew a subreport with no rows.
+            ["subreport-parameters"] = 35.5,
             // The pushed rows line up; the frame sits a few pixels inside Crystal's. 0.3.0
             // scored 67.9, with the frame missing and the rows about 11pt high.
             ["subreport-data"] = 88.0,
