@@ -11,9 +11,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
     /// backends by way of the real server, and the two PDFs compared by ink agreement, the
     /// measure majorsilence.crystal's visual suite uses (the Jaccard index of inked 8px
     /// cells on the first page, which a blank render scores 0 on by construction), after
-    /// RptEngine's page is moved up to 12pt to line up with Crystal's, since Crystal's moves
-    /// with the host printer's margins. Each scenario has a recorded baseline; a drop of more than the tolerance on either
-    /// backend fails, a rise says to raise the baseline. Both PDFs and a diff image are
+    /// RptEngine's page is moved up to 8pt to line up with Crystal's, since Crystal's moves
+    /// with the host printer's margins. Each scenario has a recorded baseline; a drop of more
+    /// than the tolerance on either backend fails, a rise says to raise the baseline. Both PDFs and a diff image are
     /// attached to every result for triage.
     ///
     /// Run on demand with:
@@ -33,15 +33,20 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // 0, 0 and 0 unaligned) on a host whose default printer holds A4, without
         // Worker__PrinterPaper: the dataset report, which prints on its printer's paper, is A4
         // from Crystal and Letter from RptEngine there. With Worker__PrinterPaper=A4 set in the
-        // environment both pages are A4 and it scores 94.3. The subreport scenario draws its
-        // subreport only once the engine draws a subreport whose dataset has no rows
-        // (majorsilence/Reporting#345).
+        // environment both pages are A4 and it scores 94.3. The two subreport scenarios were
+        // measured on Majorsilence.Crystal 0.3.1.
         private static readonly Dictionary<string, double> Baseline = new()
         {
             ["dataset-report"] = 96.8,
             ["plain-report"] = 95.0,
             ["parameters"] = 95.7,
-            ["subreport-parameters"] = 5.9,
+            // The subreport's frame is drawn, but collapsed and empty: the engine draws a
+            // subreport whose dataset has no rows only from the Reporting release after
+            // 26.0.6 (majorsilence/Reporting#345). 0.2.1 scored 5.9.
+            ["subreport-parameters"] = 17.8,
+            // The pushed rows line up; the frame sits a few pixels inside Crystal's. 0.3.0
+            // scored 67.9, with the frame missing and the rows about 11pt high.
+            ["subreport-data"] = 88.0,
         };
 
         public sealed record Scenario(string Name, string Template, Func<Data> MakeData);
@@ -68,8 +73,8 @@ namespace Majorsilence.CrystalCmd.ClientTests
             return data;
         }
 
-        // The serviceable scenarios of Test_ConnectToServerWritePdfAsync: one table or none,
-        // no subreport with its own data. The others cannot go to RptEngine yet.
+        // The serviceable scenarios of Test_ConnectToServerWritePdfAsync: one table or none for
+        // the report and for each subreport. The others cannot go to RptEngine yet.
         private static readonly Scenario[] Scenarios =
         [
             new("dataset-report", "the_dotnet_dataset_report.rpt", () => { var d = new Data(); d.AddData("EMPLOYEE", Employees()); return d; }),
@@ -83,6 +88,12 @@ namespace Majorsilence.CrystalCmd.ClientTests
                     ReportName = "thereport_wth_parameters.rpt",
                     Parameters = WithParameters(new Data()).Parameters
                 });
+                return d;
+            }),
+            new("subreport-data", "thereport_with_subreport_with_dotnet_dataset.rpt", () =>
+            {
+                var d = new Data();
+                d.AddData("the_dotnet_dataset_report.rpt", "Employee", Employees());
                 return d;
             }),
         ];
@@ -126,6 +137,11 @@ namespace Majorsilence.CrystalCmd.ClientTests
             TestContext.AddTestAttachment(diffPath);
             TestContext.Out.WriteLine($"{scenario.Name}: ink agreement {agreement:F1}% (pages: Crystal {crystalPages}, RptEngine {rptEnginePages}); "
                 + $"RptEngine's page moved {dx * 72.0 / Dpi:F1}pt right and {dy * 72.0 / Dpi:F1}pt down to line up, {unaligned:F1}% before");
+            // A move as far as the window allows is more than a printer's margins: the
+            // layout itself is off by at least that much.
+            int maxShift = MaxShiftPoints * Dpi / 72;
+            if (Math.Abs(dx) >= maxShift - 1 || Math.Abs(dy) >= maxShift - 1)
+                TestContext.Out.WriteLine($"{scenario.Name}: the move reached the {MaxShiftPoints}pt limit, so RptEngine's layout is off by at least that; see diff.png");
 
             Assert.That(rptEnginePages, Is.EqualTo(crystalPages), "page counts differ");
             if (!Baseline.TryGetValue(scenario.Name, out double baseline))
@@ -164,8 +180,9 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // margins moves with them: against Microsoft Print to PDF the same template prints 6pt
         // right of and below where it prints against a laser printer, which alone took a page
         // holding one line from 88% to 7%. RptEngine has no printer, so that offset belongs to
-        // the host, not to either backend. A layout error is larger than this, and still shows.
-        private const int MaxShiftPoints = 12;
+        // the host, not to either backend. 8pt covers it. A wider window hides layout errors: a
+        // subreport printed 11pt high was nearly absorbed by 12pt, and shows in full at 8.
+        private const int MaxShiftPoints = 8;
 
         // The move, in pixels, that best lines RptEngine's ink up with Crystal's: each axis on
         // its own, from how much ink each row and column holds.

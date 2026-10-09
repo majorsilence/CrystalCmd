@@ -97,17 +97,78 @@ public class RequestTranslatorTests
         Assert.That(ex!.Message, Does.Contain("2 tables"));
     }
 
+    private static ReportAnalysis WithSubreportTables(params (string Subreport, string Table, string[] Columns)[] subreports) => new()
+    {
+        Parameters = [],
+        ParametersExtended = new Dictionary<string, string>(),
+        DataTables = [],
+        Subreports = subreports.Select(s => new SubreportAnalysis
+        {
+            SubreportName = s.Subreport,
+            Parameters = [],
+            DataTables = [new DataTableAnalysis { TableName = s.Table, ColumnNames = s.Columns }]
+        }).ToList(),
+        ReportObjects = []
+    };
+
+    // A subreport table as the client sends it. Data has no AddData overload taking CSV text for
+    // a subreport: a string there binds to the IEnumerable<T> overload, as characters.
+    private static SubReports SubreportCsv(string reportName, string tableName, string csv) =>
+        new() { ReportName = reportName, TableName = tableName, DataTable = csv };
+
+    // A subreport's table is pushed under the name the client gives the subreport, which the
+    // Crystal runtime's callers usually write as the imported file's name.
     [Test]
-    public void SubreportData_IsRefused()
+    public void SubreportData_LandsOnTheSubreportTheClientNames()
     {
         var data = new Data();
-        data.AddData("Sub1", "EMPLOYEE", EmployeeCsv == null ? "" : "A\nString\n\"x\"\n");
+        data.SubReportDataTables.Add(SubreportCsv("Sub1.rpt", "EMPLOYEE", EmployeeCsv));
 
-        Assert.Throws<NotServiceableException>(() => RequestTranslator.Translate(data, Analysis()));
+        var t = RequestTranslator.Translate(data, WithSubreportTables(("Sub1", "EMPLOYEE", ["EMPLOYEE_ID"]), ("Sub2", "OTHER", ["X"])));
 
-        var empty = new Data();
-        empty.SetEmptyTable("Sub1", "EMPLOYEE");
-        Assert.Throws<NotServiceableException>(() => RequestTranslator.Translate(empty, Analysis()));
+        Assert.That(t.Overrides.SubreportData.Keys, Is.EqualTo(new[] { "Sub1" }));
+        var table = t.Overrides.SubreportData["Sub1"];
+        Assert.That(table.Rows.Count, Is.EqualTo(2));
+        Assert.That(table.Columns["EMPLOYEE_ID"]!.DataType, Is.EqualTo(typeof(int)));
+        Assert.That(t.Warnings, Is.Empty);
+    }
+
+    [Test]
+    public void AnEmptySubreportTable_HasTheSubreportsOwnColumns()
+    {
+        var data = new Data();
+        data.SetEmptyTable("Sub1", "EMPLOYEE");
+
+        var t = RequestTranslator.Translate(data, WithSubreportTables(("Sub1", "EMPLOYEE", ["EMPLOYEE_ID", "LAST_NAME"])));
+
+        var table = t.Overrides.SubreportData["Sub1"];
+        Assert.That(table.Rows.Count, Is.EqualTo(0));
+        Assert.That(table.Columns.Cast<System.Data.DataColumn>().Select(c => c.ColumnName), Is.EqualTo(new[] { "EMPLOYEE_ID", "LAST_NAME" }));
+    }
+
+    // A subreport renders from one flattened table, as the main report does.
+    [Test]
+    public void TwoTablesForOneSubreport_AreRefused()
+    {
+        var data = new Data();
+        data.SubReportDataTables.Add(SubreportCsv("Sub1", "EMPLOYEE", EmployeeCsv));
+        data.SetEmptyTable("Sub1.rpt", "OTHER");
+
+        var ex = Assert.Throws<NotServiceableException>(() =>
+            RequestTranslator.Translate(data, WithSubreportTables(("Sub1", "EMPLOYEE", ["EMPLOYEE_ID"]))));
+        Assert.That(ex!.Message, Does.Contain("Sub1"));
+    }
+
+    [Test]
+    public void SubreportData_ForNoSubreportItCanResolve_IsAWarning()
+    {
+        var data = new Data();
+        data.SubReportDataTables.Add(SubreportCsv("Nope", "EMPLOYEE", EmployeeCsv));
+
+        var t = RequestTranslator.Translate(data, WithSubreportTables(("Sub1", "A", ["X"]), ("Sub2", "B", ["Y"])));
+
+        Assert.That(t.Overrides.SubreportData, Is.Empty);
+        Assert.That(t.Warnings.Single(), Does.StartWith("SubReportDataTables: no subreport named 'Nope'"));
     }
 
     [TestCase(ExportTypes.PDF, ExportFormat.Pdf)]
