@@ -46,8 +46,11 @@ public static class ServiceableRule
         int tables = data.DataTables.Count + data.EmptyDataTables.Count;
         if (tables > 1)
             reasons.Add($"the request carries {tables} tables and the backend renders from one flattened table");
-        if (data.SubReportDataTables.Count > 0 || data.EmptySubReportDataTables.Count > 0)
-            reasons.Add("the request pushes data to a subreport, which the backend cannot hand a subreport yet");
+        // A subreport takes one flattened table, as the main report does.
+        foreach (var crowded in data.SubReportDataTables.Concat(data.EmptySubReportDataTables)
+                     .GroupBy(s => BareName(s.ReportName), StringComparer.OrdinalIgnoreCase)
+                     .Where(g => g.Count() > 1))
+            reasons.Add($"the request pushes {crowded.Count()} tables to subreport {crowded.Key} and the backend renders a subreport from one flattened table");
         switch (data.ExportAs)
         {
             case ExportTypes.CrystalReport:
@@ -79,23 +82,31 @@ public static class ServiceableRule
         }
 
         var report = parsed.Report;
-        int tableCount = report.Fields.OfType<DatabaseField>()
-            .Select(f => f.TableName).Where(t => !string.IsNullOrEmpty(t))
-            .Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        int tableCount = TableCount(report);
         if (tableCount > 1)
             reasons.Add($"the report reads {tableCount} tables and the backend renders from one flattened table");
 
-        var subreportsWithData = AllSubreports(report)
-            .Where(s => s.Report is not null && s.Report.Fields.OfType<DatabaseField>().Any())
-            .Select(s => s.SubreportName).ToList();
-        if (subreportsWithData.Count > 0)
-            reasons.Add($"a subreport reads its own table ({string.Join(", ", subreportsWithData)}), which the backend cannot hand data yet");
+        foreach (var sub in AllSubreports(report).Where(s => s.Report is not null))
+        {
+            int subTables = TableCount(sub.Report!);
+            if (subTables > 1)
+                reasons.Add($"subreport {sub.SubreportName} reads {subTables} tables and the backend renders a subreport from one flattened table");
+        }
 
         if (AllObjects(report).OfType<CrossTabObject>().Any())
             reasons.Add("the report has a cross-tab, whose rendering is not yet measured on the backend");
         if (AllObjects(report).OfType<ChartObject>().Any())
             reasons.Add("the report has a chart, whose rendering is not yet measured on the backend");
     }
+
+    private static int TableCount(ReportDefinition report) =>
+        report.Fields.OfType<DatabaseField>()
+            .Select(f => f.TableName).Where(t => !string.IsNullOrEmpty(t))
+            .Distinct(StringComparer.OrdinalIgnoreCase).Count();
+
+    // A request names a subreport as the Crystal runtime does, often with ".rpt".
+    private static string BareName(string? name) =>
+        name is not null && name.EndsWith(".rpt", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name ?? string.Empty;
 
     private static IEnumerable<SubreportObject> AllSubreports(ReportDefinition report)
     {

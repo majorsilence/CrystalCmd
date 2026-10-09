@@ -10,26 +10,33 @@ public class RoutingTests
 {
     private static byte[] Template(string name) => File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, name));
 
-    // The five samples with one table or none, and no subreport reading its own table.
+    // Every sample reads one table or none, and so does each of its subreports.
     [TestCase("thereport.rpt")]
     [TestCase("thereport_wth_parameters.rpt")]
     [TestCase("the_dotnet_dataset_report.rpt")]
     [TestCase("thereport_with_subreport_with_parameters.rpt")]
-    [TestCase("analyzer_report.rpt", false)]
-    public void Rule_OnTheSampleTemplates(string name, bool expectedServiceable = true)
-    {
-        var result = ServiceableRule.Evaluate(new Data(), Template(name));
-        Assert.That(result.Serviceable, Is.EqualTo(expectedServiceable), result.ToString());
-    }
-
     [TestCase("thereport_with_subreport_with_dotnet_dataset.rpt")]
     [TestCase("the_dotnet_dataset_report_with_params_and_subreport.rpt")]
     [TestCase("analyzer_report.rpt")]
-    public void Rule_RefusesATemplateWhoseSubreportReadsItsOwnTable(string name)
+    public void Rule_OnTheSampleTemplates(string name)
     {
-        var result = ServiceableRule.Evaluate(null, Template(name));
+        var result = ServiceableRule.Evaluate(new Data(), Template(name));
+        Assert.That(result.Serviceable, Is.True, result.ToString());
+    }
+
+    // A subreport renders from one flattened table. No sample has a subreport that reads two,
+    // so this takes one from majorsilence.crystal's public corpus when it is checked out
+    // beside this repository.
+    [Test]
+    public void Rule_RefusesATemplateWhoseSubreportReadsSeveralTables()
+    {
+        string path = Path.GetFullPath("../../../../../../../majorsilence.crystal/tests/rpt-corpus/benbrahim777__Top5USAsubCanada.rpt", AppContext.BaseDirectory);
+        Assume.That(File.Exists(path), Is.True, "needs a majorsilence.crystal checkout with its corpus downloaded, beside this one");
+
+        var result = ServiceableRule.Evaluate(null, File.ReadAllBytes(path));
+
         Assert.That(result.Serviceable, Is.False);
-        Assert.That(result.Reasons.Single(), Does.Contain("subreport reads its own table"));
+        Assert.That(result.ToString(), Does.Contain("subreport Subreport1 reads 2 tables"));
     }
 
     [Test]
@@ -39,6 +46,7 @@ public class RoutingTests
         data.AddData("A", "X\nString\n\"1\"\n");
         data.AddData("B", "X\nString\n\"1\"\n");
         data.SetEmptyTable("Sub", "T");
+        data.SubReportDataTables.Add(new SubReports { ReportName = "Sub.rpt", TableName = "U", DataTable = "X\nString\n\"1\"\n" });
 
         var result = ServiceableRule.Evaluate(data, Template("thereport.rpt"));
 
@@ -93,14 +101,17 @@ public class RoutingTests
     public void Router_AutoFollowsTheRule_AndSaysWhy()
     {
         var serviceable = BackendRouter.Route(new Data(), Template("the_dotnet_dataset_report.rpt"), RenderBackend.Auto);
-        var not = BackendRouter.Route(new Data(), Template("thereport_with_subreport_with_dotnet_dataset.rpt"), RenderBackend.Auto);
+        var twoTables = new Data();
+        twoTables.AddData("A", "X\nString\n\"1\"\n");
+        twoTables.AddData("B", "X\nString\n\"1\"\n");
+        var not = BackendRouter.Route(twoTables, Template("the_dotnet_dataset_report.rpt"), RenderBackend.Auto);
 
         Assert.Multiple(() =>
         {
             Assert.That(serviceable.Backend, Is.EqualTo(RenderBackend.RptEngine));
             Assert.That(serviceable.Reason, Does.Contain("serviceable rule"));
             Assert.That(not.Backend, Is.EqualTo(RenderBackend.Crystal));
-            Assert.That(not.Reason, Does.Contain("subreport reads its own table"));
+            Assert.That(not.Reason, Does.Contain("2 tables"));
         });
     }
 

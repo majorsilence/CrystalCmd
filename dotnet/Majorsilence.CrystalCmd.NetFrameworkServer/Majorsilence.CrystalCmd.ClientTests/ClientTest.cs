@@ -368,11 +368,15 @@ namespace Majorsilence.CrystalCmd.ClientTests
             Assert.That(ex.Message, Does.Contain("RptEngine").And.Contain("TEXT"));
         }
 
-        // Auto lets the rule decide: a subreport reading its own table goes to Crystal, the
-        // plain dataset report to RptEngine, and the server log says which and why.
+        // Auto lets the rule decide: the plain dataset report and a subreport given its table go
+        // to RptEngine, two tables pushed to one subreport go to Crystal, and the server log
+        // says which and why.
         [Test]
         public async Task Test_AutoBackend_FollowsTheRule()
         {
+            const string ByTheRule = "RptEngine, by the serviceable rule";
+            int before = Occurrences(UnitTestSetup.GetProcessDiagnostics(), ByTheRule);
+
             var plain = new Data { Backend = RenderBackend.Auto };
             plain.AddData("EMPLOYEE", GetTable());
             await CreatePdfFromReport("the_dotnet_dataset_report.rpt", "auto_dataset_report.pdf", plain);
@@ -381,14 +385,28 @@ namespace Majorsilence.CrystalCmd.ClientTests
             withSubreportData.AddData("the_dotnet_dataset_report.rpt", "Employee", GetTable());
             await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "auto_subreport_report.pdf", withSubreportData);
 
+            var crowded = new Data { Backend = RenderBackend.Auto };
+            crowded.AddData("the_dotnet_dataset_report.rpt", "Employee", GetTable());
+            crowded.AddData("the_dotnet_dataset_report.rpt", "Extra", GetTable());
+            await CreatePdfFromReport("thereport_with_subreport_with_dotnet_dataset.rpt", "auto_crowded_subreport.pdf", crowded);
+
             string log = UnitTestSetup.GetProcessDiagnostics();
             Assert.Multiple(() =>
             {
                 Assert.That(new FileInfo("auto_dataset_report.pdf").Length, Is.GreaterThan(0));
                 Assert.That(new FileInfo("auto_subreport_report.pdf").Length, Is.GreaterThan(0));
-                Assert.That(log, Does.Contain("RptEngine, by the serviceable rule"));
-                Assert.That(log, Does.Contain("Crystal, because"));
+                Assert.That(new FileInfo("auto_crowded_subreport.pdf").Length, Is.GreaterThan(0));
+                Assert.That(Occurrences(log, ByTheRule) - before, Is.EqualTo(2));
+                Assert.That(log, Does.Contain("Crystal, because the request pushes 2 tables to subreport"));
             });
+        }
+
+        private static int Occurrences(string text, string value)
+        {
+            int count = 0;
+            for (int i = text.IndexOf(value, StringComparison.Ordinal); i >= 0; i = text.IndexOf(value, i + value.Length, StringComparison.Ordinal))
+                count++;
+            return count;
         }
 
         private async Task CreatePdfFromReport(string reportPath, string pdfOutputPath, Data reportData)

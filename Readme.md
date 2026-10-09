@@ -234,7 +234,8 @@ its reason.
 The new worker takes a request only when all of these hold:
 
 - The request carries at most one table, and the template reads at most one.
-- The request pushes no data to a subreport, and no subreport reads its own table.
+- The same holds for each subreport: the request pushes it at most one table, and it reads
+  at most one.
 - The report has no cross-tab and no chart, including inside subreports.
 - The export type is `PDF`, `CSV`, `Excel`, `ExcelDataOnly` or `RichText`.
 - The template parses.

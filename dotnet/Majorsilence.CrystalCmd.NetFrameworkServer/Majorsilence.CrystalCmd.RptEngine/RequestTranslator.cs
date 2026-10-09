@@ -32,10 +32,6 @@ public static class RequestTranslator
 
         var format = MapFormat(data.ExportAs);
 
-        if (data.SubReportDataTables.Count > 0 || data.EmptySubReportDataTables.Count > 0)
-            throw new NotServiceableException(
-                "The request pushes data to a subreport; this backend cannot hand a subreport its own data yet (roadmap stage 3).");
-
         int tableCount = data.DataTables.Count + data.EmptyDataTables.Count;
         if (tableCount > 1)
             throw new NotServiceableException(
@@ -46,15 +42,17 @@ public static class RequestTranslator
         if (data.DataTables.Count == 1)
         {
             var (name, csv) = (data.DataTables.Keys.First(), data.DataTables.Values.First());
-            CheckTableName(name, analysis, warnings);
+            CheckTableName(name, analysis.DataTables, warnings, "DataTables");
             overrides.Data = CsvTableReader.CreateTableEtl(csv);
         }
         else if (data.EmptyDataTables.Count == 1)
         {
             string name = data.EmptyDataTables[0];
-            CheckTableName(name, analysis, warnings);
-            overrides.Data = EmptyTable(name, analysis, warnings);
+            CheckTableName(name, analysis.DataTables, warnings, "EmptyDataTables");
+            overrides.Data = EmptyTable(name, analysis.DataTables, warnings, "EmptyDataTables");
         }
+
+        SubreportTables(data, analysis, overrides, warnings);
 
         foreach (var kv in data.Parameters)
             overrides.Parameters[kv.Key] = kv.Value;
@@ -62,7 +60,7 @@ public static class RequestTranslator
         foreach (var sp in data.SubReportParameters)
         {
             if (sp.Parameters is null || sp.Parameters.Count == 0) continue;
-            string? target = ResolveSubreportName(sp.ReportName, analysis, warnings);
+            string? target = ResolveSubreportName(sp.ReportName, analysis, warnings, "SubReportParameters");
             if (target is null) continue;
             if (!overrides.SubreportParameters.TryGetValue(target, out var bag))
                 overrides.SubreportParameters[target] = bag = new Dictionary<string, object?>();
@@ -98,6 +96,31 @@ public static class RequestTranslator
         return new TranslatedRequest { Overrides = overrides, Format = format, Warnings = warnings };
     }
 
+    // Tables pushed to subreports, each resolved to the subreport the template names the way
+    // SubReportParameters are. A subreport renders from one flattened table, as the main
+    // report does, so a second table for the same subreport is refused. An empty table gets
+    // the subreport's own columns, as the main report's does.
+    private static void SubreportTables(Data data, ReportAnalysis analysis, RuntimeOverrides overrides, List<string> warnings)
+    {
+        var pushed = data.SubReportDataTables.Select(s => (Sub: s, Empty: false))
+            .Concat(data.EmptySubReportDataTables.Select(s => (Sub: s, Empty: true)));
+        foreach (var (sub, empty) in pushed)
+        {
+            string? target = ResolveSubreportName(sub.ReportName, analysis, warnings, "SubReportDataTables");
+            if (target is null) continue;
+            if (overrides.SubreportData.ContainsKey(target))
+                throw new NotServiceableException(
+                    $"The request pushes more than one table to subreport '{target}'; this backend renders a subreport from one flattened table.");
+
+            var tables = analysis.Subreports.First(s => s.SubreportName == target).DataTables;
+            if (!string.IsNullOrEmpty(sub.TableName))
+                CheckTableName(sub.TableName, tables, warnings, $"SubReportDataTables ({target})");
+            overrides.SubreportData[target] = empty || sub.DataTable is null
+                ? EmptyTable(sub.TableName ?? string.Empty, tables, warnings, $"EmptySubReportDataTables ({target})")
+                : CsvTableReader.CreateTableEtl(sub.DataTable);
+        }
+    }
+
     /// <summary>The engine's format for a request's export type, or a refusal for the three with no equivalent.</summary>
     public static ExportFormat MapFormat(ExportTypes exportAs) => exportAs switch
     {
@@ -115,30 +138,30 @@ public static class RequestTranslator
     // The engine has one flattened table, so whatever table the caller named receives the
     // data. The name is still checked against the template, as the Crystal runtime's
     // callers are told when a table is not found.
-    private static void CheckTableName(string name, ReportAnalysis analysis, List<string> warnings)
+    private static void CheckTableName(string name, IReadOnlyList<DataTableAnalysis> tables, List<string> warnings, string label)
     {
-        if (analysis.DataTables.Count == 0) return;
-        if (FindTable(name, analysis) is null)
-            warnings.Add($"DataTables: the report has no table named '{name}' (it has {string.Join(", ", analysis.DataTables.Select(t => t.TableName))}); the data is pushed to the report's single table anyway");
+        if (tables.Count == 0) return;
+        if (FindTable(name, tables) is null)
+            warnings.Add($"{label}: the report has no table named '{name}' (it has {string.Join(", ", tables.Select(t => t.TableName))}); the data is pushed to the report's single table anyway");
     }
 
-    private static DataTableAnalysis? FindTable(string name, ReportAnalysis analysis)
+    private static DataTableAnalysis? FindTable(string name, IReadOnlyList<DataTableAnalysis> tables)
     {
         if (int.TryParse(name, out int index))
-            return index >= 1 && index <= analysis.DataTables.Count ? analysis.DataTables[index - 1] : null;
-        return analysis.DataTables.FirstOrDefault(t => string.Equals(t.TableName, name, StringComparison.OrdinalIgnoreCase));
+            return index >= 1 && index <= tables.Count ? tables[index - 1] : null;
+        return tables.FirstOrDefault(t => string.Equals(t.TableName, name, StringComparison.OrdinalIgnoreCase));
     }
 
     // An empty table with the template's own columns, so every field resolves and prints
     // nothing, which is what the Crystal runtime's callers get from an empty DataTable
     // built from the report's schema. Column types are not in the analysis; strings do.
-    private static DataTable EmptyTable(string name, ReportAnalysis analysis, List<string> warnings)
+    private static DataTable EmptyTable(string name, IReadOnlyList<DataTableAnalysis> tables, List<string> warnings, string label)
     {
-        var table = FindTable(name, analysis) ?? (analysis.DataTables.Count == 1 ? analysis.DataTables[0] : null);
+        var table = FindTable(name, tables) ?? (tables.Count == 1 ? tables[0] : null);
         var dt = new DataTable();
         if (table is null)
         {
-            warnings.Add($"EmptyDataTables: no columns known for '{name}'; the report renders with no data");
+            warnings.Add($"{label}: no columns known for '{name}'; the report renders with no data");
             return dt;
         }
         foreach (var column in table.ColumnNames)
@@ -150,11 +173,11 @@ public static class RequestTranslator
     // file's name with or without ".rpt"; the template records the placed object's name
     // ("Subreport1"). Exact first, then without the extension, then the only subreport
     // there is; otherwise a warning and the values are skipped.
-    private static string? ResolveSubreportName(string requested, ReportAnalysis analysis, List<string> warnings)
+    private static string? ResolveSubreportName(string requested, ReportAnalysis analysis, List<string> warnings, string label)
     {
         if (string.IsNullOrWhiteSpace(requested))
         {
-            warnings.Add("SubReportParameters: an entry has no ReportName and is skipped");
+            warnings.Add($"{label}: an entry has no ReportName and is skipped");
             return null;
         }
         string bare = requested.EndsWith(".rpt", StringComparison.OrdinalIgnoreCase) ? requested[..^4] : requested;
@@ -163,10 +186,10 @@ public static class RequestTranslator
         if (hit is not null) return hit.SubreportName;
         if (analysis.Subreports.Count == 1)
         {
-            warnings.Add($"SubReportParameters: no subreport named '{requested}'; applied to the report's only subreport, '{analysis.Subreports[0].SubreportName}'");
+            warnings.Add($"{label}: no subreport named '{requested}'; applied to the report's only subreport, '{analysis.Subreports[0].SubreportName}'");
             return analysis.Subreports[0].SubreportName;
         }
-        warnings.Add($"SubReportParameters: no subreport named '{requested}' (the report has {(analysis.Subreports.Count == 0 ? "none" : string.Join(", ", analysis.Subreports.Select(s => s.SubreportName)))}); skipped");
+        warnings.Add($"{label}: no subreport named '{requested}' (the report has {(analysis.Subreports.Count == 0 ? "none" : string.Join(", ", analysis.Subreports.Select(s => s.SubreportName)))}); skipped");
         return null;
     }
 }
