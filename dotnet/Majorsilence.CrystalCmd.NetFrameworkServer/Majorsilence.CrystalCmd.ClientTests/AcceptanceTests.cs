@@ -34,12 +34,13 @@ namespace Majorsilence.CrystalCmd.ClientTests
         // Worker__PrinterPaper: the dataset report, which prints on its printer's paper, is A4
         // from Crystal and Letter from RptEngine there. With Worker__PrinterPaper=A4 set in the
         // environment both pages are A4 and it scores 94.3. The two subreport scenarios were
-        // measured on Majorsilence.Crystal 0.3.2.
+        // measured on Majorsilence.Crystal 0.3.2. On 0.4.0 the dataset report rose from 96.8
+        // and the parameters from 95.7; the rest are unchanged.
         private static readonly Dictionary<string, double> Baseline = new()
         {
-            ["dataset-report"] = 96.8,
+            ["dataset-report"] = 97.3,
             ["plain-report"] = 95.0,
-            ["parameters"] = 95.7,
+            ["parameters"] = 97.2,
             // The subreport's text lines up with Crystal's, but its frame stays the 15.4pt
             // strip it was placed as: the engine does not grow a Rectangle with a subreport
             // that grows inside it, where Crystal's frame wraps the whole subreport. 0.2.1

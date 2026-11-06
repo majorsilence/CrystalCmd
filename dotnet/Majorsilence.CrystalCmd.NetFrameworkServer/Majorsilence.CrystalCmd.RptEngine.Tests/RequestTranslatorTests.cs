@@ -16,6 +16,7 @@ public class RequestTranslatorTests
         Parameters = [],
         ParametersExtended = new Dictionary<string, string>(),
         DataTables = tables.Select(t => new DataTableAnalysis { TableName = t.Table, ColumnNames = t.Columns }).ToList(),
+        TableLinks = [],
         Subreports = [],
         ReportObjects = []
     };
@@ -25,6 +26,7 @@ public class RequestTranslatorTests
         Parameters = [],
         ParametersExtended = new Dictionary<string, string>(),
         DataTables = [],
+        TableLinks = [],
         Subreports = names.Select(n => new SubreportAnalysis { SubreportName = n, Parameters = ["MyParameter"], DataTables = [] }).ToList(),
         ReportObjects = []
     };
@@ -102,6 +104,7 @@ public class RequestTranslatorTests
         Parameters = [],
         ParametersExtended = new Dictionary<string, string>(),
         DataTables = [],
+        TableLinks = [],
         Subreports = subreports.Select(s => new SubreportAnalysis
         {
             SubreportName = s.Subreport,
