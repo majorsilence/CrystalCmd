@@ -28,5 +28,31 @@ namespace Majorsilence.CrystalCmd.Server
                 throw;
             }
         }
+
+        /// <summary>
+        /// Tells the caller which backend will render its request, so a client can show it
+        /// (<see cref="RenderBackendHeaders"/>). The reason is reduced to printable ASCII because it
+        /// can quote template names, and a header value must not carry anything else.
+        /// </summary>
+        public static void AddResponseHeaders(Microsoft.AspNetCore.Http.HttpResponse response, RoutingDecision decision)
+        {
+            response.Headers[RenderBackendHeaders.Backend] = decision.Backend.ToString();
+            response.Headers[RenderBackendHeaders.Reason] = HeaderSafe(decision.Reason);
+        }
+
+        internal static string HeaderSafe(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            var chars = value.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (chars[i] < 0x20 || chars[i] > 0x7E)
+                    chars[i] = '?';
+            }
+            var safe = new string(chars);
+            return safe.Length > 512 ? safe.Substring(0, 512) : safe;
+        }
     }
 }

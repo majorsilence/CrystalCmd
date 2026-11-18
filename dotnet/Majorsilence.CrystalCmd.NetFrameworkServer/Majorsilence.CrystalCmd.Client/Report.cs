@@ -171,6 +171,7 @@ namespace Majorsilence.CrystalCmd.Client
                     var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     uploadId = content;
                     uploadResponse = response.StatusCode;
+                    RecordRenderBackend(response);
                     string errorMessage = "";
                     try
                     {
@@ -193,6 +194,32 @@ namespace Majorsilence.CrystalCmd.Client
             }
 
             throw new CrystalCmdException("Failed to upload report file");
+        }
+
+        /// <summary>
+        /// The backend the server routed the last <see cref="GenerateAsync(Common.Data, Stream, HttpClient, System.Threading.CancellationToken)"/>
+        /// request to, from the <see cref="Common.RenderBackendHeaders.Backend"/> response header. Null when the
+        /// server does not send it (releases before the header existed).
+        /// </summary>
+        public Common.RenderBackend? LastRenderBackend { get; private set; }
+
+        /// <summary>Why the server chose <see cref="LastRenderBackend"/>, or null.</summary>
+        public string LastRenderBackendReason { get; private set; }
+
+        private void RecordRenderBackend(HttpResponseMessage response)
+        {
+            LastRenderBackend = null;
+            LastRenderBackendReason = null;
+
+            if (response.Headers.TryGetValues(Common.RenderBackendHeaders.Backend, out var backends)
+                && Enum.TryParse(System.Linq.Enumerable.FirstOrDefault(backends), true, out Common.RenderBackend backend))
+            {
+                LastRenderBackend = backend;
+            }
+            if (response.Headers.TryGetValues(Common.RenderBackendHeaders.Reason, out var reasons))
+            {
+                LastRenderBackendReason = System.Linq.Enumerable.FirstOrDefault(reasons);
+            }
         }
 
         private async Task<Stream> PollGet(string id, HttpClient httpClient,

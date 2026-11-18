@@ -39,6 +39,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             {
                 return BadRequest(ex.Message);
             }
+            Routing.AddResponseHeaders(Response, route);
             var queue = WorkQueue.CreateDefault(route.ReportsChannel, _configuration);
             await queue.Enqueue(new QueueItem()
             {
@@ -108,6 +109,7 @@ namespace Majorsilence.CrystalCmd.Server.Controllers
             {
                 return BadRequest(ex.Message);
             }
+            Routing.AddResponseHeaders(Response, route);
             var queue = WorkQueue.CreateDefault(route.ReportsChannel, _configuration);
             await queue.Enqueue(new QueueItem()
             {

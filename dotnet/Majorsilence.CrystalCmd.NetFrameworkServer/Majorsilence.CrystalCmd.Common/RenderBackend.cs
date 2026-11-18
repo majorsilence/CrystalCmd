@@ -26,6 +26,19 @@ namespace Majorsilence.CrystalCmd.Common
     }
 
     /// <summary>
+    /// Response headers on <c>POST /export</c> and <c>POST /export/poll</c> that name the backend the
+    /// server routed the request to, and why, so a caller can show which engine rendered a report.
+    /// </summary>
+    public static class RenderBackendHeaders
+    {
+        /// <summary>The <see cref="RenderBackend"/> name: <c>Crystal</c> or <c>RptEngine</c>, never <c>Auto</c>.</summary>
+        public const string Backend = "X-CrystalCmd-Backend";
+
+        /// <summary>The routing decision's reason, for example "Crystal, because the report has a cross-tab".</summary>
+        public const string Reason = "X-CrystalCmd-Backend-Reason";
+    }
+
+    /// <summary>
     /// The work-queue channels the server enqueues on and each worker consumes. The Crystal
     /// worker listens on the first pair, the Majorsilence.Crystal worker on the second.
     /// </summary>
