@@ -129,6 +129,59 @@ namespace Majorsilence.CrystalCmd.Tests
             VerifyWarningLogged(mockLogger, "MyParameter2");
         }
 
+        // An optional string parameter the caller deliberately leaves blank must reach
+        // Crystal as String.Empty. The server used to substitute a single space, which
+        // silently broke every report formula written as Length({?P}) = 0 - the form
+        // those formulas used while Crystal rendered in-process. Crystal itself accepts
+        // String.Empty, so there is nothing here to work around.
+        [TestCase("", TestName = "EmptyStringParameterReachesCrystalUnchanged(empty)")]
+        [TestCase(null, TestName = "EmptyStringParameterReachesCrystalUnchanged(null)")]
+        public void EmptyStringParameterReachesCrystalUnchanged(string supplied)
+        {
+            var crystalWrapper = new CrystalDocumentWrapper(_mockLogger.Object);
+            using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+            {
+                ExportAs = Common.ExportTypes.PDF,
+                Parameters = new Dictionary<string, object>()
+                {
+                    { "MyParameter", supplied },
+                    { "MyParameter2", true }
+                }
+            }))
+            {
+                var value = (reportClientDocument.ParameterFields["MyParameter"].CurrentValues[0]
+                    as CrystalDecisions.Shared.ParameterDiscreteValue).Value;
+                Assert.That(value, Is.EqualTo(string.Empty),
+                    "a blank string parameter must not be padded to a space");
+            }
+        }
+
+        // The fallback for a required string parameter the caller never sent goes
+        // through the same conversion, so it must also land on String.Empty rather
+        // than a space.
+        [Test]
+        public void MissingStringParameterDefaultsToEmptyString()
+        {
+            var mockLogger = new Mock<ILogger>();
+            var crystalWrapper = new CrystalDocumentWrapper(mockLogger.Object);
+            using (var reportClientDocument = crystalWrapper.Create("thereport_wth_parameters.rpt", new CrystalCmd.Common.Data()
+            {
+                ExportAs = Common.ExportTypes.PDF,
+                Parameters = new Dictionary<string, object>()
+                {
+                    { "MyParameter2", true }
+                    // MyParameter deliberately omitted
+                }
+            }))
+            {
+                var value = (reportClientDocument.ParameterFields["MyParameter"].CurrentValues[0]
+                    as CrystalDecisions.Shared.ParameterDiscreteValue).Value;
+                Assert.That(value, Is.EqualTo(string.Empty),
+                    "the substituted default for a missing string parameter must be empty, not a space");
+            }
+            VerifyWarningLogged(mockLogger, "MISSING PARAMETER");
+        }
+
         // A parameter the report requires that is absent from the dataset still gets a
         // default value so the report renders, but must log an obvious warning naming
         // the parameter so the caller bug is visible.

@@ -468,7 +468,12 @@ namespace Majorsilence.CrystalCmd.Server.Common
                     rpt.SetParameterValue(name, ParseDateParameterValue(val));
                     break;
                 default:
-                    theValue = string.IsNullOrWhiteSpace(val?.ToString()) ? " " : val.ToString();
+                    // Crystal accepts String.Empty for a string parameter, so pass an
+                    // absent/empty value through as "" rather than substituting a single
+                    // space. Substituting " " silently broke every report formula that
+                    // tests an optional string parameter with Length({?P}) = 0, which is
+                    // how these reports behaved when Crystal ran in-process.
+                    theValue = val?.ToString() ?? "";
                     rpt.SetParameterValue(name, theValue);
                     break;
             }
